@@ -1,0 +1,53 @@
+﻿<Window x:Class="RBG_D_MOST_Project_K4Wv2_WPF_Depth_BodyIX_TwoDevice.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="600" Width="1150">
+    <Window.Resources>
+        <SolidColorBrush x:Key="MediumGreyBrush" Color="#ff6e6e6e"/>
+        <SolidColorBrush x:Key="KinectPurpleBrush" Color="#ff52318f" />
+        <SolidColorBrush x:Key="KinectBlueBrush" Color="#ff00BCF2" />
+        <Style TargetType="{x:Type Image}">
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="10 0 10 0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Image Grid.Row="0" Source="Images\Logo.png" HorizontalAlignment="Left" Stretch="Fill" Height="32" Width="81" Margin="0 10 0 5"/>
+        <TextBlock Grid.Row="0" Margin="0 0 -1 0" HorizontalAlignment="Right" VerticalAlignment="Bottom" Foreground="{StaticResource MediumGreyBrush}" FontFamily="Segoe UI" FontSize="18"> Motion Tracker</TextBlock>
+        <Image Grid.Row="0" Source="Images\Status.png" Stretch="None" HorizontalAlignment="Center" Margin="0 0 0 5"/>
+        <Grid  Grid.Row="1" >
+            <Grid.ColumnDefinitions >
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+            <Viewbox x:Name="kinectBodyViewbox"  Grid.Row="1" Grid.Column="0"  HorizontalAlignment="Left"  Margin="5,5,5,5"   >
+                <Image Source="{Binding ImageSource}" Stretch="UniformToFill"/>
+            </Viewbox>
+            <Viewbox x:Name="kinectBodyViewbox_B"  Grid.Row="1" Grid.Column="1"  HorizontalAlignment="Left" Margin="5,5,5,5"   >
+                <Image Source="{Binding ImageSource}" Stretch="UniformToFill"/>
+            </Viewbox>
+        </Grid>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Background="White">
+            <Button x:Name="PlayButton" Content="Play" Width="90" Height="32" Margin="10,10,10,0" Padding="5" VerticalAlignment="Top" Click="PlayButton_Click" />
+            <Button x:Name="StopButton" Content="Stop" Width="90" Height="32" Margin="10,10,10,0" Padding="5" VerticalAlignment="Top" Click="StopButton_Click" />
+            <Button x:Name="ResetButton" Content="Reset" Width="90" Height="32" Margin="10,10,10,0" Padding="5" VerticalAlignment="Top" Click="RestartButton_Click" />
+            <Button x:Name="StartSwitchButton" Content="StartSwitch" Width="90" Height="32" Margin="10,10,10,0" Padding="5" VerticalAlignment="Top" Click="StartSwtichButton_Click" />
+            <Button x:Name="SmallSwitchButton" Content="SmallSwitch" Width="90" Height="32" Margin="10,10,10,0" Padding="5" VerticalAlignment="Top" Click="SamllSwtichButton_Click" />
+            <Button x:Name="DisableCommandButton" Content="Disable" Width="90" Height="32" Margin="10,10,10,0" Padding="5" VerticalAlignment="Top" Click="DisableButton_Click" />
+            <Button x:Name="EnableCommandButton" Content="Enable" Width="90" Height="32" Margin="10,10,10,0" Padding="5" VerticalAlignment="Top" Click="EnableButton_Click" />
+            <Button x:Name="RestartCommandButton" Content="Restart" Width="90" Height="32" Margin="10,10,10,0" Padding="5" VerticalAlignment="Top" Click="DevRestartButton_Click" />
+            <Button x:Name="StatusCommandButton" Content="Status" Width="90" Height="32" Margin="10,10,10,0" Padding="5" VerticalAlignment="Top" Click="StatusButton_Click" />
+            <Button x:Name="SwitchDevButton" Content="SwitchDev" Width="90" Height="32" Margin="10,10,10,0" Padding="5" VerticalAlignment="Top" Click="SwitchDevButton_Click" />
+        </StackPanel>
+        <StatusBar Grid.Row="3" HorizontalAlignment="Stretch" Name="statusBar" VerticalAlignment="Bottom" Background="White" Foreground="{StaticResource MediumGreyBrush}">
+            <StatusBarItem Content="{Binding KinectStatusText}" />
+        </StatusBar>
+    </Grid>
+</Window>

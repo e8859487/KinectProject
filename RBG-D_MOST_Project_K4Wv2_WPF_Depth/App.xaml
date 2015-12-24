@@ -1,0 +1,8 @@
+﻿<Application x:Class="RBG_D_MOST_Project_K4Wv2_WPF_Depth.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+         
+    </Application.Resources>
+</Application>

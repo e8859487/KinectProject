@@ -1,0 +1,108 @@
+Name 						PID
+KinectMangagementService 	2340	v
+KinectMointor				2348 	v
+KinectService 				5140 	this will crush if we use multiple source
+C:\Windows\System32\Kinect
+KStudioHostService			5188
+
+Quick tip for starting the KinectService programmatically (Kinect v2) 
+System.Diagnostics.Process.Start(@"C:\Windows\System32\KinectService.exe"); 
+
+https://msdn.microsoft.com/zh-tw/library/windows/hardware/ff544722%28v=vs.85%29.aspx
+
+List from tool: devcon
+
+ displays the device instance ID and description of each device in the Net setup class
+=======================================================================================================
+	command : devcon listclass KinectSensor
+
+Device Uniquite id 
+myID: B 
+USB\VID_045E&PID_02C4&MI_00\7&1FC7402&0&0000                : WDF KinectSensor Interface 0  
+myID: A 
+USB\VID_045E&PID_02C4&MI_00\7&6D76B01&0&0000                : WDF KinectSensor Interface 0
+
+
+
+provide the hardware IDs, Hardware IDs,Compatible IDs and both are identical. Only instance ID different!!
+======================================================================================================= 
+	command :devcon hwids =net      (spaces change are not allowed)
+
+USB\VID_045E&PID_02C4&MI_00\7&6D76B01&0&0000
+    Name: WDF KinectSensor Interface 0
+    Hardware IDs:
+        USB\VID_045E&PID_02C4&REV_0100&MI_00
+        USB\VID_045E&PID_02C4&MI_00
+    Compatible IDs:
+        USB\Class_ff&SubClass_ff&Prot_00
+        USB\Class_ff&SubClass_ff
+        USB\Class_ff
+USB\VID_045E&PID_02C4&MI_00\7&1FC7402&0&0000
+    Name: WDF KinectSensor Interface 0
+    Hardware IDs:
+        USB\VID_045E&PID_02C4&REV_0100&MI_00
+        USB\VID_045E&PID_02C4&MI_00
+    Compatible IDs:
+        USB\Class_ff&SubClass_ff&Prot_00
+        USB\Class_ff&SubClass_ff
+        USB\Class_ff
+
+
+provide the hardware IDs, Hardware IDs,Compatible IDs and both are identical. Only instance ID different!!
+======================================================================================================= 
+ 	command : devcon status "@USB\VID_045E&PID_02C4&MI_00\7&1FC7402&0&0000"
+
+ USB\VID_045E&PID_02C4&MI_00\7&1FC7402&0&0000
+    Name: WDF KinectSensor Interface 0
+    Driver is running.
+
+
+======================================================================================================= 
+Example 28: Enable a particular device(hardware ID) 
+    devcon /r enable "@USB\VID_045E&PID_02C4&MI_00\7&1FC7402&0&0000"
+	devcon   enable "@USB\VID_045E&PID_02C4&MI_00\7&1FC7402&0&0000"
+
+Example 29: Enable devices by class	
+	devcon /r enable =Printer
+
+
+Example 30: Disable devices by an ID pattern
+	devcon /r disable USB*
+
+Example 31: Disable devices by device instance ID
+	devcon /r disable "@USB\VID_045E&PID_02C4&MI_00\7&1FC7402&0&0000"
+
+Stops and restarts the specified devices. Valid only on the local computer.
+    devcon restart "@USB\VID_045E&PID_02C4&MI_00\7&6D76B01&0&0000"
+
+
+==Summery==  MUST BE ADMINISTRATOR
+=======================================================================================================
+
+0.Find KinectSensor Devices list by class
+    devcon listclass KinectSensor
+
+1.Check status
+A
+	devcon status "@USB\VID_045E&PID_02C4&MI_00\7&6D76B01&0&0000" 
+B
+	devcon status "@USB\VID_045E&PID_02C4&MI_00\7&1FC7402&0&0000"
+
+2.Disable devices by device instance ID
+A
+	devcon   disable "@USB\VID_045E&PID_02C4&MI_00\7&6D76B01&0&0000"
+B
+	devcon   disable "@USB\VID_045E&PID_02C4&MI_00\7&1FC7402&0&0000"
+
+3.Enable a particular device(hardware ID) 
+A
+	devcon enable "@USB\VID_045E&PID_02C4&MI_00\7&6D76B01&0&0000"
+B
+	devcon   enable "@USB\VID_045E&PID_02C4&MI_00\7&1FC7402&0&0000"
+
+4.Restart Machine
+A
+    devcon restart "@USB\VID_045E&PID_02C4&MI_00\7&6D76B01&0&0000"
+B
+    devcon restart "@USB\VID_045E&PID_02C4&MI_00\7&1FC7402&0&0000"
+    
