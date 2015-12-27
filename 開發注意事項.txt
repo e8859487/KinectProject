@@ -5,3 +5,27 @@
 要加入參考
 1.Kinect (2.0)
 2.Kinect.Tools
+
+Client端 若使用windows的遠端連線
+則必須要設定遠端音訊為本機撥放，否則Kinect動作會被干擾
+
+遠端桌面連線 > 顯示選項 > 本機資源 > 設定 > 在遠端電腦上撥放
+
+
+
+====================================================最後更新 : 20151224
+RBG-D_MOST_Project_K4Wv2_WPF
+顯示人體骨架影像
+
+
+RBG-D_MOST_Project_K4Wv2_WPF_Depth
+顯示深度影像
+
+RBG-D_MOST_Project_K4Wv2_WPF_Depth_BodyIX
+融合骨架與深度資訊
+
+RBG-D_MOST_Project_K4Wv2_WPF_Depth_BodyIX_TwoDevice
+嘗試將兩台kinect 用於同意台電腦上  
+使用到Devcon去控制USB裝置啟閉 (注意 須要有使用者權限)
+
+結果 : 因啟閉時間過長 無法使用
