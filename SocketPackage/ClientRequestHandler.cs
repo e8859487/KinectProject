@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Net.Sockets;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 
+using Img_Serializable;
 namespace SocketPackage
 {
-    class ClientRequestHandler
+   public  class ClientRequestHandler
     {
+        static public ImageInfo_Serializable imgObj = null;
         #region private property
 
         /// socket client 識別號碼
@@ -46,24 +49,34 @@ namespace SocketPackage
 
         private void bgwSocket_DoWork(object sender, DoWorkEventArgs e)
         {
+            NetworkStream netStream =null;
+            BinaryFormatter binaryFromatter = new BinaryFormatter();
+
             //server & client 已經連線完成
             while (_TcpClient.Connected)
             {
                 //取得網路串流物件，取得來自 socket client 的訊息
-                NetworkStream netStream = _TcpClient.GetStream();
-                byte[] readBuffer = new byte[217088];
-                int count = 0;
-                if ((count = netStream.Read(readBuffer, 0, readBuffer.Length)) != 0)
+                netStream = _TcpClient.GetStream();
+               // byte[] readBuffer = new byte[_TcpClient.ReceiveBufferSize];
+                //int count = 0;
+             //   if ((count = netStream.Read(readBuffer, 0, readBuffer.Length)) != 0)
+                if(_TcpClient.ReceiveBufferSize>0 && netStream.CanRead)
                 {
-                    string clientRequest = Encoding.UTF8.GetString(readBuffer, 0, count);
-                    //SocketServer.sMessages.Add(clientRequest);
-                    
-                    SocketServer._memStream.Seek(0, System.IO.SeekOrigin.Begin);
-                    SocketServer._memStream.Write(readBuffer, 0, count);
+                    try { 
+                      imgObj = (ImageInfo_Serializable)binaryFromatter.Deserialize(netStream);
+                        }
+                    catch(Exception ee)
+                    {
+                        SocketServer.sMessages.Add(ee.ToString());
+                    }
+                    //SocketServer._memStream.Seek(0, System.IO.SeekOrigin.Begin);
+                    //SocketServer._memStream.Write(readBuffer, 0, count);
                 }
             }
 
         }
+
+
 
         #endregion
     }

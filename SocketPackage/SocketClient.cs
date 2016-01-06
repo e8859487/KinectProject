@@ -2,10 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+
 using System.Threading.Tasks;
+
 using System.Net;
 using System.Net.Sockets;
 
+using System.Runtime.Serialization.Formatters.Binary;
+
+using Img_Serializable;
 namespace SocketPackage
 {
     public class SocketClient
@@ -101,6 +106,29 @@ namespace SocketPackage
                 sMessages.Add(ee.ToString());
             }
 
+        }
+        /// <summary>
+        /// 傳送序列化的物件
+        /// </summary>
+        /// <param name="imgObj"></param>
+        public void SendImgInfo(ImageInfo_Serializable imgObj)
+        {
+            try
+            {
+                //取得用來傳送訊息至 socket server 的 stream 物件
+                NetworkStream serverStream = _TcpClient.GetStream();
+
+                //將資料序列化
+                BinaryFormatter binaryFormatter = new BinaryFormatter();
+                binaryFormatter.Serialize(serverStream, imgObj);
+
+                //將資料寫入 stream object (表示傳送資料至 socket server)
+             //   serverStream.Flush();
+            }
+            catch (Exception ee)
+            {
+                sMessages.Add(ee.ToString());
+            }
         }
         #endregion
 

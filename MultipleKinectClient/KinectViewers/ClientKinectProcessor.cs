@@ -12,6 +12,9 @@ using System.Windows.Media.Imaging;
 
 using SocketPackage;
 using System.Windows.Resources;
+using Img_Serializable;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 
 
 namespace MultipleKinectClient 
@@ -57,8 +60,8 @@ namespace MultipleKinectClient
 
         //定義客戶端傳輸socket
         SocketClient socketClient = null;
-        private const string IpAddr = "127.0.0.1";              //140.118.170.215
-        private   const int Port = 81;
+        private const string IpAddr = "140.118.170.215";              //127.0.0.1 
+        private const int Port = 81;
 
 
         int stride =0;
@@ -165,30 +168,62 @@ namespace MultipleKinectClient
         /// </summary>
         public void SendImgToServer()
         {
-            //socketClient.Send("Test Message , Connect successfully!! :)");
 
             //Img transmit va network
+            //depthBitmap.CopyPixels(imgBuffer,stride,0);
 
-            depthBitmap.CopyPixels(imgBuffer,stride,0);
-            
-            socketClient.SendImg(imgBuffer);
+            //ImageInfo_Serializable ImgSerialized = new ImageInfo_Serializable(depthBitmap, 0);
+
+            depthBitmap.CopyPixels(imgBuffer, stride, 0);
+            socketClient.SendImgInfo(new ImageInfo_Serializable(imgBuffer, 0));
+            //socketClient.SendImg(imgBuffer);
           //  MessageBox.Show("SendMsg successfully Msg length : " + imgBuffer.Length);
         }
 
         public void CatchImgBitmap()
         {
            depthBitmap.CopyPixels(imgBuffer,stride,0);
+            using (FileStream fs = new FileStream("abc.txt", FileMode.Create))
+            {
+                BinaryFormatter formatter = new BinaryFormatter();
+                formatter.Serialize(fs, new ImageInfo_Serializable(imgBuffer, 0));
+            }
+        }
 
+        public void testSerializeImgObj()
+        {
+            //depthBitmap.CopyPixels(imgBuffer, stride, 0);
+
+            //using (FileStream fs = new FileStream("abc.txt",FileMode.Create)){
+            //    BinaryFormatter formatter = new BinaryFormatter();
+            //    formatter.Serialize(fs, new ImageInfo_Serializable(imgBuffer, 0));
+            //}
+            //using (FileStream fs = new FileStream("abc.txt",FileMode.Open)){
+            //    BinaryFormatter formatter = new BinaryFormatter();
+            //    ImageInfo_Serializable imgObj = (ImageInfo_Serializable)formatter.Deserialize(fs);
+            //    this.depthBitmap = imgObj._depthBitmap  ;
+            //}
         }
 
         public void RenderBitmap()
         {
-            depthBitmap.WritePixels(
-                new Int32Rect(0, 0, displayWidth, displayHeight),
-                imgBuffer, 
-                displayWidth , 
-                0);
-
+            //depthBitmap.WritePixels(
+            //    new Int32Rect(0, 0, displayWidth, displayHeight),
+            //    imgBuffer, 
+            //    displayWidth , 
+            //    0);
+            using (FileStream fs = new FileStream("abc.txt", FileMode.Open))
+            {
+                BinaryFormatter formatter = new BinaryFormatter();
+                ImageInfo_Serializable imgObj = (ImageInfo_Serializable)formatter.Deserialize(fs);
+                imgBuffer = imgObj._ImgBuffer;
+                depthBitmap.WritePixels(
+                    new Int32Rect(0, 0, displayWidth, displayHeight),
+                    imgBuffer,
+                    displayWidth,
+                    0);
+                //this.depthBitmap = imgObj._depthBitmap;
+            }
         }
 
 
@@ -289,6 +324,7 @@ namespace MultipleKinectClient
 
             }
 
+            //Send Image to Server
             this.SendImgToServer();
         }
 

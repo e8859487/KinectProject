@@ -1,6 +1,4 @@
-﻿using Microsoft.Kinect;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,6 +11,10 @@ using System.Windows.Media.Imaging;
 using SocketPackage;
 using System.Windows.Threading;
 using System.IO;
+
+using Microsoft.Kinect;
+
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace MultipleKinectMaster
 {
@@ -181,14 +183,20 @@ namespace MultipleKinectMaster
         {
             int count = 0;
 
-            if(( count = (int)SocketServer._memStream.Length) != 0){
-
-                byte[] readBuffer = new byte[count];
-                SocketServer._memStream.Seek(0, SeekOrigin.Begin);
-                SocketServer._memStream.Read(readBuffer,0,count);
-                depthBitmap.WritePixels(new Int32Rect(0, 0, displayWidth, displayHeight), readBuffer, displayWidth, 0);
-
+            if(SocketPackage.ClientRequestHandler.imgObj!=null && SocketPackage.ClientRequestHandler.imgObj._ImgBuffer !=  null)
+            {
+                depthPixels = SocketPackage.ClientRequestHandler.imgObj._ImgBuffer;
+                //this.depthBitmap = SocketPackage.ClientRequestHandler.imgObj._ImgBuffer;
+                this.RenderDepthPixels();
             }
+            //if(( count = (int)SocketServer._memStream.Length) != 0){
+
+            //    byte[] readBuffer = new byte[count];
+            //    SocketServer._memStream.Seek(0, SeekOrigin.Begin);
+            //    SocketServer._memStream.Read(readBuffer,0,count);
+            //    depthBitmap.WritePixels(new Int32Rect(0, 0, displayWidth, displayHeight), readBuffer, displayWidth, 0);
+
+            //}
         
         }
 
