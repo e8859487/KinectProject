@@ -17,13 +17,11 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 
 
-namespace MultipleKinectClient 
+namespace MultipleKinectClient
 {
     public sealed class ClientKinectProcessor : IDisposable
     {
         #region Private Region Parameters
-        private BodyFrameReader bodyFrameReader = null;
-
         private Body[] bodies = null;
 
         private const double JointThickness = 3;
@@ -34,7 +32,6 @@ namespace MultipleKinectClient
 
         private readonly Pen inferredBonePen = new Pen(Brushes.Gray, 1);
 
-
         private DrawingGroup drawingGroup;
 
         private DrawingImage imageSource;
@@ -43,8 +40,10 @@ namespace MultipleKinectClient
 
         private List<Tuple<JointType, JointType>> bones;
 
+        //Display window width
         private int displayWidth;
 
+        //Display window Height
         private int displayHeight;
 
         private List<Pen> bodyColors;
@@ -52,51 +51,53 @@ namespace MultipleKinectClient
         private WriteableBitmap depthBitmap = null;
         private byte[] depthPixels = null;
 
-
         private const int MapDepthToByte = 8000 / 256;
 
         FrameDescription frameDescription = null;
-        private MultiSourceFrameReader multiFrameSourceReader = null; 
+        private MultiSourceFrameReader multiFrameSourceReader = null;
 
         //定義客戶端傳輸socket
         SocketClient socketClient = null;
-        private const string IpAddr = "140.118.170.215";              //127.0.0.1 
+        private const string IpAddr = "140.118.170.215";              //127.0.0.1  140.118.170.215
         private const int Port = 81;
 
-
-        int stride =0;
+        int stride = 0;
         byte[] imgBuffer = null;
+
+        double depthTimeStamp = 0;
+        int framesNumber = 0;
+
+        ImageInfo_Serializable ImageObjBuffer = null;
         #endregion
 
-        public ClientKinectProcessor(KinectSensor kinectSensor) {
-            if (kinectSensor == null) {
+        public ClientKinectProcessor(KinectSensor kinectSensor)
+        {
+            if (kinectSensor == null)
+            {
                 throw new ArgumentNullException("kinectSensor");
             }
+
+            //multipleFrameReader Read Depth and Body infomation.
+            this.multiFrameSourceReader = kinectSensor.OpenMultiSourceFrameReader(FrameSourceTypes.Depth | FrameSourceTypes.Body);
             
-
-
-            //this.bodyFrameReader = kinectSensor.BodyFrameSource.OpenReader();
-
-           // this.bodyFrameReader.FrameArrived += this.Reader_BodyFrameArrived;
-
-            //multipleFrameReader 
-            this.multiFrameSourceReader =  kinectSensor.OpenMultiSourceFrameReader(FrameSourceTypes.Depth | FrameSourceTypes.Body);
             this.multiFrameSourceReader.MultiSourceFrameArrived += this.Reader_MultiSourceFrameArrived;
-
 
             this.coordinateMapper = kinectSensor.CoordinateMapper;
 
-             frameDescription = kinectSensor.DepthFrameSource.FrameDescription;
-            //window size : 512*424
-            this.displayHeight = frameDescription.Height;   //424
-            this.displayWidth = frameDescription.Width;     //512
+            frameDescription = kinectSensor.DepthFrameSource.FrameDescription;
 
-            // allocate space to put the pixels being received and converted
+            //window size : 512*424
+            this.displayHeight = kinectSensor.DepthFrameSource.FrameDescription.Height;   //424
+            this.displayWidth = kinectSensor.DepthFrameSource.FrameDescription.Width;     //512
+
+
+            // Allocate space to put the pixels being received and converted
             this.depthPixels = new byte[this.displayWidth * this.displayHeight];
+
             //create bitmap to display
             this.depthBitmap = new WriteableBitmap(this.displayWidth, this.displayHeight, 96.0, 96.0, PixelFormats.Gray8, null);
             //this.bitmap = new RenderTargetBitmap(this.displayWidth, this.displayHeight, 96, 96, PixelFormats.Pbgra32);
-        
+
             this.bones = new List<Tuple<JointType, JointType>>();
             #region bone implement
 
@@ -133,7 +134,7 @@ namespace MultipleKinectClient
             this.bones.Add(new Tuple<JointType, JointType>(JointType.HipLeft, JointType.KneeLeft));
             this.bones.Add(new Tuple<JointType, JointType>(JointType.KneeLeft, JointType.AnkleLeft));
             this.bones.Add(new Tuple<JointType, JointType>(JointType.AnkleLeft, JointType.FootLeft));
-            
+
             #endregion
 
             this.bodyColors = new List<Pen>();
@@ -144,7 +145,8 @@ namespace MultipleKinectClient
             this.bodyColors.Add(new Pen(Brushes.Green, 6));
             this.bodyColors.Add(new Pen(Brushes.Blue, 6));
             this.bodyColors.Add(new Pen(Brushes.Indigo, 6));
-            this.bodyColors.Add(new Pen(Brushes.Violet, 6)); 
+            this.bodyColors.Add(new Pen(Brushes.Violet, 6));
+
             #endregion
 
 
@@ -153,56 +155,45 @@ namespace MultipleKinectClient
 
 
             //network processes
-            socketClient = new SocketClient(IpAddr, Port);
-            socketClient.Connect();
+            this.socketClient = new SocketClient(IpAddr, Port);
+            this.socketClient.Connect();
 
-           // Stride = (Width) * (bytes per pixel)
-            stride = (int)depthBitmap.PixelWidth * ((depthBitmap.Format.BitsPerPixel + 7) / 8);//每列影像列的位元長度(bytes)
-            imgBuffer = new byte[(int)depthBitmap.PixelHeight * stride];
+            // Stride = (Width) * (bytes per pixel)
+            this.stride = (int)depthBitmap.PixelWidth * ((depthBitmap.Format.BitsPerPixel + 7) / 8);//每列影像列的位元長度(bytes)
+            this.imgBuffer = new byte[(int)depthBitmap.PixelHeight * stride];
 
-
+            //serializable Image object . Including depth and skeleton joints. 
+            //ImgObj
+            ImageObjBuffer = new ImageInfo_Serializable();
         }
 
         /// <summary>
-        /// Test Send Msg to server
+        /// Send ImgObj to server va network
         /// </summary>
         public void SendImgToServer()
         {
-
-            //Img transmit va network
-            //depthBitmap.CopyPixels(imgBuffer,stride,0);
-
-            //ImageInfo_Serializable ImgSerialized = new ImageInfo_Serializable(depthBitmap, 0);
-
             depthBitmap.CopyPixels(imgBuffer, stride, 0);
-            socketClient.SendImgInfo(new ImageInfo_Serializable(imgBuffer, 0));
-            //socketClient.SendImg(imgBuffer);
-          //  MessageBox.Show("SendMsg successfully Msg length : " + imgBuffer.Length);
+
+            //Save Image information into Serializable
+            //深度影像
+            ImageObjBuffer._ImgBuffer = imgBuffer;
+            //Frame編號
+            ImageObjBuffer._imageIdx = framesNumber;
+          //骨架資訊於 UpdateBodyFrame 函式中處理
+
+            //送出影像物件
+            socketClient.SendImgInfo(ImageObjBuffer);
+
         }
 
         public void CatchImgBitmap()
         {
-           depthBitmap.CopyPixels(imgBuffer,stride,0);
+            depthBitmap.CopyPixels(imgBuffer, stride, 0);
             using (FileStream fs = new FileStream("abc.txt", FileMode.Create))
             {
                 BinaryFormatter formatter = new BinaryFormatter();
-                formatter.Serialize(fs, new ImageInfo_Serializable(imgBuffer, 0));
+                formatter.Serialize(fs, new ImageInfo_Serializable(imgBuffer, 0 ));
             }
-        }
-
-        public void testSerializeImgObj()
-        {
-            //depthBitmap.CopyPixels(imgBuffer, stride, 0);
-
-            //using (FileStream fs = new FileStream("abc.txt",FileMode.Create)){
-            //    BinaryFormatter formatter = new BinaryFormatter();
-            //    formatter.Serialize(fs, new ImageInfo_Serializable(imgBuffer, 0));
-            //}
-            //using (FileStream fs = new FileStream("abc.txt",FileMode.Open)){
-            //    BinaryFormatter formatter = new BinaryFormatter();
-            //    ImageInfo_Serializable imgObj = (ImageInfo_Serializable)formatter.Deserialize(fs);
-            //    this.depthBitmap = imgObj._depthBitmap  ;
-            //}
         }
 
         public void RenderBitmap()
@@ -212,6 +203,7 @@ namespace MultipleKinectClient
             //    imgBuffer, 
             //    displayWidth , 
             //    0);
+            
             using (FileStream fs = new FileStream("abc.txt", FileMode.Open))
             {
                 BinaryFormatter formatter = new BinaryFormatter();
@@ -226,24 +218,24 @@ namespace MultipleKinectClient
             }
         }
 
-
-
-        public ImageSource ImageSource {
-            get {
-              //  return this.imageSource;
+        public ImageSource ImageSource
+        {
+            get
+            {
+                //  return this.imageSource;
                 return this.depthBitmap;
             }
         }
 
-        public void Dispose() {
-            if (this.bodyFrameReader != null) {
-                this.bodyFrameReader.FrameArrived -= Reader_BodyFrameArrived;
-                this.bodyFrameReader.Dispose();
-                this.bodyFrameReader = null;
+        public void Dispose()
+        {
+            if (this.multiFrameSourceReader != null)
+            {
+                this.multiFrameSourceReader.MultiSourceFrameArrived -= Reader_MultiSourceFrameArrived;
+                this.multiFrameSourceReader.Dispose();
+                this.multiFrameSourceReader = null;
             }
         }
-
-
 
         #region Private Method
         private void Reader_MultiSourceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
@@ -251,10 +243,9 @@ namespace MultipleKinectClient
             DepthFrame depthFrame = null;
             BodyFrame bodyFrame = null;
             MultiSourceFrame multiSourceFrame = e.FrameReference.AcquireFrame();
-            bool isBitmapLocked = false;
             bool dataReceived = false;
             bool depthFrameProcessed = false;
-          
+
             // If the Frame has expired by the time we process this event, return.
             if (multiSourceFrame == null)
             {
@@ -264,7 +255,6 @@ namespace MultipleKinectClient
             try
             {
                 depthFrame = multiSourceFrame.DepthFrameReference.AcquireFrame();
-
                 if (depthFrame != null)
                 {
                     // the fastest way to process the body index data is to directly access 
@@ -272,8 +262,8 @@ namespace MultipleKinectClient
                     using (Microsoft.Kinect.KinectBuffer depthBuffer = depthFrame.LockImageBuffer())
                     {
                         // verify data and write the color data to the display bitmap
-                        if (((this.frameDescription.Width * this.frameDescription.Height) == (depthBuffer.Size / this.frameDescription.BytesPerPixel)) &&
-                            (this.frameDescription.Width == this.depthBitmap.PixelWidth) && (this.frameDescription.Height == this.depthBitmap.PixelHeight))
+                        //if (((this.frameDescription.Width * this.frameDescription.Height) == (depthBuffer.Size / this.frameDescription.BytesPerPixel)) &&
+                           // (this.frameDescription.Width == this.depthBitmap.PixelWidth) && (this.frameDescription.Height == this.depthBitmap.PixelHeight))
                         {
                             // Note: In order to see the full range of depth (including the less reliable far field depth)
                             // we are setting maxDepth to the extreme potential depth threshold
@@ -309,10 +299,6 @@ namespace MultipleKinectClient
             }
             finally
             {
-                if (isBitmapLocked)
-                {
-                    //this.bitmap.Unlock();
-                }
                 if (depthFrame != null)
                 {
                     depthFrame.Dispose();
@@ -324,29 +310,13 @@ namespace MultipleKinectClient
 
             }
 
-            //Send Image to Server
-            this.SendImgToServer();
-        }
-
-        private void Reader_BodyFrameArrived(object sender, BodyFrameArrivedEventArgs e)
-        {
-            bool dataReceived = false;
-            using (BodyFrame bodyFrame = e.FrameReference.AcquireFrame())
+            //Send image Obj to master at 15 FPS
+           // if (framesNumber % 2  == 0)
             {
-                if (bodyFrame != null)
-                {
-                    if (this.bodies == null)
-                    {
-                        this.bodies = new Body[bodyFrame.BodyCount];
-                    }
-                    bodyFrame.GetAndRefreshBodyData(this.bodies);
-                    dataReceived = true;
-                }
+                //Send Image to Server
+                this.SendImgToServer();
             }
-            if (dataReceived)
-            {
-                this.UpdateBodyFrame(this.bodies);
-            }
+            framesNumber++;
         }
 
         private void UpdateBodyFrame(Body[] bodies)
@@ -357,15 +327,18 @@ namespace MultipleKinectClient
                 {
                     // dc.DrawRectangle(Brushes.Black, null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                     dc.DrawImage(depthBitmap, new System.Windows.Rect(0, 0, depthBitmap.PixelWidth, depthBitmap.PixelHeight));
-                    int penIndex = 0;
+                    
+                    //foreach counter
+                    int LoopIndex = 0;
+                    Dictionary<JointType, Point> jointPoints=null;
                     foreach (Body body in bodies)
                     {
-                        Pen drawPen = this.bodyColors[penIndex++];
+                        Pen drawPen = this.bodyColors[LoopIndex++];
                         if (body.IsTracked)
                         {
                             IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
                             // convert the joint points to depth (display) space
-                            Dictionary<JointType, Point> jointPoints = new Dictionary<JointType, Point>();
+                             jointPoints = new Dictionary<JointType, Point>();
 
                             foreach (JointType jointType in joints.Keys)
                             {
@@ -381,9 +354,16 @@ namespace MultipleKinectClient
                                 jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
 
                             }
+
+
+                            //Save Skeleton joints to imgObj
+                            ImageObjBuffer._BodyTpArray[0] = new Tuple< Boolean, Dictionary<JointType, Point>>(body.IsTracked, jointPoints);
+                            
                             this.DrawBody(joints, jointPoints, dc, drawPen);
 
                         }
+
+
                     }
 
                     this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
@@ -480,7 +460,7 @@ namespace MultipleKinectClient
                 this.depthBitmap.PixelWidth,
                 0);
         }
-        
+
         #endregion
     }
 }

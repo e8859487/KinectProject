@@ -231,9 +231,5 @@ namespace MultipleKinectClient
             kinectBodyView.RenderBitmap();
         }
 
-        private void testSerialize_Click(object sender, RoutedEventArgs e)
-        {
-            kinectBodyView.testSerializeImgObj();
-        }
     }
 }

@@ -2,21 +2,9 @@
 using Microsoft.Kinect.Tools;
 using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 using SocketPackage;
 namespace MultipleKinectMaster
@@ -55,7 +43,7 @@ namespace MultipleKinectMaster
             this.InitializeComponent();
             this.kinectSensor = KinectSensor.GetDefault();
             this.kinectSensor.IsAvailableChanged += this.Sensor_IsAvailableChanged;
-            //this.kinectSensor.Open();
+            this.kinectSensor.Open();
             this.kinectStatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
                                                             : Properties.Resources.SensorNotAvailableStatusText;
             this.kinectBodyView = new MasterKinectProcessor(this.kinectSensor);
@@ -63,7 +51,20 @@ namespace MultipleKinectMaster
             // set data context for display in UI
 
             this.DataContext = this;
-            this.kinectBodyViewbox.DataContext = this.kinectBodyView;
+            this.kinectBodyViewboxClient.DataContext = this.kinectBodyView;
+            this.kinectBodyViewboxMaster.DataContext = this.kinectBodyView;
+
+            //Access Skeleton joints information
+            this.Head1.DataContext = this.kinectBodyView;
+            this.Torso1.DataContext = this.kinectBodyView;
+            this.LShouder1.DataContext = this.kinectBodyView;
+            this.RShouder1.DataContext = this.kinectBodyView;
+
+            //Access Skeleton joints information
+            this.Head2.DataContext = this.kinectBodyView;
+            this.Torso2.DataContext = this.kinectBodyView;
+            this.LShouder2.DataContext = this.kinectBodyView;
+            this.RShouder2.DataContext = this.kinectBodyView;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
