@@ -17,6 +17,7 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Image Grid.Row="0" Source="Images\Logo.png" HorizontalAlignment="Left" Stretch="Fill" Height="32" Width="81" Margin="0 10 0 5"/>
@@ -25,7 +26,18 @@
         <Viewbox x:Name="kinectBodyViewbox"  Grid.Row="1"  HorizontalAlignment="Center" >
             <Image Source="{Binding ImageSource}" Stretch="UniformToFill"/>
         </Viewbox>
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Background="White">
+
+        <WrapPanel  Grid.Row="2"  >
+            <Label Content="裝置編號 : "  />
+            <TextBlock Text="Dev2" VerticalAlignment="Center"  />
+            <Label Content="人體代號 : "  />
+            <TextBlock x:Name="BodyIndex" Text="{Binding Bodyindex}" VerticalAlignment="Center"  />
+
+        </WrapPanel>
+
+        <Separator Grid.Row="2" VerticalAlignment="Bottom" />
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Background="White">
             <Button x:Name="PlayButton" Content="Play" Width="90" Click="PlayButton_Click" Margin="10,10,10,0" Padding="5" Height="32" VerticalAlignment="Top" />
             <Button x:Name="StopButton" Content="Stop" Width="90" Height="32" Margin="10,10,10,0" Padding="5" VerticalAlignment="Top" Click="StopButton_Click" />
             <Button x:Name="ResetButton" Content="Reset" Width="90" Height="32" Margin="10,10,10,0" Padding="5" VerticalAlignment="Top" Click="RestartButton_Click" />
@@ -34,7 +46,7 @@
             <Button x:Name="RenderMsgButton" Content="Render" Width="45" Height="32" Margin="10,10,10,0" Padding="5" VerticalAlignment="Top" Click="Render_Click" />
 
         </StackPanel>
-        <StatusBar Grid.Row="3" HorizontalAlignment="Stretch" Name="statusBar" VerticalAlignment="Bottom" Background="White" Foreground="{StaticResource MediumGreyBrush}">
+        <StatusBar Grid.Row="4" HorizontalAlignment="Stretch" Name="statusBar" VerticalAlignment="Bottom" Background="White" Foreground="{StaticResource MediumGreyBrush}">
             <StatusBarItem Content="{Binding KinectStatusText}" />
         </StatusBar>
     </Grid>

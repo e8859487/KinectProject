@@ -209,30 +209,36 @@ namespace MultipleKinectMaster
                     0);
 
 
-                if (SocketPackage.ClientRequestHandler.imgObj._BodyTpArray[0]!= null && SocketPackage.ClientRequestHandler.imgObj._BodyTpArray[0].Item1 == true)
-                {
 
-                    foreach (JointType jointType in SocketPackage.ClientRequestHandler.imgObj._BodyTpArray[0].Item2.Keys)
+                if (SocketPackage.ClientRequestHandler.imgObj._BodyDictTp != null)
+                {
+                    foreach (int idx in SocketPackage.ClientRequestHandler.imgObj._BodyDictTp.Keys)
                     {
-                        if (jointType == JointType.Head)
+                        if (SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item1 == true)
                         {
-                            Head2 = string.Format("({0},{1})", (int)SocketPackage.ClientRequestHandler.imgObj._BodyTpArray[0].Item2[jointType].X,
-                                (int)SocketPackage.ClientRequestHandler.imgObj._BodyTpArray[0].Item2[jointType].Y);
-                        }
-                        else if (jointType == JointType.SpineBase)
-                        {
-                            Torso2 = string.Format("({0},{1})", (int)SocketPackage.ClientRequestHandler.imgObj._BodyTpArray[0].Item2[jointType].X,
-                                (int)SocketPackage.ClientRequestHandler.imgObj._BodyTpArray[0].Item2[jointType].Y);
-                        }
-                        else if (jointType == JointType.ShoulderLeft)
-                        {
-                            LShouder2 = string.Format("({0},{1})", (int)SocketPackage.ClientRequestHandler.imgObj._BodyTpArray[0].Item2[jointType].X,
-                                (int)SocketPackage.ClientRequestHandler.imgObj._BodyTpArray[0].Item2[jointType].Y);
-                        }
-                        else if (jointType == JointType.ShoulderRight)
-                        {
-                            RShouder2 = string.Format("({0},{1})", (int)SocketPackage.ClientRequestHandler.imgObj._BodyTpArray[0].Item2[jointType].X,
-                                (int)SocketPackage.ClientRequestHandler.imgObj._BodyTpArray[0].Item2[jointType].Y);
+                            foreach (JointType jointType in SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2.Keys)
+                            {
+                                if (jointType == JointType.Head)
+                                {
+                                    Head2 = string.Format("({0},{1})", (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].X,
+                                        (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].Y);
+                                }
+                                else if (jointType == JointType.SpineBase)
+                                {
+                                    Torso2 = string.Format("({0},{1})", (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].X,
+                                        (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].Y);
+                                }
+                                else if (jointType == JointType.ShoulderLeft)
+                                {
+                                    LShouder2 = string.Format("({0},{1})", (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].X,
+                                        (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].Y);
+                                }
+                                else if (jointType == JointType.ShoulderRight)
+                                {
+                                    RShouder2 = string.Format("({0},{1})", (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].X,
+                                        (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].Y);
+                                }
+                            }
                         }
                     }
                 }

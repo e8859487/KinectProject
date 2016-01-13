@@ -63,6 +63,7 @@ namespace MultipleKinectClient
 
             this.DataContext = this;
             this.kinectBodyViewbox.DataContext = this.kinectBodyView;
+            this.BodyIndex.DataContext = this.kinectBodyView;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

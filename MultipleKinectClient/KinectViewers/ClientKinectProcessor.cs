@@ -16,10 +16,12 @@ using Img_Serializable;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 
+using System.ComponentModel;
+
 
 namespace MultipleKinectClient
 {
-    public sealed class ClientKinectProcessor : IDisposable
+    public sealed class ClientKinectProcessor : IDisposable,INotifyPropertyChanged
     {
         #region Private Region Parameters
         private Body[] bodies = null;
@@ -67,6 +69,9 @@ namespace MultipleKinectClient
         double depthTimeStamp = 0;
         int framesNumber = 0;
 
+        //記錄當下偵測到的人體骨架數量
+        string bodyIndex = string.Empty;
+
         ImageInfo_Serializable ImageObjBuffer = null;
         #endregion
 
@@ -79,7 +84,7 @@ namespace MultipleKinectClient
 
             //multipleFrameReader Read Depth and Body infomation.
             this.multiFrameSourceReader = kinectSensor.OpenMultiSourceFrameReader(FrameSourceTypes.Depth | FrameSourceTypes.Body);
-            
+
             this.multiFrameSourceReader.MultiSourceFrameArrived += this.Reader_MultiSourceFrameArrived;
 
             this.coordinateMapper = kinectSensor.CoordinateMapper;
@@ -179,7 +184,7 @@ namespace MultipleKinectClient
             ImageObjBuffer._ImgBuffer = imgBuffer;
             //Frame編號
             ImageObjBuffer._imageIdx = framesNumber;
-          //骨架資訊於 UpdateBodyFrame 函式中處理
+            //骨架資訊於 UpdateBodyFrame 函式中處理
 
             //送出影像物件
             socketClient.SendImgInfo(ImageObjBuffer);
@@ -192,7 +197,7 @@ namespace MultipleKinectClient
             using (FileStream fs = new FileStream("abc.txt", FileMode.Create))
             {
                 BinaryFormatter formatter = new BinaryFormatter();
-                formatter.Serialize(fs, new ImageInfo_Serializable(imgBuffer, 0 ));
+                formatter.Serialize(fs, new ImageInfo_Serializable(imgBuffer, 0));
             }
         }
 
@@ -203,7 +208,7 @@ namespace MultipleKinectClient
             //    imgBuffer, 
             //    displayWidth , 
             //    0);
-            
+
             using (FileStream fs = new FileStream("abc.txt", FileMode.Open))
             {
                 BinaryFormatter formatter = new BinaryFormatter();
@@ -222,10 +227,33 @@ namespace MultipleKinectClient
         {
             get
             {
-                //  return this.imageSource;
-                return this.depthBitmap;
+                 return this.imageSource;
+                //return this.depthBitmap;
             }
         }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+
+        public string Bodyindex
+        {
+            get
+            {
+                return this.bodyIndex;
+            }
+            set
+            {
+                if (bodyIndex != value)
+                {
+                    bodyIndex = value;
+                    if (PropertyChanged != null)
+                    {
+                        this.PropertyChanged(this, new PropertyChangedEventArgs("Bodyindex"));
+                    }
+                }
+            }
+        }
+
 
         public void Dispose()
         {
@@ -263,7 +291,7 @@ namespace MultipleKinectClient
                     {
                         // verify data and write the color data to the display bitmap
                         //if (((this.frameDescription.Width * this.frameDescription.Height) == (depthBuffer.Size / this.frameDescription.BytesPerPixel)) &&
-                           // (this.frameDescription.Width == this.depthBitmap.PixelWidth) && (this.frameDescription.Height == this.depthBitmap.PixelHeight))
+                        // (this.frameDescription.Width == this.depthBitmap.PixelWidth) && (this.frameDescription.Height == this.depthBitmap.PixelHeight))
                         {
                             // Note: In order to see the full range of depth (including the less reliable far field depth)
                             // we are setting maxDepth to the extreme potential depth threshold
@@ -311,7 +339,7 @@ namespace MultipleKinectClient
             }
 
             //Send image Obj to master at 15 FPS
-           // if (framesNumber % 2  == 0)
+             if (framesNumber % 2  == 0)
             {
                 //Send Image to Server
                 this.SendImgToServer();
@@ -327,10 +355,11 @@ namespace MultipleKinectClient
                 {
                     // dc.DrawRectangle(Brushes.Black, null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                     dc.DrawImage(depthBitmap, new System.Windows.Rect(0, 0, depthBitmap.PixelWidth, depthBitmap.PixelHeight));
-                    
+
+                    string _bodyIndex = string.Empty;
                     //foreach counter
                     int LoopIndex = 0;
-                    Dictionary<JointType, Point> jointPoints=null;
+                    Dictionary<JointType, Point> jointPoints = null;
                     foreach (Body body in bodies)
                     {
                         Pen drawPen = this.bodyColors[LoopIndex++];
@@ -352,20 +381,25 @@ namespace MultipleKinectClient
 
                                 DepthSpacePoint depthSpacePoint = this.coordinateMapper.MapCameraPointToDepthSpace(position);
                                 jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
-
                             }
 
-
                             //Save Skeleton joints to imgObj
-                            ImageObjBuffer._BodyTpArray[0] = new Tuple< Boolean, Dictionary<JointType, Point>>(body.IsTracked, jointPoints);
-                            
+                            //ImageObjBuffer._BodyTpArray[0] = new Tuple< Boolean, Dictionary<JointType, Point>>(body.IsTracked, jointPoints);
+                            if (ImageObjBuffer._BodyDictTp.ContainsKey(LoopIndex))
+                            {
+                                ImageObjBuffer._BodyDictTp[LoopIndex] = new Tuple<Boolean, Dictionary<JointType, Point>>(body.IsTracked, jointPoints);
+                            }
+                            else
+                            {
+                                ImageObjBuffer._BodyDictTp.Add(LoopIndex, new Tuple<Boolean, Dictionary<JointType, Point>>(body.IsTracked, jointPoints));
+                            }
+
+                            _bodyIndex = _bodyIndex + LoopIndex.ToString();
+                                // = new Tuple<Boolean, Dictionary<JointType, Point>>(body.IsTracked, jointPoints);
                             this.DrawBody(joints, jointPoints, dc, drawPen);
-
                         }
-
-
                     }
-
+                    Bodyindex = _bodyIndex;
                     this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                 }
             }
