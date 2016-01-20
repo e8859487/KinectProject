@@ -32,16 +32,17 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <Viewbox x:Name="kinectBodyViewboxMaster"  Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right" Margin="0,5,3.8,4.8"    MinWidth="500" MinHeight="300" >
+            <Viewbox x:Name="kinectBodyViewboxMaster"  Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right" Margin="0,5,3.8,4.8"    MinWidth="550" MinHeight="300" >
                 <Image Source="{Binding ImageSourceMaster}" Stretch="UniformToFill"/>
             </Viewbox>
-            <Viewbox x:Name="kinectBodyViewboxClient"   Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center"  Margin="7.2,5,2.4,4.8" MinWidth="500"   MinHeight="300"  >
+            <Viewbox x:Name="kinectBodyViewboxClient"   Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center"  Margin="7.2,5,2.4,4.8" MinWidth="550"   MinHeight="300"  >
                 <Image Source="{Binding ImageSourceClient}" Stretch="UniformToFill"/>
             </Viewbox>
             <WrapPanel  Grid.Row="1" Grid.Column="0">
                 <Label Content="裝置編號 : "  />
                 <TextBlock Text="Dev1" VerticalAlignment="Center"  />
-
+                <Label Content="幀數 :" />
+                <TextBlock x:Name="FrameNumbers1" Text="{Binding FrameNumbers1 }"   VerticalAlignment="Center"/>
                 <Label Content="頭 :" />
                 <TextBlock x:Name="Head1" Text="{Binding Head1 }"   VerticalAlignment="Center"/>
                 <Label Content="身 :"/>

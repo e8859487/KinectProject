@@ -8,9 +8,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-using log4net;
-using log4net.Config;
-
 namespace SocketPackage
 {
     public class SocketServer
@@ -29,8 +26,6 @@ namespace SocketPackage
         /// socker client 識別編號
         private int _ClientNo = 0;
 
-        //Log
-        private ILog log = null;
         #endregion
 
         #region static public property
@@ -46,9 +41,6 @@ namespace SocketPackage
         //socket server TCP port number
         public SocketServer(int inPortNumber)
         {
-            XmlConfigurator.Configure(new System.IO.FileInfo(@"./config.xml"));
-            log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
             this._PortNumber = inPortNumber;
             _bgwServer.DoWork += new DoWorkEventHandler(_bgwServer_DoWork);
         }
@@ -80,7 +72,7 @@ namespace SocketPackage
 
                 //啟動 listener
                 _tcpListener.Start();
-                log.Info(">> Server Started");
+                sMessages.Add(" >> " + "Server Started");
                 //========== 持續接受監聽 socket client 的連線 ========== (start)
                 while (true)
                 {
@@ -89,9 +81,7 @@ namespace SocketPackage
 
                     //累加 socket client 識別編號
                     _ClientNo++;
-                    log.Info(" >> " + "Client Request No:" + Convert.ToString(_ClientNo) + " started!");
-
-                    //sMessages.Add(" >> " + "Client Request No:" + Convert.ToString(_ClientNo) + " started!");
+                    sMessages.Add(" >> " + "Client Request No:" + Convert.ToString(_ClientNo) + " started!");
 
                     //產生 BackgroundWorker 負責處理每一個 Socket Client 的要求
                     ClientRequestHandler handler = new ClientRequestHandler(_ClientNo, socket4Client);
@@ -101,8 +91,7 @@ namespace SocketPackage
             }
             catch (Exception exp)
             {
-                //sMessages.Add(exp.ToString());
-                log.Error("_bgwServer_DoWork", exp);
+                sMessages.Add(exp.ToString());
             }
         }
         

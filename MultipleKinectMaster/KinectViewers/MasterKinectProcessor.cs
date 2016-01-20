@@ -17,12 +17,17 @@ using Microsoft.Kinect;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.ComponentModel;
 
+using log4net;
+using log4net.Config;
+
 namespace MultipleKinectMaster
 {
     public sealed class MasterKinectProcessor : IDisposable, INotifyPropertyChanged
     {
+
+
         #region Private Region Parameters
-        private BodyFrameReader bodyFrameReader = null;
+        //private BodyFrameReader bodyFrameReader = null;
 
         private Body[] bodies = null;
 
@@ -77,12 +82,21 @@ namespace MultipleKinectMaster
         public string B_Torso1 = string.Empty;
         public string B_LShouder1 = string.Empty;
         public string B_RShouder1 = string.Empty;
+        public int B_FrameNumbers1 = 0;
+        public int B_FrameNumbers1_average = 0;
+        System.Diagnostics.Stopwatch swTimer = new System.Diagnostics.Stopwatch();
+
+
 
         public string B_Head2 = string.Empty;
         public string B_Torso2 = string.Empty;
         public string B_LShouder2 = string.Empty;
         public string B_RShouder2 = string.Empty;
+
+        //Log Declare
+        private ILog log = null;
         #endregion
+
 
         public MasterKinectProcessor(KinectSensor kinectSensor)
         {
@@ -177,23 +191,24 @@ namespace MultipleKinectMaster
 
             this.drawingGroup = new DrawingGroup();
             this.imageSource = new DrawingImage(this.drawingGroup);
+
+            //Log Setting
+            XmlConfigurator.Configure(new System.IO.FileInfo(@"./config.xml"));
+            log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+            log.Info("Motion Detector Server Start!!");
+            //Timer start 
+            swTimer.Start();
+
         }
 
         internal void ShowImg()
         {
-            int count = 0;
-            if ((count = (int)SocketServer._memStream.Length) != 0)
-            {
-                byte[] pixels = new byte[count];
-                SocketServer._memStream.Seek(0, SeekOrigin.Begin);
-                SocketServer._memStream.Read(pixels, 0, count);
-                // string str = Encoding.UTF8.GetString(pixels, 0, count);
-                depthBitmap.WritePixels(new Int32Rect(0, 0, displayWidth, displayHeight), pixels, displayWidth, 0);
+            //int count = 0;
 
-
-                MessageBox.Show("showImg Clicked" + pixels.Length);
-            }
         }
+
+
+
 
         void _timer_Tick(object sender, EventArgs e)
         {
@@ -208,45 +223,55 @@ namespace MultipleKinectMaster
                     this.depthBitmapClient.PixelWidth,
                     0);
 
-
-
-                if (SocketPackage.ClientRequestHandler.imgObj._BodyDictTp != null)
-                {
-                    foreach (int idx in SocketPackage.ClientRequestHandler.imgObj._BodyDictTp.Keys)
+                for (int i = 0; i < 7; i++) {
+                    if (SocketPackage.ClientRequestHandler.imgObj._IsTracked[i])
                     {
-                        if (SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item1 == true)
-                        {
-                            foreach (JointType jointType in SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2.Keys)
-                            {
-                                if (jointType == JointType.Head)
-                                {
-                                    Head2 = string.Format("({0},{1})", (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].X,
-                                        (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].Y);
-                                }
-                                else if (jointType == JointType.SpineBase)
-                                {
-                                    Torso2 = string.Format("({0},{1})", (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].X,
-                                        (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].Y);
-                                }
-                                else if (jointType == JointType.ShoulderLeft)
-                                {
-                                    LShouder2 = string.Format("({0},{1})", (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].X,
-                                        (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].Y);
-                                }
-                                else if (jointType == JointType.ShoulderRight)
-                                {
-                                    RShouder2 = string.Format("({0},{1})", (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].X,
-                                        (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].Y);
-                                }
-                            }
-                        }
+                        string[] joints = SocketPackage.ClientRequestHandler.imgObj._SBodyJoints[0].Split('|');
+                        Head2 = string.Format("({0}",joints[0] );
                     }
+                
                 }
+
+                //if (SocketPackage.ClientRequestHandler.imgObj._BodyDictTp != null)
+                //{
+                //    foreach (int idx in SocketPackage.ClientRequestHandler.imgObj._BodyDictTp.Keys)
+                //    {
+                //        if (SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item1 == true)
+                //        {
+                //            foreach (JointType jointType in SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2.Keys)
+                //            {
+                //                if (jointType == JointType.Head)
+                //                {
+                //                    Head2 = string.Format("({0},{1})", (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].X,
+                //                        (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].Y);
+                //                }
+                //                else if (jointType == JointType.SpineBase)
+                //                {
+                //                    Torso2 = string.Format("({0},{1})", (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].X,
+                //                        (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].Y);
+                //                }
+                //                else if (jointType == JointType.ShoulderLeft)
+                //                {
+                //                    LShouder2 = string.Format("({0},{1})", (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].X,
+                //                        (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].Y);
+                //                }
+                //                else if (jointType == JointType.ShoulderRight)
+                //                {
+                //                    RShouder2 = string.Format("({0},{1})", (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].X,
+                //                        (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].Y);
+                //                }
+                //            }
+                //        }
+                //    }
+                //}
+
+
             }
         }
 
 
 
+        #region GUI Getter and Setter
         public ImageSource ImageSourceClient
         {
             get
@@ -266,6 +291,7 @@ namespace MultipleKinectMaster
             }
 
         }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public string Head1
@@ -286,6 +312,7 @@ namespace MultipleKinectMaster
                 }
             }
         }
+
         public string Torso1
         {
             get
@@ -304,6 +331,7 @@ namespace MultipleKinectMaster
                 }
             }
         }
+
         public string LShouder1
         {
             get
@@ -322,6 +350,7 @@ namespace MultipleKinectMaster
                 }
             }
         }
+
         public string RShouder1
         {
             get
@@ -341,7 +370,26 @@ namespace MultipleKinectMaster
             }
         }
 
-        public string Head2
+        public string FrameNumbers1
+        {
+            get
+            {
+                return this.B_FrameNumbers1_average.ToString();
+            }
+            set
+            {
+                if (B_FrameNumbers1_average != int.Parse(value))
+                {
+                    B_FrameNumbers1_average = int.Parse(value);
+                    if (this.PropertyChanged != null)
+                    {
+                        this.PropertyChanged(this,new PropertyChangedEventArgs("FrameNumbers1"));
+                    }
+                }
+            }
+        }
+
+        public string Head2 
         {
             get
             {
@@ -359,6 +407,7 @@ namespace MultipleKinectMaster
                 }
             }
         }
+
         public string Torso2
         {
             get
@@ -377,6 +426,7 @@ namespace MultipleKinectMaster
                 }
             }
         }
+
         public string LShouder2
         {
             get
@@ -395,6 +445,7 @@ namespace MultipleKinectMaster
                 }
             }
         }
+
         public string RShouder2
         {
             get
@@ -412,7 +463,9 @@ namespace MultipleKinectMaster
                     }
                 }
             }
-        }
+        } 
+
+        #endregion
 
         public void Dispose()
         {
@@ -429,7 +482,7 @@ namespace MultipleKinectMaster
             DepthFrame depthFrame = null;
             BodyFrame bodyFrame = null;
             MultiSourceFrame multiSourceFrame = e.FrameReference.AcquireFrame();
-            bool isBitmapLocked = false;
+            //bool isBitmapLocked = false;
             bool dataReceived = false;
             bool depthFrameProcessed = false;
             // If the Frame has expired by the time we process this event, return.
@@ -437,7 +490,6 @@ namespace MultipleKinectMaster
             {
                 return;
             }
-
             try
             {
                 depthFrame = multiSourceFrame.DepthFrameReference.AcquireFrame();
@@ -483,13 +535,20 @@ namespace MultipleKinectMaster
                 {
                     this.UpdateBodyFrame(this.bodies);
                 }
+
+                //Update GUI Frame numbers, count total Frames and display it.
+                B_FrameNumbers1++;
+                if(B_FrameNumbers1>30)
+                    FrameNumbers1 = string.Format("{0}", (int)(B_FrameNumbers1/swTimer.Elapsed.TotalSeconds));
+                
+
             }
             finally
             {
-                if (isBitmapLocked)
-                {
-                    //this.bitmap.Unlock();
-                }
+                //if (isBitmapLocked)
+                //{
+                //    //this.bitmap.Unlock();
+                //}
                 if (depthFrame != null)
                 {
                     depthFrame.Dispose();
@@ -503,6 +562,8 @@ namespace MultipleKinectMaster
                     multiSourceFrame = null;
                 }
             }
+
+
         }
 
         private void UpdateBodyFrame(Body[] bodies)
@@ -538,23 +599,22 @@ namespace MultipleKinectMaster
 
                                 if (jointType == JointType.Head)
                                 {
-                                    Head1 = string.Format("({0},{1})", (int)depthSpacePoint.X, (int)depthSpacePoint.Y);
+                                    Head1 = string.Format("({0},{1},{2})", (int)(position.X * 100), (int)(position.Y * 100), (int)(position.Z * 100));
                                 }
                                 else if (jointType == JointType.SpineBase)
                                 {
-                                    Torso1 = string.Format("({0},{1})", (int)depthSpacePoint.X, (int)depthSpacePoint.Y);
+                                    Torso1 = string.Format("({0},{1},{2})", (int)(position.X * 100), (int)(position.Y * 100), (int)(position.Z * 100));
                                 }
                                 else if (jointType == JointType.ShoulderLeft)
                                 {
-                                    LShouder1 = string.Format("({0},{1})", (int)depthSpacePoint.X, (int)depthSpacePoint.Y);
+                                    LShouder1 = string.Format("({0},{1},{2})", (int)(position.X * 100), (int)(position.Y * 100), (int)(position.Z * 100));
                                 }
                                 else if (jointType == JointType.ShoulderRight)
                                 {
-                                    RShouder1 = string.Format("({0},{1})", (int)depthSpacePoint.X, (int)depthSpacePoint.Y);
+                                    RShouder1 = string.Format("({0},{1},{2})", (int)(position.X * 100), (int)(position.Y * 100), (int)(position.Z * 100));
                                 }
                             }
                             this.DrawBody(joints, jointPoints, dc, drawPen);
-
                         }
                     }
 

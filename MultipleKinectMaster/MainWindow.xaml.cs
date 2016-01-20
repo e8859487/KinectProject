@@ -34,7 +34,7 @@ namespace MultipleKinectMaster
         /// </summary>
         private string kinectStatusText = string.Empty;
 
-        private MasterKinectProcessor kinectBodyView = null;
+        private MasterKinectProcessor masterKinectProcessor = null;
 
         private int msgFlag = 0;
 
@@ -46,25 +46,26 @@ namespace MultipleKinectMaster
             this.kinectSensor.Open();
             this.kinectStatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
                                                             : Properties.Resources.SensorNotAvailableStatusText;
-            this.kinectBodyView = new MasterKinectProcessor(this.kinectSensor);
+            this.masterKinectProcessor = new MasterKinectProcessor(this.kinectSensor);
 
             // set data context for display in UI
 
             this.DataContext = this;
-            this.kinectBodyViewboxClient.DataContext = this.kinectBodyView;
-            this.kinectBodyViewboxMaster.DataContext = this.kinectBodyView;
+            this.kinectBodyViewboxClient.DataContext = this.masterKinectProcessor;
+            this.kinectBodyViewboxMaster.DataContext = this.masterKinectProcessor;
 
-            //Access Skeleton joints information
-            this.Head1.DataContext = this.kinectBodyView;
-            this.Torso1.DataContext = this.kinectBodyView;
-            this.LShouder1.DataContext = this.kinectBodyView;
-            this.RShouder1.DataContext = this.kinectBodyView;
+            //Access Skeleton joints information from Server
+            this.Head1.DataContext = this.masterKinectProcessor;
+            this.Torso1.DataContext = this.masterKinectProcessor;
+            this.LShouder1.DataContext = this.masterKinectProcessor;
+            this.RShouder1.DataContext = this.masterKinectProcessor;
+            this.FrameNumbers1.DataContext = this.masterKinectProcessor; //Frame numbers
 
-            //Access Skeleton joints information
-            this.Head2.DataContext = this.kinectBodyView;
-            this.Torso2.DataContext = this.kinectBodyView;
-            this.LShouder2.DataContext = this.kinectBodyView;
-            this.RShouder2.DataContext = this.kinectBodyView;
+            //Access Skeleton joints information from Client
+            this.Head2.DataContext = this.masterKinectProcessor;
+            this.Torso2.DataContext = this.masterKinectProcessor;
+            this.LShouder2.DataContext = this.masterKinectProcessor;
+            this.RShouder2.DataContext = this.masterKinectProcessor;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -91,10 +92,10 @@ namespace MultipleKinectMaster
 
         public void Dispose()
         {
-            if (this.kinectBodyView != null)
+            if (this.masterKinectProcessor != null)
             {
-                this.kinectBodyView.Dispose();
-                this.kinectBodyView = null;
+                this.masterKinectProcessor.Dispose();
+                this.masterKinectProcessor = null;
             }
         }
 
@@ -134,7 +135,7 @@ namespace MultipleKinectMaster
                 MessageBox.Show(SocketServer.sMessages[msgFlag].ToString());
                 msgFlag++;
             }
-                kinectBodyView.ShowImg();
+                masterKinectProcessor.ShowImg();
         }
         
         #endregion
@@ -173,10 +174,10 @@ namespace MultipleKinectMaster
 
         private void MainWindow_Closing(object sender, CancelEventArgs e)
         {
-            if (this.kinectBodyView != null)
+            if (this.masterKinectProcessor != null)
             {
-                this.kinectBodyView.Dispose();
-                this.kinectBodyView = null;
+                this.masterKinectProcessor.Dispose();
+                this.masterKinectProcessor = null;
             }
             if (this.kinectSensor != null)
             {

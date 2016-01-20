@@ -11,12 +11,17 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 using SocketPackage;
-using System.Windows.Resources;
 using Img_Serializable;
+using XmlManager;
+
+using System.Windows.Resources;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 
 using System.ComponentModel;
+
+using log4net;
+using log4net.Config;
 
 
 namespace MultipleKinectClient
@@ -60,19 +65,35 @@ namespace MultipleKinectClient
 
         //定義客戶端傳輸socket
         SocketClient socketClient = null;
-        private const string IpAddr = "140.118.170.215";              //127.0.0.1  140.118.170.215
-        private const int Port = 81;
+        private  string IpAddr = null;
+        private int Port;
 
         int stride = 0;
         byte[] imgBuffer = null;
+        
+       // byte[] tempJointsByteBuffer ;
 
-        double depthTimeStamp = 0;
+
+       // double depthTimeStamp = 0;
         int framesNumber = 0;
 
-        //記錄當下偵測到的人體骨架數量
+        /// <summary>
+        /// 記錄當下偵測到的人體骨架數量
+        /// </summary>
+        int bodyNumbers = 0;
+
+        //記錄當下偵測到的人體骨架編號
         string bodyIndex = string.Empty;
 
-        ImageInfo_Serializable ImageObjBuffer = null;
+        ImageInfo_Serializable ImgObj = null;
+        Dictionary<int, string> _JointsPosDict = new Dictionary<int, string>(); 
+
+        //用來評估程式碼計算的時間
+        System.Diagnostics.Stopwatch swTimer = new System.Diagnostics.Stopwatch();
+
+        //Log Declare
+        private ILog log = null;
+
         #endregion
 
         public ClientKinectProcessor(KinectSensor kinectSensor)
@@ -160,6 +181,10 @@ namespace MultipleKinectClient
 
 
             //network processes
+            //= "140.118.170.215";              //127.0.0.1  me 140.118.170.215  wai 140.118.170.214
+            XmlReader reader = new XmlReader(@"./Setting.xml");
+            IpAddr = reader.getNodeInnerText(@"/Root/IPAddress");
+            Port = int.Parse(reader.getNodeInnerText(@"/Root/Port"));
             this.socketClient = new SocketClient(IpAddr, Port);
             this.socketClient.Connect();
 
@@ -168,8 +193,28 @@ namespace MultipleKinectClient
             this.imgBuffer = new byte[(int)depthBitmap.PixelHeight * stride];
 
             //serializable Image object . Including depth and skeleton joints. 
-            //ImgObj
-            ImageObjBuffer = new ImageInfo_Serializable();
+            //ImgObj   size :　depthBitmap.PixelHeight * stride
+            ImgObj = new ImageInfo_Serializable(1);
+
+            //Log Setting
+            XmlConfigurator.Configure(new System.IO.FileInfo(@"./config.xml"));
+            log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+            log.Info("Motion Detector Client Start!!");
+
+        }
+
+        private static byte[] CombomBinaryArray(byte[] srcArray1, byte[] srcArray2)
+        {
+            //根据要合并的两个数组元素总数新建一个数组
+            byte[] newArray = new byte[srcArray1.Length + srcArray2.Length];
+
+            //把第一个数组复制到新建数组
+            Array.Copy(srcArray1, 0, newArray, 0, srcArray1.Length);
+
+            //把第二个数组复制到新建数组
+            Array.Copy(srcArray2, 0, newArray, srcArray1.Length, srcArray2.Length);
+
+            return newArray;
         }
 
         /// <summary>
@@ -177,28 +222,98 @@ namespace MultipleKinectClient
         /// </summary>
         public void SendImgToServer()
         {
-            depthBitmap.CopyPixels(imgBuffer, stride, 0);
+             //depthBitmap.CopyPixels(ImgObj._ImgBuffer, stride, 0);
 
             //Save Image information into Serializable
             //深度影像
-            ImageObjBuffer._ImgBuffer = imgBuffer;
+           // ImageObjBuffer._ImgBuffer = imgBuffer;
             //Frame編號
-            ImageObjBuffer._imageIdx = framesNumber;
-            //骨架資訊於 UpdateBodyFrame 函式中處理
+           
+            ImgObj._imageIdx = framesNumber;
 
-            //送出影像物件
-            socketClient.SendImgInfo(ImageObjBuffer);
+            //--骨架資訊於 UpdateBodyFrame 函式中處理--
+            //ImgObj._JointsPosBuffer = tempJointsByteBuffer;
+
+            //送出影像物件@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+            //socketClient.SendImgInfo(ImgObj);
+
+            byte[] bodyNumbers_byte = System.Text.Encoding.UTF8.GetBytes(bodyNumbers.ToString());
+            //socketClient.SendImg(depthPixels);
+
+           // socketClient.SendImg(tempByte);
+
+         //   socketClient.SendImg(CombomBinaryArray(depthPixels,bodyNumbers_byte));
+            byte[] Depth_BodyNum = CombomBinaryArray(depthPixels, bodyNumbers_byte);
+            byte[] Depth_BodyNum_Skeleton_bytesArray = Depth_BodyNum;
+            byte[] bodySkeletons_byteArray =null;
+            if (bodyNumbers > 0)
+            {
+                //找出人體的index
+                string[] dictKey = bodyIndex.Split(',');
+
+                if (dictKey != null && dictKey.Length > 1)
+                {
+                    for (int i = 0; i < dictKey.Length - 1; i++)
+                    {
+                        //傳送骨架字串
+                     //   socketClient.Send(_JointsPosDict[int.Parse(dictKey[i])]);
+                        byte[] b =  System.Text.Encoding.UTF8.GetBytes(_JointsPosDict[int.Parse(dictKey[i])]);
+                        int strLength = _JointsPosDict[int.Parse(dictKey[i])].Length;
+                        if (bodySkeletons_byteArray == null) {
+                            bodySkeletons_byteArray = CombomBinaryArray(System.Text.Encoding.UTF8.GetBytes(strLength.ToString()), b);
+                        }
+                        else { 
+                            bodySkeletons_byteArray = CombomBinaryArray(bodySkeletons_byteArray, CombomBinaryArray(System.Text.Encoding.UTF8.GetBytes(strLength.ToString()), b));
+                        }
+
+
+
+                       
+
+                    }
+                }
+            }
+            if (bodySkeletons_byteArray == null)
+            {
+                socketClient.SendImg(Depth_BodyNum_Skeleton_bytesArray);
+            }
+            else
+            {
+                Depth_BodyNum_Skeleton_bytesArray = CombomBinaryArray(Depth_BodyNum_Skeleton_bytesArray, bodySkeletons_byteArray);
+                socketClient.SendImg(Depth_BodyNum_Skeleton_bytesArray);
+
+            }
+            
+
+
+            //test
+            //string tempStr = "(-0.1302,-0.2052,1.9159)|(-0.1638,0.1214,1.8859)|(-0.1942,0.4356,1.8423)|(-0.2429,0.5843,1.8060)|(-0.3477,0.2696,1.8958)|(-0.3577,-0.0219,1.9069)|(-0.3491,-0.2514,1.8331)|(-0.3399,-0.2885,1.8102)|(-0.0189,0.3171,1.8227)|(0.0899,0.0664,1.8554)|(0.0757,-0.1619,1.7762)|(0.0660,-0.2193,1.7650)|(-0.2024,-0.2120,1.8985)|(-0.2116,-0.5718,1.8008)|(-0.2421,-0.8602,1.7249)|(-0.2541,-0.8841,1.6147)|(-0.0527,-0.1901,1.8574)|(0.0076,-0.5683,1.9041)|(0.0170,-0.9306,2.0352)|(0.0341,-0.9929,1.9632)|(-0.1871,0.3588,1.8555)|(-0.3386,-0.3539,1.7809)|(-0.3672,-0.3091,1.7729)|(0.0460,-0.2963,1.7455)|(0.0787,-0.2310,1.7213)|";
+            //tempStr = tempStr + tempStr + tempStr + tempStr + tempStr;
+            //byte[] tempByte = System.Text.Encoding.UTF8.GetBytes(tempStr);
+            //socketClient.SendImg(tempByte);
+            
+
 
         }
 
         public void CatchImgBitmap()
         {
-            depthBitmap.CopyPixels(imgBuffer, stride, 0);
-            using (FileStream fs = new FileStream("abc.txt", FileMode.Create))
-            {
-                BinaryFormatter formatter = new BinaryFormatter();
-                formatter.Serialize(fs, new ImageInfo_Serializable(imgBuffer, 0));
-            }
+            //測試程式碼消耗時間
+            swTimer.Reset();
+            swTimer.Start();
+            SendImgToServer();
+       
+            swTimer.Stop();
+            string consumeTime = swTimer.Elapsed.TotalMilliseconds.ToString();
+            MessageBox.Show("消耗時間為:" + consumeTime);
+
+
+            //depthBitmap.CopyPixels(imgBuffer, stride, 0);
+            //using (FileStream fs = new FileStream("abc.txt", FileMode.Create))
+            //{
+            //    BinaryFormatter formatter = new BinaryFormatter();
+            //    formatter.Serialize(fs, new ImageInfo_Serializable(imgBuffer, 0));
+            //}
         }
 
         public void RenderBitmap()
@@ -209,18 +324,18 @@ namespace MultipleKinectClient
             //    displayWidth , 
             //    0);
 
-            using (FileStream fs = new FileStream("abc.txt", FileMode.Open))
-            {
-                BinaryFormatter formatter = new BinaryFormatter();
-                ImageInfo_Serializable imgObj = (ImageInfo_Serializable)formatter.Deserialize(fs);
-                imgBuffer = imgObj._ImgBuffer;
-                depthBitmap.WritePixels(
-                    new Int32Rect(0, 0, displayWidth, displayHeight),
-                    imgBuffer,
-                    displayWidth,
-                    0);
-                //this.depthBitmap = imgObj._depthBitmap;
-            }
+            //using (FileStream fs = new FileStream("abc.txt", FileMode.Open))
+            //{
+            //    BinaryFormatter formatter = new BinaryFormatter();
+            //    ImageInfo_Serializable imgObj = (ImageInfo_Serializable)formatter.Deserialize(fs);
+            //    imgBuffer = imgObj._ImgBuffer;
+            //    depthBitmap.WritePixels(
+            //        new Int32Rect(0, 0, displayWidth, displayHeight),
+            //        imgBuffer,
+            //        displayWidth,
+            //        0);
+            //    //this.depthBitmap = imgObj._depthBitmap;
+            //}
         }
 
         public ImageSource ImageSource
@@ -263,6 +378,8 @@ namespace MultipleKinectClient
                 this.multiFrameSourceReader.Dispose();
                 this.multiFrameSourceReader = null;
             }
+
+            socketClient.DisCounect();
         }
 
         #region Private Method
@@ -339,7 +456,7 @@ namespace MultipleKinectClient
             }
 
             //Send image Obj to master at 15 FPS
-             if (framesNumber % 2  == 0)
+           //  if (framesNumber % 2  == 0)
             {
                 //Send Image to Server
                 this.SendImgToServer();
@@ -356,19 +473,30 @@ namespace MultipleKinectClient
                     // dc.DrawRectangle(Brushes.Black, null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                     dc.DrawImage(depthBitmap, new System.Windows.Rect(0, 0, depthBitmap.PixelWidth, depthBitmap.PixelHeight));
 
+
+                    //顯示當下使用者編號於視窗中。
                     string _bodyIndex = string.Empty;
-                    //foreach counter
-                    int LoopIndex = 0;
+
+                    //foreach counter(LoopIndex)
+                    int BodyIndex = 0;
+
+                    bodyNumbers = 0;
+
+                    StringBuilder sb_skeletonJoints ;
                     Dictionary<JointType, Point> jointPoints = null;
                     foreach (Body body in bodies)
                     {
-                        Pen drawPen = this.bodyColors[LoopIndex++];
+                        Pen drawPen = this.bodyColors[BodyIndex++];
+                        ImgObj._SBodyJoints[BodyIndex] = "";
+                        sb_skeletonJoints = new StringBuilder();
+                        int testnumber = 0;
                         if (body.IsTracked)
                         {
                             IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
                             // convert the joint points to depth (display) space
                              jointPoints = new Dictionary<JointType, Point>();
-
+                           
+                            bodyNumbers++;
                             foreach (JointType jointType in joints.Keys)
                             {
                                 // sometimes the depth(Z) of an inferred joint may show as negative
@@ -381,24 +509,34 @@ namespace MultipleKinectClient
 
                                 DepthSpacePoint depthSpacePoint = this.coordinateMapper.MapCameraPointToDepthSpace(position);
                                 jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
+
+                                //紀錄骨架座標於string中  jointType == JointType.ShoulderRight || jointType == JointType.ShoulderLeft || jointType == JointType.Head
+                               // if(testnumber < 12)
+                                {sb_skeletonJoints.Append(string.Format("({0},{1},{2})|", position.X.ToString("0.0000"), position.Y.ToString("0.0000"), position.Z.ToString("0.0000")));
+                                
+                                }
+                                testnumber++;
                             }
 
-                            //Save Skeleton joints to imgObj
-                            //ImageObjBuffer._BodyTpArray[0] = new Tuple< Boolean, Dictionary<JointType, Point>>(body.IsTracked, jointPoints);
-                            if (ImageObjBuffer._BodyDictTp.ContainsKey(LoopIndex))
+                            //將joints點存入dictionary中準備傳到server
+                            if (!_JointsPosDict.ContainsKey(BodyIndex))
                             {
-                                ImageObjBuffer._BodyDictTp[LoopIndex] = new Tuple<Boolean, Dictionary<JointType, Point>>(body.IsTracked, jointPoints);
+                                _JointsPosDict.Add(BodyIndex, sb_skeletonJoints.ToString());
                             }
                             else
                             {
-                                ImageObjBuffer._BodyDictTp.Add(LoopIndex, new Tuple<Boolean, Dictionary<JointType, Point>>(body.IsTracked, jointPoints));
+                                _JointsPosDict[BodyIndex] = sb_skeletonJoints.ToString();
+                               
                             }
+                            sb_skeletonJoints.Clear();
+                            _bodyIndex = _bodyIndex + BodyIndex.ToString()+",";
 
-                            _bodyIndex = _bodyIndex + LoopIndex.ToString();
-                                // = new Tuple<Boolean, Dictionary<JointType, Point>>(body.IsTracked, jointPoints);
                             this.DrawBody(joints, jointPoints, dc, drawPen);
-                        }
+                        }//if (body.IsTracked) End
+
                     }
+
+                    //更新使用者視窗tracked人數textbox
                     Bodyindex = _bodyIndex;
                     this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                 }
