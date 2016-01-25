@@ -8,8 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace MultipleKinectMaster.Properties
-{
+namespace MultipleKinectMaster.Properties {
     using System;
     
     
@@ -76,6 +75,15 @@ namespace MultipleKinectMaster.Properties
         internal static string EventFileFilter {
             get {
                 return ResourceManager.GetString("EventFileFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Recording in progress 的當地語系化字串。
+        /// </summary>
+        internal static string RecordingInProgressText {
+            get {
+                return ResourceManager.GetString("RecordingInProgressText", resourceCulture);
             }
         }
         

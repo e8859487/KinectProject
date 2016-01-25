@@ -16,6 +16,7 @@ namespace MultipleKinectMaster
     {
         /// <summary> Indicates if a playback is currently in progress </summary>
         private bool isPlaying = false;
+        private bool isRecording = false;
 
         private string lastFile = string.Empty;
 
@@ -34,10 +35,13 @@ namespace MultipleKinectMaster
         /// </summary>
         private string kinectStatusText = string.Empty;
 
+        private string recordPlayStatusText = string.Empty;
+
         private MasterKinectProcessor masterKinectProcessor = null;
 
         private int msgFlag = 0;
 
+        private KStudioRecording recording;
         public MainWindow()
         {
             this.InitializeComponent();
@@ -47,6 +51,7 @@ namespace MultipleKinectMaster
             this.kinectStatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
                                                             : Properties.Resources.SensorNotAvailableStatusText;
             this.masterKinectProcessor = new MasterKinectProcessor(this.kinectSensor);
+
 
             // set data context for display in UI
 
@@ -90,6 +95,28 @@ namespace MultipleKinectMaster
             }
         }
 
+        public string RecordPlaybackStatusText
+        {
+            get
+            {
+                return this.recordPlayStatusText;
+
+            }
+            set
+            {
+                if (this.recordPlayStatusText != value)
+                {
+                    this.recordPlayStatusText = value;
+                    if (this.PropertyChanged != null)
+                    {
+                        this.PropertyChanged(this, new PropertyChangedEventArgs("RecordPlaybackStatusText"));
+                    }
+                }
+            }
+        }
+
+
+
         public void Dispose()
         {
             if (this.masterKinectProcessor != null)
@@ -118,26 +145,53 @@ namespace MultipleKinectMaster
             }
         }
 
-        private void StopButton_Click(object sender, RoutedEventArgs e)
+        private void SyhronousRecord_Click(object sender, RoutedEventArgs e)
         {
-            CloseKinectSensor();
-        }
-
-        private void RestartButton_Click(object sender, RoutedEventArgs e)
-        {
-            OpenKinectSensor();
-        }
-
-        private void GetMegButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (msgFlag < SocketServer.sMessages.Count)
+            if (isRecording == false)
             {
-                MessageBox.Show(SocketServer.sMessages[msgFlag].ToString());
-                msgFlag++;
+                //string filePath = this.SaveRecordingAs();
+                string filePath = "D:\\clientSynRecord1.xef";
+
+                if (!string.IsNullOrEmpty(filePath))
+                {
+                    this.lastFile = filePath;
+                    this.isRecording = true;
+                    this.RecordPlaybackStatusText = Properties.Resources.RecordingInProgressText;
+                    //this.UpdateState();
+
+                    //Start runing the plalyback asychronously
+                    OneArgDelegate recording = new OneArgDelegate(this.RecordClip);
+                    recording.BeginInvoke(filePath, null, null);
+                    masterKinectProcessor.StartAsychronousRecord();
+                }
             }
-                masterKinectProcessor.ShowImg();
+            else
+            {
+                this.isRecording = false;
+                // this.UpdateState();
+                this.RecordPlaybackStatusText = "";
+
+                if (recording != null)
+                {
+                    if (recording.State == KStudioRecordingState.Recording)
+                    {
+                        masterKinectProcessor.StopAsychronousRecord();
+                        recording.Stop();
+                        recording.Dispose();
+                    }
+                }
+            }
         }
-        
+ 
+        private void SyhronousPlay_Click(object sender, RoutedEventArgs e)
+        {
+            string filePath = "D:\\clientSynRecord1.xef";
+            OneArgDelegate playback = new OneArgDelegate(this.PlaybackClip);
+            playback.BeginInvoke(filePath, null, null);
+            
+            masterKinectProcessor.StartAsychronousPlay();
+        }
+
         #endregion
 
         #region Private Method
@@ -146,11 +200,13 @@ namespace MultipleKinectMaster
             if (this.isPlaying)
             {
                 this.PlayButton.IsEnabled = false;
+                //this.SyhronousRecord.IsEnabled = false;
             }
             else
             {
+                this.RecordPlaybackStatusText = string.Empty;
+                //this.SyhronousRecord.IsEnabled = true;
                 this.PlayButton.IsEnabled = true;
-
             }
         }
 
@@ -227,8 +283,62 @@ namespace MultipleKinectMaster
             }
             this.isPlaying = false;
             this.Dispatcher.BeginInvoke(new NoArgDelegate(UpdateState));
-        } 
+        }
+
+        private string SaveRecordingAs()
+        {
+            string fileName = string.Empty;
+            SaveFileDialog dlg = new SaveFileDialog();
+            dlg.FileName = "recordAndPalaybackBasics.xef";
+            dlg.DefaultExt = Properties.Resources.XefExtension;
+            dlg.AddExtension = true;
+            dlg.Filter = Properties.Resources.EventFileDescription + " " + Properties.Resources.EventFileFilter;
+            dlg.CheckPathExists = true;
+            bool? result = dlg.ShowDialog();
+
+            if (result == true)
+            {
+                fileName = dlg.FileName;
+            }
+
+            return fileName;
+        }
+
+        private void RecordClip(string filePath)
+        {
+            using (KStudioClient client = KStudio.CreateClient())
+            {
+                client.ConnectToService();
+
+                //Specify which streams should be recorded
+                KStudioEventStreamSelectorCollection streamCollection = new KStudioEventStreamSelectorCollection();
+                streamCollection.Add(KStudioEventStreamDataTypeIds.Ir);
+                streamCollection.Add(KStudioEventStreamDataTypeIds.Depth);
+                streamCollection.Add(KStudioEventStreamDataTypeIds.Body);
+
+                recording = client.CreateRecording(filePath, streamCollection);
+                {
+                    recording.Start();
+                    while (recording.State == KStudioRecordingState.Recording)
+                    {
+                        Thread.Sleep(500);
+                    }
+                }
+                client.DisconnectFromService();
+            }
+
+            //Update UI after the background recording task has completed
+            this.isRecording = false;
+            this.Dispatcher.BeginInvoke(new NoArgDelegate(UpdateState));
+        }
+
         #endregion
+
+
+
+
+
+
 
 
     }

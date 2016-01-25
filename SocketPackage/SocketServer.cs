@@ -31,13 +31,18 @@ namespace SocketPackage
 
         //Log
         private ILog log = null;
+
         #endregion
 
         #region static public property
 
-        /// 工作進行中產生之訊息
-        public static List<string> sMessages = new List<string>();
+        public static  Status status = new Status();
 
+ 
+    private void StatusChange(object sender,EventArgs e)
+        {
+            log.Info("StatusChange Fired");
+        }
         #endregion
 
         #region constructor
@@ -51,6 +56,9 @@ namespace SocketPackage
 
             this._PortNumber = inPortNumber;
             _bgwServer.DoWork += new DoWorkEventHandler(_bgwServer_DoWork);
+
+//            status.changed += new changedEventHandler(StatusChange);
+
         }
         
         #endregion
@@ -63,13 +71,32 @@ namespace SocketPackage
                 _bgwServer.RunWorkerAsync();
         }
 
+        public void SendStartAsychronousRecord(){
+            status.SocketStatus = TRANSMIT_STATUS.StartRecord;
+        }
+
+        public void SendStopAsychronousRecord()
+        {
+            status.SocketStatus = TRANSMIT_STATUS.StopRecord;
+        }
+
+        public void SendStartAsychronousPlay()
+        {
+            status.SocketStatus = TRANSMIT_STATUS.StartPlaybackClip;
+        }
+
+        public void SendStopAsychronousPlay()
+        {
+            status.SocketStatus = TRANSMIT_STATUS.StopPlaybackClip;
+        }
+  
         #endregion
 
         #region Private Method
         
         private void _bgwServer_DoWork(object sender, DoWorkEventArgs e)
         {
-            try
+           // try
             {
                 //若 TCP Listner 正在工作，則停止
                 if (_tcpListener != null)
@@ -99,10 +126,10 @@ namespace SocketPackage
 
                 }
             }
-            catch (Exception exp)
+            //catch (Exception exp)
             {
                 //sMessages.Add(exp.ToString());
-                log.Error("_bgwServer_DoWork", exp);
+              //  log.Error("_bgwServer_DoWork", exp);
             }
         }
         

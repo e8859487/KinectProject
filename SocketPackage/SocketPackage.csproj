@@ -64,6 +64,7 @@
     <Compile Include="SocketClient.cs" />
     <Compile Include="SocketServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Status.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Img_Serializable\Img_Serializable.csproj">

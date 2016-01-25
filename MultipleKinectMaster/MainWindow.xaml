@@ -71,9 +71,10 @@
         <Separator Grid.Row="2" />
         <StackPanel Grid.Row="3" Orientation="Horizontal" Background="White" >
             <Button x:Name="PlayButton" Content="Play" Width="90" Click="PlayButton_Click" Margin="10,10,10,0" Padding="5" Height="32" VerticalAlignment="Top" />
-            <Button x:Name="StopButton" Content="Stop" Width="90" Height="32" Margin="10,10,10,0" Padding="5" VerticalAlignment="Top" Click="StopButton_Click" />
-            <Button x:Name="ResetButton" Content="Reset" Width="90" Height="32" Margin="10,10,10,0" Padding="5" VerticalAlignment="Top" Click="RestartButton_Click" />
-            <Button x:Name="GetMegButton" Content="GetMeg" Width="90" Height="32" Margin="10,10,10,0" Padding="5" VerticalAlignment="Top" Click="GetMegButton_Click" />
+            <Button x:Name="SyhronousRecord" Content="SyhronousRecord" Width="115" Height="32" Margin="10,10,10,0" Padding="5" VerticalAlignment="Top" Click="SyhronousRecord_Click" />
+            <Button x:Name="SyhronousPlay" Content="SyhronousPlay" Width="101" Height="32" Margin="10,10,10,0" Padding="5" VerticalAlignment="Top" Click="SyhronousPlay_Click" />
+            <TextBlock  Text="{Binding RecordPlaybackStatusText}" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource KinectBlueBrush}" FontFamily="Segoe UI" FontSize="18" Margin="10"  />
+
         </StackPanel>
         <StatusBar Grid.Row="4" HorizontalAlignment="Stretch" Name="statusBar" VerticalAlignment="Bottom" Background="White" Foreground="{StaticResource MediumGreyBrush}" Margin="10,0,-10.4,10">
             <StatusBarItem Content="{Binding KinectStatusText}" />

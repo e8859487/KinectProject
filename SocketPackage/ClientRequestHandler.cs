@@ -69,7 +69,7 @@ namespace SocketPackage
         }
 
 
-        private void bgwSocket_DoWork(object sender, DoWorkEventArgs e)
+        private  void bgwSocket_DoWork(object sender, DoWorkEventArgs e)
         {
             NetworkStream netStream = null;
             BinaryReader binaryReader = null;
@@ -79,16 +79,10 @@ namespace SocketPackage
             {
                 //取得網路串流物件，取得來自 socket client 的訊息
                 netStream = _TcpClient.GetStream();
-                // byte[] readBuffer = new byte[_TcpClient.ReceiveBufferSize];
-                //int count = 0;
-                //   if ((count = netStream.Read(readBuffer, 0, readBuffer.Length)) != 0)
                 if (_TcpClient.ReceiveBufferSize > 0 && netStream.CanRead)
                 {
-                  //  try
+                     try
                    {
-
-                       //imgObj = (ImageInfo_Serializable)binaryFromatter.Deserialize(netStream);
-                       
                         binaryReader = new BinaryReader(netStream);
                         DepthByte = binaryReader.ReadBytes(217088 );
                         imgObj._ImgBuffer = DepthByte;
@@ -100,8 +94,6 @@ namespace SocketPackage
                        }
                          int bodyNumbers = int.Parse(a);
                          
-
-
                          for (int i = 0; i < bodyNumbers; i++)
                          {
                              int strLength = int.Parse(System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(3)));
@@ -113,12 +105,31 @@ namespace SocketPackage
                          {
                              imgObj._IsTracked[i] = false;
                          }
-                        
+
+                         //寫入狀態
+                         if (netStream.CanWrite)
+                         {
+                            // using (BinaryWriter binaryWriter = new BinaryWriter(netStream))
+                             {
+                                 int status = (int)SocketServer.status.SocketStatus;
+
+                                 netStream.Write(System.Text.Encoding.UTF8.GetBytes(status.ToString()), 0,1);
+
+                                 if (status == (int)SocketPackage.TRANSMIT_STATUS.StartRecord)
+                                 {
+                                     SocketServer.status.SocketStatus = SocketPackage.TRANSMIT_STATUS.Recording;
+                                 }
+                                 if (status == (int)SocketPackage.TRANSMIT_STATUS.StartPlaybackClip)
+                                 {
+                                     SocketServer.status.SocketStatus = SocketPackage.TRANSMIT_STATUS.PlaybackCliping;
+                                 }
+                             }
+                         }
                     }
-                  //  catch (Exception ee)
-                  //  {
-                 //       SocketServer.sMessages.Add(ee.ToString());
-                   // }
+                    catch (Exception ee)
+                     {
+                        log.Error(string.Format("_ClientNo:{0} ",_ClientNo),ee);
+                     }
                 }
             }
 

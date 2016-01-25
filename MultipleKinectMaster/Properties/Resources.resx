@@ -123,6 +123,9 @@
   <data name="EventFileFilter" xml:space="preserve">
     <value>KStudio Event File</value>
   </data>
+  <data name="RecordingInProgressText" xml:space="preserve">
+    <value>Recording in progress</value>
+  </data>
   <data name="RunningStatusText" xml:space="preserve">
     <value>Running</value>
   </data>

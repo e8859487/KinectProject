@@ -13,29 +13,48 @@ using log4net.Config;
 
 namespace ConsoleTest
 {
+    using MyCollections;
+
     class Program
     {
-
-        private static byte[] CombomBinaryArray(byte[] srcArray1, byte[] srcArray2)
+        class EventListener
         {
-            //根据要合并的两个数组元素总数新建一个数组
-            byte[] newArray = new byte[srcArray1.Length + srcArray2.Length];
+            private ListWithChangeEvent List;
 
-            //把第一个数组复制到新建数组
-            Array.Copy(srcArray1, 0, newArray, 0, srcArray1.Length);
+            public EventListener(ListWithChangeEvent list)
+            {
+                List = list;
+                List.Changed += new ChangeEventHandler(ListChanged);
+            }
 
-            //把第二个数组复制到新建数组
-            Array.Copy(srcArray2, 0, newArray, srcArray1.Length, srcArray2.Length);
+            private void ListChanged(object sender, EventArgs e)
+            {
+                Console.WriteLine("This is called when the event fires.");
+            }
 
-            return newArray;
+            public void Detach()
+            {
+                List.Changed -= new ChangeEventHandler(ListChanged);
+                List = null;
+            }
         }
+        
 
         static void Main(string[] args)
         {
- 
-            byte [] aa= Encoding.UTF8.GetBytes("9");
-           
-            Console.Write( int.Parse("1") );
+
+
+            ListWithChangeEvent list = new ListWithChangeEvent();
+
+            EventListener listener = new EventListener(list);
+            list.Add("item 1");
+            list.Clear();
+            listener.Detach();
+
+
+
+            #region test log4net
+
             /*
             XmlConfigurator.Configure(new System.IO.FileInfo(@"./config.xml"));
 
@@ -48,6 +67,8 @@ namespace ConsoleTest
             log.Error("test Error");
             Console.Write("HI BITCH");
             */
+            
+            #endregion
             
 
             #region testString length socket transmit 

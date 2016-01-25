@@ -2,21 +2,9 @@
 using Microsoft.Kinect.Tools;
 using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace MultipleKinectClient
 {
@@ -45,9 +33,11 @@ namespace MultipleKinectClient
         /// </summary>
         private string kinectStatusText = string.Empty;
 
-        private ClientKinectProcessor kinectBodyView = null;
+        private ClientKinectProcessor clientKinectProcessor = null;
 
+        private bool isRecording;
 
+        private KStudioRecording recording;
 
         public MainWindow()
         {
@@ -57,14 +47,15 @@ namespace MultipleKinectClient
             this.kinectSensor.Open();
             this.kinectStatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
                                                             : Properties.Resources.SensorNotAvailableStatusText;
-            this.kinectBodyView = new ClientKinectProcessor(this.kinectSensor);
-
+            this.clientKinectProcessor = new ClientKinectProcessor(this.kinectSensor);
+            this.clientKinectProcessor.changed += new clientRecordEventHandler(StatusChange);
             // set data context for display in UI
 
             this.DataContext = this;
-            this.kinectBodyViewbox.DataContext = this.kinectBodyView;
-            this.BodyIndex.DataContext = this.kinectBodyView;
+            this.kinectBodyViewbox.DataContext = this.clientKinectProcessor;
+            this.BodyIndex.DataContext = this.clientKinectProcessor;
         }
+
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -90,21 +81,37 @@ namespace MultipleKinectClient
 
         public void Dispose()
         {
-            if (this.kinectBodyView != null)
+            if (this.clientKinectProcessor != null)
             {
-                this.kinectBodyView.Dispose();
-                this.kinectBodyView = null;
+                this.clientKinectProcessor.Dispose();
+                this.clientKinectProcessor = null;
             }
         }
 
         #region Private Method
+        private void StatusChange(object sender, SocketPackage.StatusEventArgs e)
+        {
+            //control Record
+            if (e.Status == SocketPackage.TRANSMIT_STATUS.StartRecord || e.Status == SocketPackage.TRANSMIT_STATUS.StopRecord)
+            {
+                Record_Click(null, null);
+            }
+            else if(e.Status == SocketPackage.TRANSMIT_STATUS.StartPlaybackClip || e.Status == SocketPackage.TRANSMIT_STATUS.StopPlaybackClip){
+                string filePath = "D:\\clientSynRecord1.xef";
+                OneArgDelegate playback = new OneArgDelegate(this.PlaybackClip);
+                playback.BeginInvoke(filePath, null, null);
+
+            }
+        }
+
+
 
         private void MainWindow_Closing(object sender, CancelEventArgs e)
         {
-            if (this.kinectBodyView != null)
+            if (this.clientKinectProcessor != null)
             {
-                this.kinectBodyView.Dispose();
-                this.kinectBodyView = null;
+                this.clientKinectProcessor.Dispose();
+                this.clientKinectProcessor = null;
             }
             if (this.kinectSensor != null)
             {
@@ -185,7 +192,54 @@ namespace MultipleKinectClient
                 this.kinectSensor.Close();
                 this.kinectSensor = null;
             }
-        } 
+        }
+
+        private void RecordClip(string filePath)
+        {
+            using (KStudioClient client = KStudio.CreateClient())
+            {
+                client.ConnectToService();
+
+                //Specify which streams should be recorded
+                KStudioEventStreamSelectorCollection streamCollection = new KStudioEventStreamSelectorCollection();
+                streamCollection.Add(KStudioEventStreamDataTypeIds.Ir);
+                streamCollection.Add(KStudioEventStreamDataTypeIds.Depth);
+                streamCollection.Add(KStudioEventStreamDataTypeIds.Body);
+
+                 recording = client.CreateRecording(filePath, streamCollection);
+                    recording.Start();
+                    while (recording.State == KStudioRecordingState.Recording)
+                    {
+                        Thread.Sleep(500);
+                    }
+
+                client.DisconnectFromService();
+            }
+
+            //Update UI after the background recording task has completed
+            this.isRecording = false;
+            this.Dispatcher.BeginInvoke(new NoArgDelegate(UpdateState));
+        }
+
+        private string SaveRecordingAs()
+        {
+            string fileName = string.Empty;
+            SaveFileDialog dlg = new SaveFileDialog();
+            dlg.FileName = "recordAndPalaybackBasics.xef";
+            dlg.DefaultExt = Properties.Resources.XefExtension;
+            dlg.AddExtension = true;
+            dlg.Filter = Properties.Resources.EventFileDescription + " " + Properties.Resources.EventFileFilter;
+            dlg.CheckPathExists = true;
+            bool? result = dlg.ShowDialog();
+
+            if (result == true)
+            {
+                fileName = dlg.FileName;
+            }
+
+            return fileName;
+        }
+
         #endregion
 
         #region Button_Event
@@ -205,32 +259,44 @@ namespace MultipleKinectClient
 
             }
         }
-
-        private void StopButton_Click(object sender, RoutedEventArgs e)
+ 
+        private void Record_Click(object sender, RoutedEventArgs e)
         {
-            CloseKinectSensor();
+            if (isRecording == false)
+            {
+               string filePath = "D:\\clientSynRecord1.xef";
+               // string filePath = this.SaveRecordingAs();
+               // C:\\recordAndPalaybackBasics2.xef
+
+                if (!string.IsNullOrEmpty(filePath))
+                {
+                    this.lastFile = filePath;
+                    this.isRecording = true;
+                    //this.RecordPlaybackStatusText = Properties.Resources.RecordingInProgressText;
+                    //this.UpdateState();
+
+                    //Start runing the plalyback asychronously
+                    OneArgDelegate recording = new OneArgDelegate(this.RecordClip);
+                    recording.BeginInvoke(filePath, null, null);
+                }
+            }
+            else
+            {
+                this.isRecording = false;
+                // this.UpdateState();
+                //this.RecordPlaybackStatusText = "";
+
+                if (recording != null)
+                {
+                    if (recording.State == KStudioRecordingState.Recording)
+                    {
+                        recording.Stop();
+                        recording.Dispose();
+                    }
+                }
+            }
         }
-
-        private void RestartButton_Click(object sender, RoutedEventArgs e)
-        {
-            OpenKinectSensor();
-        }
-
-        private void SendMeg_Click(object sender, RoutedEventArgs e)
-        {
-            kinectBodyView.SendImgToServer();
-        } 
         #endregion
-
-        private void CatchImg_Click(object sender, RoutedEventArgs e)
-        {
-            kinectBodyView.CatchImgBitmap();
-        }
-
-        private void Render_Click(object sender, RoutedEventArgs e)
-        {
-            kinectBodyView.RenderBitmap();
-        }
 
     }
 }

@@ -26,7 +26,9 @@ using log4net.Config;
 
 namespace MultipleKinectClient
 {
-    public sealed class ClientKinectProcessor : IDisposable,INotifyPropertyChanged
+    public delegate void clientRecordEventHandler(object sender, StatusEventArgs e);
+
+    public   class ClientKinectProcessor : IDisposable,INotifyPropertyChanged
     {
         #region Private Region Parameters
         private Body[] bodies = null;
@@ -71,9 +73,6 @@ namespace MultipleKinectClient
         int stride = 0;
         byte[] imgBuffer = null;
         
-       // byte[] tempJointsByteBuffer ;
-
-
        // double depthTimeStamp = 0;
         int framesNumber = 0;
 
@@ -93,6 +92,8 @@ namespace MultipleKinectClient
 
         //Log Declare
         private ILog log = null;
+
+ 
 
         #endregion
 
@@ -122,7 +123,6 @@ namespace MultipleKinectClient
 
             //create bitmap to display
             this.depthBitmap = new WriteableBitmap(this.displayWidth, this.displayHeight, 96.0, 96.0, PixelFormats.Gray8, null);
-            //this.bitmap = new RenderTargetBitmap(this.displayWidth, this.displayHeight, 96, 96, PixelFormats.Pbgra32);
 
             this.bones = new List<Tuple<JointType, JointType>>();
             #region bone implement
@@ -187,6 +187,9 @@ namespace MultipleKinectClient
             Port = int.Parse(reader.getNodeInnerText(@"/Root/Port"));
             this.socketClient = new SocketClient(IpAddr, Port);
             this.socketClient.Connect();
+            this.socketClient.clientDataChanged += new clientDataChangeEventHandler(StatusChange);
+
+
 
             // Stride = (Width) * (bytes per pixel)
             this.stride = (int)depthBitmap.PixelWidth * ((depthBitmap.Format.BitsPerPixel + 7) / 8);//每列影像列的位元長度(bytes)
@@ -201,51 +204,60 @@ namespace MultipleKinectClient
             log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
             log.Info("Motion Detector Client Start!!");
 
+
         }
 
-        private static byte[] CombomBinaryArray(byte[] srcArray1, byte[] srcArray2)
+        #region CallBack Event and Event handler
+
+        private void StatusChange(object sender, StatusEventArgs e)
         {
-            //根据要合并的两个数组元素总数新建一个数组
+            //Status changed
+            OnChanged(e);
+        }
+
+        public event clientRecordEventHandler changed;
+
+        protected virtual void OnChanged(StatusEventArgs e)
+        {
+            if (changed != null)
+            {
+                changed(this, e);
+            }
+        }
+
+        #endregion
+
+        private byte[] CombomBinaryArray(byte[] srcArray1, byte[] srcArray2)
+        {
+            //根據要合併的兩個byte陣列長度建立一個新的byte[]
             byte[] newArray = new byte[srcArray1.Length + srcArray2.Length];
 
-            //把第一个数组复制到新建数组
+            //把第一個陣列複製到新的陣列
             Array.Copy(srcArray1, 0, newArray, 0, srcArray1.Length);
 
-            //把第二个数组复制到新建数组
+            //把第二個陣列貼到第一個陣列之後
             Array.Copy(srcArray2, 0, newArray, srcArray1.Length, srcArray2.Length);
 
             return newArray;
         }
 
         /// <summary>
-        /// Send ImgObj to server va network
+        /// Send All Data to Server to server va network
         /// </summary>
-        public void SendImgToServer()
+        public void SendDataToServer()
         {
-             //depthBitmap.CopyPixels(ImgObj._ImgBuffer, stride, 0);
-
-            //Save Image information into Serializable
-            //深度影像
-           // ImageObjBuffer._ImgBuffer = imgBuffer;
-            //Frame編號
-           
             ImgObj._imageIdx = framesNumber;
 
-            //--骨架資訊於 UpdateBodyFrame 函式中處理--
-            //ImgObj._JointsPosBuffer = tempJointsByteBuffer;
-
-            //送出影像物件@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            //socketClient.SendImgInfo(ImgObj);
-
             byte[] bodyNumbers_byte = System.Text.Encoding.UTF8.GetBytes(bodyNumbers.ToString());
-            //socketClient.SendImg(depthPixels);
+            
+            //深度 + 人體骨架數量
+            byte[] Depth_BodyNum_byte = CombomBinaryArray(depthPixels, bodyNumbers_byte);
 
-           // socketClient.SendImg(tempByte);
+            //深度 + 人體骨架數量 + 骨架點
+            byte[] Depth_BodyNum_Skeleton_byte = Depth_BodyNum_byte;
 
-         //   socketClient.SendImg(CombomBinaryArray(depthPixels,bodyNumbers_byte));
-            byte[] Depth_BodyNum = CombomBinaryArray(depthPixels, bodyNumbers_byte);
-            byte[] Depth_BodyNum_Skeleton_bytesArray = Depth_BodyNum;
             byte[] bodySkeletons_byteArray =null;
+
             if (bodyNumbers > 0)
             {
                 //找出人體的index
@@ -255,45 +267,35 @@ namespace MultipleKinectClient
                 {
                     for (int i = 0; i < dictKey.Length - 1; i++)
                     {
-                        //傳送骨架字串
-                     //   socketClient.Send(_JointsPosDict[int.Parse(dictKey[i])]);
-                        byte[] b =  System.Text.Encoding.UTF8.GetBytes(_JointsPosDict[int.Parse(dictKey[i])]);
-                        int strLength = _JointsPosDict[int.Parse(dictKey[i])].Length;
+                        //骨架位置字串
+                        byte[] skeleton_Joints_byte =  System.Text.Encoding.UTF8.GetBytes(_JointsPosDict[int.Parse(dictKey[i])]);
+
+                        //骨架字串的長度
+                        byte[] str_SkeletonJoints_Len_byte = System.Text.Encoding.UTF8.GetBytes(_JointsPosDict[int.Parse(dictKey[i])].Length.ToString());
+
+                        //
                         if (bodySkeletons_byteArray == null) {
-                            bodySkeletons_byteArray = CombomBinaryArray(System.Text.Encoding.UTF8.GetBytes(strLength.ToString()), b);
+                            bodySkeletons_byteArray = CombomBinaryArray(str_SkeletonJoints_Len_byte, skeleton_Joints_byte);
                         }
-                        else { 
-                            bodySkeletons_byteArray = CombomBinaryArray(bodySkeletons_byteArray, CombomBinaryArray(System.Text.Encoding.UTF8.GetBytes(strLength.ToString()), b));
+                        else {
+                            bodySkeletons_byteArray = CombomBinaryArray(bodySkeletons_byteArray, CombomBinaryArray(str_SkeletonJoints_Len_byte, skeleton_Joints_byte));
                         }
-
-
-
-                       
-
                     }
                 }
             }
+            //沒有任何人體骨架
             if (bodySkeletons_byteArray == null)
             {
-                socketClient.SendImg(Depth_BodyNum_Skeleton_bytesArray);
+                //送出深度影像 + 骨架數量(0)
+                socketClient.SendBytes(Depth_BodyNum_byte);
             }
-            else
+            else  //一個以上的人體骨架
             {
-                Depth_BodyNum_Skeleton_bytesArray = CombomBinaryArray(Depth_BodyNum_Skeleton_bytesArray, bodySkeletons_byteArray);
-                socketClient.SendImg(Depth_BodyNum_Skeleton_bytesArray);
+                Depth_BodyNum_Skeleton_byte = CombomBinaryArray(Depth_BodyNum_Skeleton_byte, bodySkeletons_byteArray);
+                //送出 深度影像 + 骨架數量(n) + (骨架字串長度 +  骨架字串) * n
+                socketClient.SendBytes(Depth_BodyNum_Skeleton_byte);
 
             }
-            
-
-
-            //test
-            //string tempStr = "(-0.1302,-0.2052,1.9159)|(-0.1638,0.1214,1.8859)|(-0.1942,0.4356,1.8423)|(-0.2429,0.5843,1.8060)|(-0.3477,0.2696,1.8958)|(-0.3577,-0.0219,1.9069)|(-0.3491,-0.2514,1.8331)|(-0.3399,-0.2885,1.8102)|(-0.0189,0.3171,1.8227)|(0.0899,0.0664,1.8554)|(0.0757,-0.1619,1.7762)|(0.0660,-0.2193,1.7650)|(-0.2024,-0.2120,1.8985)|(-0.2116,-0.5718,1.8008)|(-0.2421,-0.8602,1.7249)|(-0.2541,-0.8841,1.6147)|(-0.0527,-0.1901,1.8574)|(0.0076,-0.5683,1.9041)|(0.0170,-0.9306,2.0352)|(0.0341,-0.9929,1.9632)|(-0.1871,0.3588,1.8555)|(-0.3386,-0.3539,1.7809)|(-0.3672,-0.3091,1.7729)|(0.0460,-0.2963,1.7455)|(0.0787,-0.2310,1.7213)|";
-            //tempStr = tempStr + tempStr + tempStr + tempStr + tempStr;
-            //byte[] tempByte = System.Text.Encoding.UTF8.GetBytes(tempStr);
-            //socketClient.SendImg(tempByte);
-            
-
-
         }
 
         public void CatchImgBitmap()
@@ -301,41 +303,16 @@ namespace MultipleKinectClient
             //測試程式碼消耗時間
             swTimer.Reset();
             swTimer.Start();
-            SendImgToServer();
+            SendDataToServer();
        
             swTimer.Stop();
             string consumeTime = swTimer.Elapsed.TotalMilliseconds.ToString();
             MessageBox.Show("消耗時間為:" + consumeTime);
-
-
-            //depthBitmap.CopyPixels(imgBuffer, stride, 0);
-            //using (FileStream fs = new FileStream("abc.txt", FileMode.Create))
-            //{
-            //    BinaryFormatter formatter = new BinaryFormatter();
-            //    formatter.Serialize(fs, new ImageInfo_Serializable(imgBuffer, 0));
-            //}
         }
 
         public void RenderBitmap()
         {
-            //depthBitmap.WritePixels(
-            //    new Int32Rect(0, 0, displayWidth, displayHeight),
-            //    imgBuffer, 
-            //    displayWidth , 
-            //    0);
-
-            //using (FileStream fs = new FileStream("abc.txt", FileMode.Open))
-            //{
-            //    BinaryFormatter formatter = new BinaryFormatter();
-            //    ImageInfo_Serializable imgObj = (ImageInfo_Serializable)formatter.Deserialize(fs);
-            //    imgBuffer = imgObj._ImgBuffer;
-            //    depthBitmap.WritePixels(
-            //        new Int32Rect(0, 0, displayWidth, displayHeight),
-            //        imgBuffer,
-            //        displayWidth,
-            //        0);
-            //    //this.depthBitmap = imgObj._depthBitmap;
-            //}
+ 
         }
 
         public ImageSource ImageSource
@@ -347,6 +324,7 @@ namespace MultipleKinectClient
             }
         }
 
+        #region GUI Getter and Setter
         public event PropertyChangedEventHandler PropertyChanged;
 
 
@@ -367,7 +345,8 @@ namespace MultipleKinectClient
                     }
                 }
             }
-        }
+        } 
+        #endregion
 
 
         public void Dispose()
@@ -459,7 +438,7 @@ namespace MultipleKinectClient
            //  if (framesNumber % 2  == 0)
             {
                 //Send Image to Server
-                this.SendImgToServer();
+                this.SendDataToServer();
             }
             framesNumber++;
         }
