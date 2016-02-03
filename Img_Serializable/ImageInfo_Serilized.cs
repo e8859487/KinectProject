@@ -33,6 +33,4 @@ namespace Img_Serializable
         }
 
     }
-
-
 }

@@ -13,6 +13,9 @@ using log4net.Config;
 
 namespace SocketPackage
 {
+    //public delegate void changeEventHandler(object sender, EventArgs e);
+
+
     public class SocketServer
     {
         #region private property
@@ -36,13 +39,32 @@ namespace SocketPackage
 
         #region static public property
 
+
+
         public static  Status status = new Status();
 
- 
-    private void StatusChange(object sender,EventArgs e)
+        static public SocketData imgObj = new SocketData();
+        
+        private void StatusChange(object sender,EventArgs e)
         {
             log.Info("StatusChange Fired");
         }
+
+        //my callback
+        public event changeEventHandler changed;
+
+        protected virtual void OnChanged(EventArgs e){
+            if (changed != null)
+            {
+                changed(this, e);
+            }
+        }
+
+        private void SocketDataChanged(object sender , EventArgs e)
+        {
+            this.OnChanged(EventArgs.Empty);
+        }
+
         #endregion
 
         #region constructor
@@ -59,6 +81,7 @@ namespace SocketPackage
 
 //            status.changed += new changedEventHandler(StatusChange);
 
+            imgObj.changed += new changeEventHandler(SocketDataChanged);
         }
         
         #endregion

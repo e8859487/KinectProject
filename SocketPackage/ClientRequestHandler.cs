@@ -13,7 +13,10 @@ namespace SocketPackage
 {
     public class ClientRequestHandler
     {
-        static public ImageInfo_Serializable imgObj = new ImageInfo_Serializable(217088);
+          public  const int IMG_SIZE = 217088;
+          public  const int BODY_NUMBER_SIZE = 1;
+          public  const int BODY_SKELETION_STR_SIZE = 3;
+ 
         #region private property
 
         /// socket client 識別號碼
@@ -24,20 +27,7 @@ namespace SocketPackage
 
         //Log Declare
         private ILog log = null;
-        static public byte[] depthByte = new byte[217088];
-
-        static public byte[] DepthByte
-        {
-            get {
-                return depthByte;
-            }
-            set{
-                if (value != depthByte)
-                {
-                    depthByte = value;
-                }
-            }
-        }
+ 
         #endregion
 
         #region constructor
@@ -69,11 +59,10 @@ namespace SocketPackage
         }
 
 
-        private  void bgwSocket_DoWork(object sender, DoWorkEventArgs e)
+        private void bgwSocket_DoWork(object sender, DoWorkEventArgs e)
         {
             NetworkStream netStream = null;
             BinaryReader binaryReader = null;
-            BinaryFormatter binaryFromatter = new BinaryFormatter();
             //server & client 已經連線完成
             while (_TcpClient.Connected)
             {
@@ -81,55 +70,57 @@ namespace SocketPackage
                 netStream = _TcpClient.GetStream();
                 if (_TcpClient.ReceiveBufferSize > 0 && netStream.CanRead)
                 {
-                     try
-                   {
+                   // try
+                    {
                         binaryReader = new BinaryReader(netStream);
-                        DepthByte = binaryReader.ReadBytes(217088 );
-                        imgObj._ImgBuffer = DepthByte;
+                        SocketServer.imgObj.ImgBuffer = binaryReader.ReadBytes(IMG_SIZE);
 
-                       string a ;
-                        if ( (a =System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(1))) != "0")
+                        string a;
+                        a = System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(BODY_NUMBER_SIZE));
+
+                        int bodyNumbers = int.Parse(a);
+
+                        MyBody body; 
+                        
+                        for (int i = 0; i < bodyNumbers; i++)
                         {
-                           // log.Error(a);
-                       }
-                         int bodyNumbers = int.Parse(a);
-                         
-                         for (int i = 0; i < bodyNumbers; i++)
-                         {
-                             int strLength = int.Parse(System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(3)));
-                             imgObj._SBodyJoints[i] = System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(strLength));
-                             imgObj._IsTracked[i] = true;
-                         }
-                         //待修改
-                         for (int i = bodyNumbers; i < 7; i++)
-                         {
-                             imgObj._IsTracked[i] = false;
-                         }
+                            body = SocketServer.imgObj.Body[i];
 
-                         //寫入狀態
-                         if (netStream.CanWrite)
-                         {
-                            // using (BinaryWriter binaryWriter = new BinaryWriter(netStream))
-                             {
-                                 int status = (int)SocketServer.status.SocketStatus;
+                            int strLength = int.Parse(System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(BODY_SKELETION_STR_SIZE)));
+                            SocketServer.imgObj.SBodyJoints[i] = System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(strLength));
+                            body.isTracked = true;
+                        }
 
-                                 netStream.Write(System.Text.Encoding.UTF8.GetBytes(status.ToString()), 0,1);
+                        //設定其他骨架為未追蹤
+                        for (int i = bodyNumbers; i < 7; i++)
+                        {
+                            body = SocketServer.imgObj.Body[i];
 
-                                 if (status == (int)SocketPackage.TRANSMIT_STATUS.StartRecord)
-                                 {
-                                     SocketServer.status.SocketStatus = SocketPackage.TRANSMIT_STATUS.Recording;
-                                 }
-                                 if (status == (int)SocketPackage.TRANSMIT_STATUS.StartPlaybackClip)
-                                 {
-                                     SocketServer.status.SocketStatus = SocketPackage.TRANSMIT_STATUS.PlaybackCliping;
-                                 }
-                             }
-                         }
+                            body.isTracked = false;
+                        }
+                        
+                        
+                        //寫入狀態
+                        if (netStream.CanWrite)
+                        {
+                            int status = (int)SocketServer.status.SocketStatus;
+
+                            netStream.Write(System.Text.Encoding.UTF8.GetBytes(status.ToString()), 0, 1);
+
+                            if (status == (int)SocketPackage.TRANSMIT_STATUS.StartRecord)
+                            {
+                                SocketServer.status.SocketStatus = SocketPackage.TRANSMIT_STATUS.Recording;
+                            }
+                            if (status == (int)SocketPackage.TRANSMIT_STATUS.StartPlaybackClip)
+                            {
+                                SocketServer.status.SocketStatus = SocketPackage.TRANSMIT_STATUS.PlaybackCliping;
+                            }
+                        }
                     }
-                    catch (Exception ee)
-                     {
-                        log.Error(string.Format("_ClientNo:{0} ",_ClientNo),ee);
-                     }
+                  //  catch (Exception ee)
+                    {
+                      //  log.Error(string.Format("_ClientNo:{0} ", _ClientNo), ee);
+                    }
                 }
             }
 

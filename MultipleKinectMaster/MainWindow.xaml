@@ -38,35 +38,74 @@
             <Viewbox x:Name="kinectBodyViewboxClient"   Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center"  Margin="7.2,5,2.4,4.8" MinWidth="550"   MinHeight="300"  >
                 <Image Source="{Binding ImageSourceClient}" Stretch="UniformToFill"/>
             </Viewbox>
-            <WrapPanel  Grid.Row="1" Grid.Column="0">
-                <Label Content="裝置編號 : "  />
-                <TextBlock Text="Dev1" VerticalAlignment="Center"  />
-                <Label Content="幀數 :" />
-                <TextBlock x:Name="FrameNumbers1" Text="{Binding FrameNumbers1 }"   VerticalAlignment="Center"/>
-                <Label Content="頭 :" />
-                <TextBlock x:Name="Head1" Text="{Binding Head1 }"   VerticalAlignment="Center"/>
-                <Label Content="身 :"/>
-                <TextBlock  x:Name="Torso1" Text="{Binding Torso1  }" VerticalAlignment="Center"/>
-                <Label Content="左肩 :"/>
-                <TextBlock  x:Name="LShouder1" Text="{Binding LShouder1 }" VerticalAlignment="Center"/>
-                <Label Content="右肩 :"/>
-                <TextBlock  x:Name="RShouder1" Text="{Binding RShouder1}" VerticalAlignment="Center"/>
-            </WrapPanel>
 
-            <WrapPanel  Grid.Row="1" Grid.Column="1">
-                <Label Content="裝置編號 : "  />
-                <TextBlock Text="Dev2" VerticalAlignment="Center"  />
+            <Grid  Grid.Row="1" Grid.Column="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-                <Label Content="頭 :" />
-                <TextBlock x:Name="Head2" Text="{Binding Head2 }"   VerticalAlignment="Center"/>
-                <Label Content="身 :"/>
-                <TextBlock  x:Name="Torso2" Text="{Binding Torso2 }" VerticalAlignment="Center"/>
-                <Label Content="左肩 :"/>
-                <TextBlock  x:Name="LShouder2" Text="{Binding LShouder2 }" VerticalAlignment="Center"/>
-                <Label Content="右肩 :"/>
-                <TextBlock  x:Name="RShouder2" Text="{Binding RShouder2}" VerticalAlignment="Center"/>
-            </WrapPanel>
-            
+                <WrapPanel  Grid.Row="0" Grid.Column="0">
+                    <Label Grid.Row="1" Grid.Column="0"  Content="裝置編號 : "  />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Dev1" VerticalAlignment="Center"  />
+
+                    <Label Content="幀數 :" />
+                    <TextBlock x:Name="FrameNumbers1" Text="{Binding FrameNumbers1 }"   VerticalAlignment="Center"/>
+                </WrapPanel>
+
+                <WrapPanel Grid.Row="1" Grid.Column="0">
+
+
+                    <Label Content="頭 :" />
+                    <TextBlock x:Name="Head1" Text="{Binding Head1 }"   VerticalAlignment="Center"/>
+                    <Label Content="身 :"/>
+                    <TextBlock  x:Name="Torso1" Text="{Binding Torso1  }" VerticalAlignment="Center"/>
+                    <Label Content="左肩 :"/>
+                    <TextBlock  x:Name="LShouder1" Text="{Binding LShouder1 }" VerticalAlignment="Center"/>
+                    <Label Content="右肩 :"/>
+                    <TextBlock  x:Name="RShouder1" Text="{Binding RShouder1}" VerticalAlignment="Center"/>
+                </WrapPanel>
+            </Grid>
+
+            <Grid   Grid.Row="1" Grid.Column="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <WrapPanel Grid.Row="0" Grid.Column="0">
+                    <Label Content="裝置編號 : "  />
+                    <TextBlock Text="Dev2" VerticalAlignment="Center"  />
+                </WrapPanel>
+
+                <WrapPanel Grid.Row="1" Grid.Column="0">
+
+                    <Label Content="頭 :" />
+                    <TextBlock x:Name="Head2" Text="{Binding Head2 }"   VerticalAlignment="Center"/>
+                    <Label Content="身 :"/>
+                    <TextBlock  x:Name="Torso2" Text="{Binding Torso2 }" VerticalAlignment="Center"/>
+                    <Label Content="左肩 :"/>
+                    <TextBlock  x:Name="LShouder2" Text="{Binding LShouder2 }" VerticalAlignment="Center"/>
+                    <Label Content="右肩 :"/>
+                    <TextBlock  x:Name="RShouder2" Text="{Binding RShouder2}" VerticalAlignment="Center"/>
+                </WrapPanel>
+            </Grid>
+
+
+
         </Grid>
         <Separator Grid.Row="2" />
         <StackPanel Grid.Row="3" Orientation="Horizontal" Background="White" >

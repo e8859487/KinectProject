@@ -42,7 +42,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SocketServer.cs" />
     <Compile Include="XmlManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

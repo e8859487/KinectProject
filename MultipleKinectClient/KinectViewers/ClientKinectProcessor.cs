@@ -67,7 +67,7 @@ namespace MultipleKinectClient
 
         //定義客戶端傳輸socket
         SocketClient socketClient = null;
-        private  string IpAddr = null;
+        private string IpAddr = null;
         private int Port;
 
         int stride = 0;
@@ -185,6 +185,8 @@ namespace MultipleKinectClient
             XmlReader reader = new XmlReader(@"./Setting.xml");
             IpAddr = reader.getNodeInnerText(@"/Root/IPAddress");
             Port = int.Parse(reader.getNodeInnerText(@"/Root/Port"));
+            reader.Dispose();
+
             this.socketClient = new SocketClient(IpAddr, Port);
             this.socketClient.Connect();
             this.socketClient.clientDataChanged += new clientDataChangeEventHandler(StatusChange);
@@ -246,7 +248,7 @@ namespace MultipleKinectClient
         /// </summary>
         public void SendDataToServer()
         {
-            ImgObj._imageIdx = framesNumber;
+            //ImgObj._imageIdx = framesNumber;
 
             byte[] bodyNumbers_byte = System.Text.Encoding.UTF8.GetBytes(bodyNumbers.ToString());
             
@@ -268,7 +270,7 @@ namespace MultipleKinectClient
                     for (int i = 0; i < dictKey.Length - 1; i++)
                     {
                         //骨架位置字串
-                        byte[] skeleton_Joints_byte =  System.Text.Encoding.UTF8.GetBytes(_JointsPosDict[int.Parse(dictKey[i])]);
+                        byte[] skeleton_Joints_byte =  System.Text.Encoding.UTF8.GetBytes( _JointsPosDict[int.Parse(dictKey[i])]);
 
                         //骨架字串的長度
                         byte[] str_SkeletonJoints_Len_byte = System.Text.Encoding.UTF8.GetBytes(_JointsPosDict[int.Parse(dictKey[i])].Length.ToString());
@@ -294,7 +296,6 @@ namespace MultipleKinectClient
                 Depth_BodyNum_Skeleton_byte = CombomBinaryArray(Depth_BodyNum_Skeleton_byte, bodySkeletons_byteArray);
                 //送出 深度影像 + 骨架數量(n) + (骨架字串長度 +  骨架字串) * n
                 socketClient.SendBytes(Depth_BodyNum_Skeleton_byte);
-
             }
         }
 
@@ -474,7 +475,10 @@ namespace MultipleKinectClient
                             IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
                             // convert the joint points to depth (display) space
                              jointPoints = new Dictionary<JointType, Point>();
-                           
+
+                            //人體編號
+                             sb_skeletonJoints.Append(body.TrackingId.ToString() + ":" );
+
                             bodyNumbers++;
                             foreach (JointType jointType in joints.Keys)
                             {
@@ -490,9 +494,8 @@ namespace MultipleKinectClient
                                 jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
 
                                 //紀錄骨架座標於string中  jointType == JointType.ShoulderRight || jointType == JointType.ShoulderLeft || jointType == JointType.Head
-                               // if(testnumber < 12)
-                                {sb_skeletonJoints.Append(string.Format("({0},{1},{2})|", position.X.ToString("0.0000"), position.Y.ToString("0.0000"), position.Z.ToString("0.0000")));
-                                
+                                {
+                                    sb_skeletonJoints.Append(string.Format("{0},{1},{2}|", position.X.ToString("0.0000"), position.Y.ToString("0.0000"), position.Z.ToString("0.0000")));
                                 }
                                 testnumber++;
                             }
@@ -505,7 +508,6 @@ namespace MultipleKinectClient
                             else
                             {
                                 _JointsPosDict[BodyIndex] = sb_skeletonJoints.ToString();
-                               
                             }
                             sb_skeletonJoints.Clear();
                             _bodyIndex = _bodyIndex + BodyIndex.ToString()+",";

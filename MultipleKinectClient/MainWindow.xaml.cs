@@ -39,6 +39,8 @@ namespace MultipleKinectClient
 
         private KStudioRecording recording;
 
+        private string playBackFilePath;
+
         public MainWindow()
         {
             this.InitializeComponent();
@@ -54,6 +56,13 @@ namespace MultipleKinectClient
             this.DataContext = this;
             this.kinectBodyViewbox.DataContext = this.clientKinectProcessor;
             this.BodyIndex.DataContext = this.clientKinectProcessor;
+
+
+            //讀取同步播放檔案路徑
+            XmlManager.XmlReader reader = new XmlManager.XmlReader(@"./Setting.xml");
+            playBackFilePath = reader.getNodeInnerText(@"/Root/SynchronousPlayPath");
+            reader.Dispose();
+
         }
 
 
@@ -89,6 +98,12 @@ namespace MultipleKinectClient
         }
 
         #region Private Method
+
+        /// <summary>
+        /// 處理Server端傳過來的資訊 ，同步控制撥放或是錄影
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void StatusChange(object sender, SocketPackage.StatusEventArgs e)
         {
             //control Record
@@ -97,10 +112,8 @@ namespace MultipleKinectClient
                 Record_Click(null, null);
             }
             else if(e.Status == SocketPackage.TRANSMIT_STATUS.StartPlaybackClip || e.Status == SocketPackage.TRANSMIT_STATUS.StopPlaybackClip){
-                string filePath = "D:\\clientSynRecord1.xef";
                 OneArgDelegate playback = new OneArgDelegate(this.PlaybackClip);
-                playback.BeginInvoke(filePath, null, null);
-
+                playback.BeginInvoke(playBackFilePath, null, null);
             }
         }
 

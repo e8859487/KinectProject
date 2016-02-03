@@ -42,6 +42,9 @@ namespace MultipleKinectMaster
         private int msgFlag = 0;
 
         private KStudioRecording recording;
+
+        private string playBackFilePath;
+
         public MainWindow()
         {
             this.InitializeComponent();
@@ -50,8 +53,7 @@ namespace MultipleKinectMaster
             this.kinectSensor.Open();
             this.kinectStatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
                                                             : Properties.Resources.SensorNotAvailableStatusText;
-            this.masterKinectProcessor = new MasterKinectProcessor(this.kinectSensor);
-
+            this.masterKinectProcessor = new MasterKinectProcessor(this.kinectSensor,this.Dispatcher);
 
             // set data context for display in UI
 
@@ -71,6 +73,12 @@ namespace MultipleKinectMaster
             this.Torso2.DataContext = this.masterKinectProcessor;
             this.LShouder2.DataContext = this.masterKinectProcessor;
             this.RShouder2.DataContext = this.masterKinectProcessor;
+
+            //讀取同步播放檔案路徑
+            XmlManager.XmlReader reader = new XmlManager.XmlReader(@"./Setting.xml");
+            playBackFilePath = reader.getNodeInnerText(@"/Root/SynchronousPlayPath");
+            reader.Dispose();
+
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -185,9 +193,9 @@ namespace MultipleKinectMaster
  
         private void SyhronousPlay_Click(object sender, RoutedEventArgs e)
         {
-            string filePath = "D:\\clientSynRecord1.xef";
+            //"D:\\clientSynRecord1.xef";
             OneArgDelegate playback = new OneArgDelegate(this.PlaybackClip);
-            playback.BeginInvoke(filePath, null, null);
+            playback.BeginInvoke(playBackFilePath, null, null);
             
             masterKinectProcessor.StartAsychronousPlay();
         }

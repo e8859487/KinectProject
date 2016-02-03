@@ -36,5 +36,10 @@ namespace XmlManager
                 return ee.ToString();
             }
         }
+
+        public void Dispose()
+        {
+            xmlDoc = null;
+        }
     }
 }

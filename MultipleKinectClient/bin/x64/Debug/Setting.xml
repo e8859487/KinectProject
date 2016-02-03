@@ -3,5 +3,6 @@
  <Root>
  	<IPAddress>140.118.170.215</IPAddress>
  	<Port>81</Port>
+   <SynchronousPlayPath>D:\\FangTestRecord\\clientSynRecord1.xef</SynchronousPlayPath>
  	<UpdateTime>2016-01-18</UpdateTime>
  </Root>

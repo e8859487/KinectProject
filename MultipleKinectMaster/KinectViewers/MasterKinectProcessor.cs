@@ -27,7 +27,6 @@ namespace MultipleKinectMaster
 
 
         #region Private Region Parameters
-        //private BodyFrameReader bodyFrameReader = null;
 
         private Body[] bodies = null;
 
@@ -60,8 +59,6 @@ namespace MultipleKinectMaster
         private WriteableBitmap depthBitmapClient = null;
         private byte[] depthPixelsClient = null;
 
-        //RenderTargetBitmap bitmap = null;
-
         private const int MapDepthToByte = 8000 / 256;
 
         FrameDescription frameDescription = null;
@@ -72,7 +69,6 @@ namespace MultipleKinectMaster
 
         private const int _Port = 81;
 
-        public DispatcherTimer _timer = null;
 
         //skeleton joints information
         public string B_Head1 = string.Empty;
@@ -95,24 +91,24 @@ namespace MultipleKinectMaster
 
         //Log Declare
         private ILog log = null;
+
+        Dispatcher _dispatcher;
         #endregion
 
 
-        public MasterKinectProcessor(KinectSensor kinectSensor)
+        public MasterKinectProcessor(KinectSensor kinectSensor,Dispatcher guiDispatcher)
         {
             if (kinectSensor == null)
             {
                 throw new ArgumentNullException("kinectSensor");
             }
 
-            _timer = new DispatcherTimer();
-            _timer.Interval = TimeSpan.FromMilliseconds(30);
-            _timer.Tick += _timer_Tick;
-            _timer.Start();
+            _dispatcher = guiDispatcher;
 
             //Socket Server Initial
             _socketServer = new SocketServer(_Port);
             _socketServer.Start();
+            _socketServer.changed += new changeEventHandler(_socketServer_changed);
          
             //multipleFrameReader 
             this.multiFrameSourceReader = kinectSensor.OpenMultiSourceFrameReader(FrameSourceTypes.Depth | FrameSourceTypes.Body);
@@ -187,7 +183,6 @@ namespace MultipleKinectMaster
             this.bodyColors.Add(new Pen(Brushes.Violet, 6));
             #endregion
 
-
             this.drawingGroup = new DrawingGroup();
             this.imageSource = new DrawingImage(this.drawingGroup);
 
@@ -198,6 +193,46 @@ namespace MultipleKinectMaster
             //Timer start 
             swTimer.Start();
 
+        }
+
+        void _socketServer_changed(object sender, EventArgs e)
+        {
+            if (SocketPackage.SocketServer.imgObj != null && SocketPackage.SocketServer.imgObj.ImgBuffer != null)
+            {
+                depthPixelsClient = SocketPackage.SocketServer.imgObj.ImgBuffer;
+                Action GUIDelegateDepthImg = delegate()
+                {
+                    this.depthBitmapClient.WritePixels(
+                        new Int32Rect(0, 0, this.depthBitmapClient.PixelWidth, this.depthBitmapClient.PixelHeight),
+                        this.depthPixelsClient,
+                        this.depthBitmapClient.PixelWidth,
+                        0);
+                };
+                this._dispatcher.BeginInvoke(GUIDelegateDepthImg);
+
+
+                SocketPackage.SocketServer.imgObj.processJoints();
+                for (int i = 0; i < 7; i++)
+                {
+                    MyBody _body = SocketPackage.SocketServer.imgObj.Body[i];
+                    if (_body.isTracked)
+                    {
+                        //string[] pieces = SocketPackage.SocketServer.imgObj.SBodyJoints[0].Split(':');
+                        //string skeletonIndex = pieces[0];
+                        //if (pieces.Length > 1)
+                        //{
+
+                        //    string[] joints = pieces[1].Split('|');
+                        //}
+
+                        Action GUIjointInfoDelegate = delegate()
+                        {
+                            Head2 = string.Format("(User : {0}  >>  Head:{1}", 1, _body.joints[JointType.Head].X);
+                        };
+                        this._dispatcher.BeginInvoke(GUIjointInfoDelegate);
+                    }
+                }
+            }
         }
 
         public void Dispose()
@@ -682,64 +717,7 @@ namespace MultipleKinectMaster
 
 
 
-        void _timer_Tick(object sender, EventArgs e)
-        {
-
-            if (SocketPackage.ClientRequestHandler.imgObj != null && SocketPackage.ClientRequestHandler.imgObj._ImgBuffer != null)
-            {
-                depthPixelsClient = SocketPackage.ClientRequestHandler.imgObj._ImgBuffer;
-                this.depthBitmapClient.WritePixels(
-                    new Int32Rect(0, 0, this.depthBitmapClient.PixelWidth, this.depthBitmapClient.PixelHeight),
-                    this.depthPixelsClient,
-                    this.depthBitmapClient.PixelWidth,
-                    0);
-
-                for (int i = 0; i < 7; i++)
-                {
-                    if (SocketPackage.ClientRequestHandler.imgObj._IsTracked[i])
-                    {
-                        string[] joints = SocketPackage.ClientRequestHandler.imgObj._SBodyJoints[0].Split('|');
-                        Head2 = string.Format("({0}", joints[0]);
-                    }
-
-                }
-
-                //if (SocketPackage.ClientRequestHandler.imgObj._BodyDictTp != null)
-                //{
-                //    foreach (int idx in SocketPackage.ClientRequestHandler.imgObj._BodyDictTp.Keys)
-                //    {
-                //        if (SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item1 == true)
-                //        {
-                //            foreach (JointType jointType in SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2.Keys)
-                //            {
-                //                if (jointType == JointType.Head)
-                //                {
-                //                    Head2 = string.Format("({0},{1})", (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].X,
-                //                        (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].Y);
-                //                }
-                //                else if (jointType == JointType.SpineBase)
-                //                {
-                //                    Torso2 = string.Format("({0},{1})", (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].X,
-                //                        (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].Y);
-                //                }
-                //                else if (jointType == JointType.ShoulderLeft)
-                //                {
-                //                    LShouder2 = string.Format("({0},{1})", (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].X,
-                //                        (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].Y);
-                //                }
-                //                else if (jointType == JointType.ShoulderRight)
-                //                {
-                //                    RShouder2 = string.Format("({0},{1})", (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].X,
-                //                        (int)SocketPackage.ClientRequestHandler.imgObj._BodyDictTp[idx].Item2[jointType].Y);
-                //                }
-                //            }
-                //        }
-                //    }
-                //}
-
-
-            }
-        }
+        
         #endregion
 
     }

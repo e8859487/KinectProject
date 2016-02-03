@@ -14,6 +14,7 @@ using log4net.Config;
 namespace ConsoleTest
 {
     using MyCollections;
+    using Microsoft.Kinect;
 
     class Program
     {
@@ -44,14 +45,26 @@ namespace ConsoleTest
         {
 
 
+            foreach (string str in Enum.GetNames(typeof(JointType)))
+            {
+                Console.WriteLine(str);
+            }
+
+
+
+
+            #region test callback 
+
+            /*
             ListWithChangeEvent list = new ListWithChangeEvent();
 
             EventListener listener = new EventListener(list);
             list.Add("item 1");
             list.Clear();
             listener.Detach();
-
-
+            */
+            
+            #endregion
 
             #region test log4net
 
