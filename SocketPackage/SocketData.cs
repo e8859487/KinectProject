@@ -79,6 +79,7 @@ namespace SocketPackage
 
                     string skeletonIndex = pieces[0];
 
+                    //設定使用者ID
                     b.userId = skeletonIndex;
 
 

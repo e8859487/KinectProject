@@ -11,12 +11,19 @@ using XmlManager;
 using log4net;
 using log4net.Config;
 
+
+using System.Activities;
+using System.Threading;
+using MotionFSM;
+
+using Microsoft.Activities.Extensions.Tracking;
 namespace ConsoleTest
 {
     using MyCollections;
-    using Microsoft.Kinect;
+    using System.Diagnostics;
+    //using Microsoft.Kinect;
 
-    class Program
+    class Program :IWorkflowView
     {
         class EventListener
         {
@@ -39,21 +46,267 @@ namespace ConsoleTest
                 List = null;
             }
         }
-        
+
+        private WorkflowApplication wfApp = null;
+
+        public static StateMachineStateTracker StateTracker;
+
+        private Activity workflowDefinition = new Activity1();
+        private void startFSMRuntime()
+        {
+
+            try
+            {
+                if (wfApp == null)
+                {
+                    wfApp = new WorkflowApplication(workflowDefinition)
+                    {
+                        // tells the  WorkflowRuntime  to run within the same  thread  as the application.
+                        OnUnhandledException = OnUnhandledException,
+                        Completed = OnWorkflowCompleted,
+                        Idle = OnWorkflowIdle,
+                    };
+                    StateTracker = new StateMachineStateTracker(workflowDefinition);
+                    wfApp.Extensions.Add(StateTracker);
+
+                    wfApp.Extensions.Add(new StateTrackerPersistenceProvider( StateTracker));
+                       
+
+                    wfApp.SynchronizationContext = SynchronizationContext.Current;
+                    wfApp.Run();
+                }
+            }
+            catch (Exception ee)
+            {
+
+                throw ee;
+            }
+        }
+
+        /// <summary>  
+        /// The on workflow completed.  
+        /// </summary>  
+        /// <param name="wc">  
+        /// The event args  
+        /// </param>  
+        private void OnWorkflowCompleted(WorkflowApplicationCompletedEventArgs wc)
+        {
+            Console.WriteLine("OnWorkflowCompleted");
+        }
+
+
+        /// <summary>  
+        /// Called when the workflow is idle  
+        /// </summary>  
+        /// <param name="args">  
+        /// The event args.  
+        /// </param>  
+        private void OnWorkflowIdle(WorkflowApplicationIdleEventArgs args)
+        {
+
+            var bookmarkList = new StringBuilder();
+
+            foreach (var bk in args.Bookmarks)
+            {
+                MotionTransitions ret;
+                Enum.TryParse(bk.BookmarkName, out ret);
+ 
+
+                bookmarkList.Append(bk.BookmarkName);
+            }
+            Console.WriteLine(bookmarkList.ToString());
+        }
+        private UnhandledExceptionAction
+     OnUnhandledException(WorkflowApplicationUnhandledExceptionEventArgs uh)
+        {
+            return UnhandledExceptionAction.Terminate;
+        }
+
+
+
+
+
+
+
+        public void OnIdle(WorkflowApplicationIdleEventArgs args)
+        {
+            Console.WriteLine(string.Format("Now State : {0}",statemachineStateTracker.CurrentState));
+
+        }
+
+        UnhandledExceptionAction IWorkflowView.OnUnhandledException(WorkflowApplicationUnhandledExceptionEventArgs args)
+        {
+            return UnhandledExceptionAction.Terminate;
+
+        }
+
+       public  static StateMachineStateTracker statemachineStateTracker;
+
+       public static void printOutEvent(){
+            StringBuilder sb = new StringBuilder();
+
+
+
+            foreach (System.Activities.Statements.Transition ts in statemachineStateTracker.Transitions)
+            {
+                sb.Append(ts.DisplayName);
+                sb.Append(", ");
+            }
+                Console.WriteLine(sb.ToString());
+        }
+
+
+
+       public static bool IsEventExist(StateMachineStateTracker stateMachineStateTracker, string EventName)
+       {
+           //Self transitions
+           if (stateMachineStateTracker.CurrentState == "S_UnKnow")
+           {
+               return true;
+           }
+
+           //Trusted transitions
+           foreach (System.Activities.Statements.Transition ts in stateMachineStateTracker.Transitions)
+           {
+               if (String.Equals(ts.DisplayName, EventName))
+               {
+                   return true;
+               }
+           }
+
+           //unknow transition
+           return false;
+       }
 
         static void Main(string[] args)
         {
+            Debug.WriteLine("123");
 
+
+            Program pg = new Program();
+
+            WorkflowInstance wfInstance = new WorkflowInstance(pg);
+            wfInstance.Run();
+
+            statemachineStateTracker= wfInstance.StateTracker;
+            string eventName = string.Empty;
+
+           
+
+            string str;
+            string a;
+
+             while ((a = Console.ReadLine()) != null)
+            {
+                switch (a.ToLower())
+                {
+                    case "walk" :
+                        eventName = Enum.GetName(typeof(MotionTransitions), MotionTransitions.E_Walk);//
+                        break;
+
+                    case "falldown":
+                        eventName = Enum.GetName(typeof(MotionTransitions), MotionTransitions.E_FallDown);//
+                        break;
+
+                    case "standup":
+                        eventName = Enum.GetName(typeof(MotionTransitions), MotionTransitions.E_StandUp);//
+                        break;
+
+                    case "getup":
+                        eventName = Enum.GetName(typeof(MotionTransitions), MotionTransitions.E_GetUp);//
+                        break;
+
+                    case "stop":
+                        eventName = Enum.GetName(typeof(MotionTransitions), MotionTransitions.E_Stop);//
+                        break;
+
+                    case "sitdown":
+                        eventName = Enum.GetName(typeof(MotionTransitions), MotionTransitions.E_SitDown);//
+                        break;
+
+                    case "liedown":
+                        eventName = Enum.GetName(typeof(MotionTransitions), MotionTransitions.E_LieDown);//
+                        break;
+
+                    case "print":
+                        printOutEvent();
+                        
+                        break;
+
+                    case "globelState":
+                        Console.WriteLine(statemachineStateTracker.CurrentState);
+                        break;
+
+                }
+
+                if (IsEventExist(statemachineStateTracker, eventName))
+                { 
+                    wfInstance.ResumeBookmark(eventName);
+                }
+                else
+                {
+                    wfInstance.ResumeBookmark("E_Unknow");
+                }
+
+            }
+
+
+            #region test wf print state
+
+            /*
+
+            Program pg = new Program();
+            pg.startFSMRuntime();
+            System.Console.WriteLine(Program.StateTracker.CurrentStateMachine);
+
+            string a;
+            while ((a = Console.ReadLine()) != null)
+            {
+                switch (a)
+                {
+                    case "n":
+                        pg.wfApp.ResumeBookmark("E_Walk", string.Empty);
+                        Program.StateTracker.Trace();
+                        System.Console.WriteLine(Program.StateTracker.CurrentState);
+                        break;
+                    case "p":
+                        pg.wfApp.ResumeBookmark("E_su_gu_sd_l", string.Empty);
+                        Program.StateTracker.Trace();
+                        System.Console.WriteLine(Program.StateTracker.CurrentState);
+                        
+                        break;
+                    case "o":
+                        System.Console.WriteLine(Program.StateTracker.CurrentState);
+                        break;
+                }
+                
+            }
+            */
+            
+            #endregion
+
+
+
+
+
+
+
+
+
+
+
+
+            #region test Enum
+            /*
 
             foreach (string str in Enum.GetNames(typeof(JointType)))
             {
                 Console.WriteLine(str);
             }
+            */
+            #endregion
 
-
-
-
-            #region test callback 
+            #region test callback
 
             /*
             ListWithChangeEvent list = new ListWithChangeEvent();
@@ -63,7 +316,7 @@ namespace ConsoleTest
             list.Clear();
             listener.Detach();
             */
-            
+
             #endregion
 
             #region test log4net
@@ -80,11 +333,10 @@ namespace ConsoleTest
             log.Error("test Error");
             Console.Write("HI BITCH");
             */
-            
-            #endregion
-            
 
-            #region testString length socket transmit 
+            #endregion
+
+            #region testString length socket transmit
 
             /*
             string tempStr = "(-0.1302,-0.2052,1.9159)|(-0.1638,0.1214,1.8859)|(-0.1942,0.4356,1.8423)|(-0.2429,0.5843,1.8060)|(-0.3477,0.2696,1.8958)|(-0.3577,-0.0219,1.9069)|(-0.3491,-0.2514,1.8331)|(-0.3399,-0.2885,1.8102)|(-0.0189,0.3171,1.8227)|(0.0899,0.0664,1.8554)|(0.0757,-0.1619,1.7762)|(0.0660,-0.2193,1.7650)|(-0.2024,-0.2120,1.8985)|(-0.2116,-0.5718,1.8008)|(-0.2421,-0.8602,1.7249)|(-0.2541,-0.8841,1.6147)|(-0.0527,-0.1901,1.8574)|(0.0076,-0.5683,1.9041)|(0.0170,-0.9306,2.0352)|(0.0341,-0.9929,1.9632)|(-0.1871,0.3588,1.8555)|(-0.3386,-0.3539,1.7809)|(-0.3672,-0.3091,1.7729)|(0.0460,-0.2963,1.7455)|(0.0787,-0.2310,1.7213)|(-0.1302,-0.2052,1.9159)|(-0.1638,0.1214,1.8859)|(-0.1942,0.4356,1.8423)|(-0.2429,0.5843,1.8060)|(-0.3477,0.2696,1.8958)|(-0.3577,-0.0219,1.9069)|(-0.3491,-0.2514,1.8331)|(-0.3399,-0.2885,1.8102)|(-0.0189,0.3171,1.8227)|(0.0899,0.0664,1.8554)|(0.0757,-0.1619,1.7762)|(0.0660,-0.2193,1.7650)|(-0.2024,-0.2120,1.8985)|(-0.2116,-0.5718,1.8008)|(-0.2421,-0.8602,1.7249)|(-0.2541,-0.8841,1.6147)|(-0.0527,-0.1901,1.8574)|(0.0076,-0.5683,1.9041)|(0.0170,-0.9306,2.0352)|(0.0341,-0.9929,1.9632)|(-0.1871,0.3588,1.8555)|(-0.3386,-0.3539,1.7809)|(-0.3672,-0.3091,1.7729)|(0.0460,-0.2963,1.7455)|(0.0787,-0.2310,1.7213)|";
@@ -95,10 +347,9 @@ namespace ConsoleTest
             Console.Write(b);
 
             */
-            
-            #endregion 
-            
-            
+
+            #endregion
+
             #region 練習讀取XML讀檔
 
             /*
@@ -110,7 +361,7 @@ namespace ConsoleTest
              * 
              * 
             */
-            
+
             #endregion
 
             #region 練習Client端網路連接
@@ -151,7 +402,6 @@ namespace ConsoleTest
 
             #endregion
 
-
             #region 練習double to string format
 
             /*
@@ -163,7 +413,6 @@ namespace ConsoleTest
 
             #endregion
 
-            
             #region 練習memroystream
             /*
             MemoryStream ms = new MemoryStream();
@@ -247,10 +496,10 @@ namespace ConsoleTest
              */
             #endregion
 
-
-
             Console.ReadLine();
 
         }
+
+
     }
 }

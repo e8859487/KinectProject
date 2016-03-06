@@ -72,22 +72,22 @@ namespace MultipleKinectMaster
 
         //skeleton joints information
         public string B_Head1 = string.Empty;
-        public string B_Torso1 = string.Empty;
-        public string B_LShouder1 = string.Empty;
-        public string B_RShouder1 = string.Empty;
+        //public string B_Torso1 = string.Empty;
+        //public string B_LShouder1 = string.Empty;
+        //public string B_RShouder1 = string.Empty;
         //Total Frame
         public int B_FrameNumbers1 = 0;
         //Frame Rate
         public int B_FrameNumbers1_average = 0;
         //Timer to calculate the Frame Rate
         System.Diagnostics.Stopwatch swTimer = new System.Diagnostics.Stopwatch();
-        //Skeleton Joints Information
-        StringBuilder sb_SkeletonJointInfo1 = new StringBuilder();
+        
 
-        public string B_Head2 = string.Empty;
-        public string B_Torso2 = string.Empty;
-        public string B_LShouder2 = string.Empty;
-        public string B_RShouder2 = string.Empty;
+        public string txb2_skeletonInfo = string.Empty;
+
+        //public string B_Torso2 = string.Empty;
+        //public string B_LShouder2 = string.Empty;
+        //public string B_RShouder2 = string.Empty;
 
         //Log Declare
         private ILog log = null;
@@ -193,6 +193,8 @@ namespace MultipleKinectMaster
             //Timer start 
             swTimer.Start();
 
+            //
+
         }
 
         void _socketServer_changed(object sender, EventArgs e)
@@ -210,28 +212,34 @@ namespace MultipleKinectMaster
                 };
                 this._dispatcher.BeginInvoke(GUIDelegateDepthImg);
 
-
+                //預處理骨架資料
                 SocketPackage.SocketServer.imgObj.processJoints();
+
+                //
+                StringBuilder sb = new StringBuilder();
+
                 for (int i = 0; i < 7; i++)
                 {
                     MyBody _body = SocketPackage.SocketServer.imgObj.Body[i];
+
                     if (_body.isTracked)
                     {
-                        //string[] pieces = SocketPackage.SocketServer.imgObj.SBodyJoints[0].Split(':');
-                        //string skeletonIndex = pieces[0];
-                        //if (pieces.Length > 1)
-                        //{
-
-                        //    string[] joints = pieces[1].Split('|');
-                        //}
-
-                        Action GUIjointInfoDelegate = delegate()
-                        {
-                            Head2 = string.Format("(User : {0}  >>  Head:{1}", 1, _body.joints[JointType.Head].X);
-                        };
-                        this._dispatcher.BeginInvoke(GUIjointInfoDelegate);
+                        sb.Append(string.Format("User : {0} {1}:({2},{3},{4})\n", 
+                            _body.userId, 
+                            JointType.Head.ToString(), 
+                            (int)(_body.joints[JointType.Head].X * 100),
+                            (int)(_body.joints[JointType.Head].Y * 100),
+                            (int)(_body.joints[JointType.Head].Z * 100)
+                            ));
                     }
                 }
+
+                //顯示到UI上
+                Action GUIjointInfoDelegate = delegate()
+                {
+                    Txb2SkeletonInfo = sb.ToString();
+                };
+                this._dispatcher.BeginInvoke(GUIjointInfoDelegate);
             }
         }
 
@@ -245,7 +253,9 @@ namespace MultipleKinectMaster
             }
         }
 
-        public void StartAsychronousRecord() {
+        #region GUI Commands
+        public void StartAsychronousRecord()
+        {
             _socketServer.SendStartAsychronousRecord();
         }
 
@@ -258,21 +268,21 @@ namespace MultipleKinectMaster
         {
             _socketServer.SendStartAsychronousPlay();
         }
+
         public void StopAsychronousPlay()
         {
             _socketServer.SendStopAsychronousPlay();
         }
 
-        #region GUI Getter and Setter
-        public ImageSource ImageSourceClient
+        internal void testMotion()
         {
-            get
-            {
-                //  return this.imageSource;
-                return this.depthBitmapClient;
-            }
+
+
 
         }
+        #endregion
+
+        #region GUI Getter and Setter
 
         public ImageSource ImageSourceMaster
         {
@@ -281,12 +291,21 @@ namespace MultipleKinectMaster
                 return this.imageSource;
                 //return this.depthBitmap;
             }
-
         }
+
+        public ImageSource ImageSourceClient
+        {
+            get
+            {
+                //  return this.imageSource;
+                return this.depthBitmapClient;
+            }
+        }
+
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public string Head1
+        public string Txb_SkeletonInfo
         {
             get
             {
@@ -299,64 +318,7 @@ namespace MultipleKinectMaster
                     B_Head1 = value;
                     if (this.PropertyChanged != null)
                     {
-                        this.PropertyChanged(this, new PropertyChangedEventArgs("Head1"));
-                    }
-                }
-            }
-        }
-
-        public string Torso1
-        {
-            get
-            {
-                return this.B_Torso1;
-            }
-            set
-            {
-                if (B_Torso1 != value)
-                {
-                    B_Torso1 = value;
-                    if (this.PropertyChanged != null)
-                    {
-                        this.PropertyChanged(this, new PropertyChangedEventArgs("Torso1"));
-                    }
-                }
-            }
-        }
-
-        public string LShouder1
-        {
-            get
-            {
-                return this.B_LShouder1;
-            }
-            set
-            {
-                if (B_LShouder1 != value)
-                {
-                    B_LShouder1 = value;
-                    if (this.PropertyChanged != null)
-                    {
-                        this.PropertyChanged(this, new PropertyChangedEventArgs("LShouder1"));
-                    }
-                }
-            }
-        }
-
-        public string RShouder1
-        {
-            get
-            {
-                return this.B_RShouder1;
-            }
-            set
-            {
-                if (B_RShouder1 != value)
-                {
-                    B_RShouder1 = value;
-                    if (this.PropertyChanged != null)
-                    {
-                        this.PropertyChanged(this, new PropertyChangedEventArgs("RShouder1"));
+                        this.PropertyChanged(this, new PropertyChangedEventArgs("Txb_SkeletonInfo"));
                     }
                 }
             }
@@ -381,81 +343,40 @@ namespace MultipleKinectMaster
             }
         }
 
-        public string Head2 
+        public string Txb2SkeletonInfo 
         {
             get
             {
-                return this.B_Head2;
+                return this.txb2_skeletonInfo;
             }
             set
             {
-                if (B_Head2 != value)
+                if (txb2_skeletonInfo != value)
                 {
-                    B_Head2 = value;
+                    txb2_skeletonInfo = value;
                     if (this.PropertyChanged != null)
                     {
-                        this.PropertyChanged(this, new PropertyChangedEventArgs("Head2"));
+                        this.PropertyChanged(this, new PropertyChangedEventArgs("Txb2SkeletonInfo"));
                     }
                 }
             }
         }
 
-        public string Torso2
-        {
-            get
-            {
-                return this.B_Torso2;
+        private string txb_Motions = string.Empty;
+
+        public string Txb_Motions{
+            get{
+                return this.txb_Motions;
             }
-            set
-            {
-                if (B_Torso2 != value)
-                {
-                    B_Torso2 = value;
-                    if (this.PropertyChanged != null)
-                    {
-                        this.PropertyChanged(this, new PropertyChangedEventArgs("Torso2"));
+            set{
+                if(txb_Motions != value){
+                    txb_Motions = value;
+                    if(PropertyChanged !=null){
+                        this.PropertyChanged(this,new PropertyChangedEventArgs("Txb_Motions"));
                     }
                 }
             }
         }
-
-        public string LShouder2
-        {
-            get
-            {
-                return this.B_LShouder2;
-            }
-            set
-            {
-                if (B_LShouder2 != value)
-                {
-                    B_LShouder2 = value;
-                    if (this.PropertyChanged != null)
-                    {
-                        this.PropertyChanged(this, new PropertyChangedEventArgs("LShouder2"));
-                    }
-                }
-            }
-        }
-
-        public string RShouder2
-        {
-            get
-            {
-                return this.B_RShouder2;
-            }
-            set
-            {
-                if (B_RShouder2 != value)
-                {
-                    B_RShouder2 = value;
-                    if (this.PropertyChanged != null)
-                    {
-                        this.PropertyChanged(this, new PropertyChangedEventArgs("RShouder2"));
-                    }
-                }
-            }
-        } 
 
         #endregion
 
@@ -522,9 +443,7 @@ namespace MultipleKinectMaster
                     bodyFrame.GetAndRefreshBodyData(this.bodies);
                     dataReceived = true;
 
-                    //Store Skeleton Joints Information
-                    sb_SkeletonJointInfo1.Clear();
-                    sb_SkeletonJointInfo1.Append(string.Format("T:{0} ", bodyFrame.RelativeTime.Milliseconds));
+       
                 }
                 if (dataReceived)
                 {
@@ -560,8 +479,6 @@ namespace MultipleKinectMaster
                     multiSourceFrame = null;
                 }
             }
-
-
         }
 
         private void UpdateBodyFrame(Body[] bodies)
@@ -573,6 +490,9 @@ namespace MultipleKinectMaster
                     // dc.DrawRectangle(Brushes.Black, null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                     dc.DrawImage(depthBitmap, new System.Windows.Rect(0, 0, depthBitmap.PixelWidth, depthBitmap.PixelHeight));
                     int penIndex = 0;
+
+                    //Skeleton Joints Information  (Device - master )
+                    StringBuilder sb_SkeletonJointInfo1 = new StringBuilder();
                     foreach (Body body in bodies)
                     {
                         Pen drawPen = this.bodyColors[penIndex++];
@@ -581,6 +501,8 @@ namespace MultipleKinectMaster
                             IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
                             // convert the joint points to depth (display) space
                             Dictionary<JointType, Point> jointPoints = new Dictionary<JointType, Point>();
+
+                            sb_SkeletonJointInfo1.Append(string.Format("User : {0} ",body.TrackingId));
 
                             foreach (JointType jointType in joints.Keys)
                             {
@@ -597,28 +519,18 @@ namespace MultipleKinectMaster
 
                                 if (jointType == JointType.Head)
                                 {
-                                    Head1 = string.Format("({0},{1},{2})", (int)(position.X * 100), (int)(position.Y * 100), (int)(position.Z * 100));
+                                    sb_SkeletonJointInfo1.Append(string.Format("{0}:({1},{2},{3})", jointType, (int)(position.X * 100), (int)(position.Y * 100), (int)(position.Z * 100)));
                                 }
-                                else if (jointType == JointType.SpineBase)
-                                {
-                                    Torso1 = string.Format("({0},{1},{2})", (int)(position.X * 100), (int)(position.Y * 100), (int)(position.Z * 100));
-                                }
-                                else if (jointType == JointType.ShoulderLeft)
-                                {
-                                    LShouder1 = string.Format("({0},{1},{2})", (int)(position.X * 100), (int)(position.Y * 100), (int)(position.Z * 100));
-                                }
-                                else if (jointType == JointType.ShoulderRight)
-                                {
-                                    RShouder1 = string.Format("({0},{1},{2})", (int)(position.X * 100), (int)(position.Y * 100), (int)(position.Z * 100));
-                                }
-
-
-                                sb_SkeletonJointInfo1.Append(string.Format("{0}:({1},{2},{3})", jointType, (int)(position.X * 100), (int)(position.Y * 100), (int)(position.Z * 100)));
-
                             }
+                            //區別不同人
+                            sb_SkeletonJointInfo1.Append("\n");
+                            //Dispaly to GUI
+                            Txb_SkeletonInfo = sb_SkeletonJointInfo1.ToString();
+                    
                             this.DrawBody(joints, jointPoints, dc, drawPen);
                         }
                     }
+
 
                     this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                 }
@@ -719,6 +631,8 @@ namespace MultipleKinectMaster
 
         
         #endregion
+
+    
 
     }
 }

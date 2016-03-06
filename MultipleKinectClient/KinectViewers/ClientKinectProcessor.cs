@@ -84,7 +84,7 @@ namespace MultipleKinectClient
         //記錄當下偵測到的人體骨架編號
         string bodyIndex = string.Empty;
 
-        ImageInfo_Serializable ImgObj = null;
+        //ImageInfo_Serializable ImgObj = null;
         Dictionary<int, string> _JointsPosDict = new Dictionary<int, string>(); 
 
         //用來評估程式碼計算的時間
@@ -199,7 +199,7 @@ namespace MultipleKinectClient
 
             //serializable Image object . Including depth and skeleton joints. 
             //ImgObj   size :　depthBitmap.PixelHeight * stride
-            ImgObj = new ImageInfo_Serializable(1);
+            //ImgObj = new ImageInfo_Serializable(1);
 
             //Log Setting
             XmlConfigurator.Configure(new System.IO.FileInfo(@"./config.xml"));
@@ -467,7 +467,7 @@ namespace MultipleKinectClient
                     foreach (Body body in bodies)
                     {
                         Pen drawPen = this.bodyColors[BodyIndex++];
-                        ImgObj._SBodyJoints[BodyIndex] = "";
+                        //ImgObj._SBodyJoints[BodyIndex] = "";
                         sb_skeletonJoints = new StringBuilder();
                         int testnumber = 0;
                         if (body.IsTracked)

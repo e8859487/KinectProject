@@ -39,7 +39,7 @@ namespace MultipleKinectMaster
 
         private MasterKinectProcessor masterKinectProcessor = null;
 
-        private int msgFlag = 0;
+        //private int msgFlag = 0;
 
         private KStudioRecording recording;
 
@@ -62,19 +62,16 @@ namespace MultipleKinectMaster
             this.kinectBodyViewboxMaster.DataContext = this.masterKinectProcessor;
 
             //Access Skeleton joints information from Server
-            this.Head1.DataContext = this.masterKinectProcessor;
-            this.Torso1.DataContext = this.masterKinectProcessor;
-            this.LShouder1.DataContext = this.masterKinectProcessor;
-            this.RShouder1.DataContext = this.masterKinectProcessor;
+            this.Txb_SkeletonInfo.DataContext = this.masterKinectProcessor;
             this.FrameNumbers1.DataContext = this.masterKinectProcessor; //Frame numbers
 
             //Access Skeleton joints information from Client
-            this.Head2.DataContext = this.masterKinectProcessor;
-            this.Torso2.DataContext = this.masterKinectProcessor;
-            this.LShouder2.DataContext = this.masterKinectProcessor;
-            this.RShouder2.DataContext = this.masterKinectProcessor;
+            this.Txb2SkeletonInfo.DataContext = this.masterKinectProcessor;
 
-            //讀取同步播放檔案路徑
+            //test Motions 
+            this.Txb_Motions.DataContext = this.masterKinectProcessor;
+
+            //讀取同步播放的檔案路徑
             XmlManager.XmlReader reader = new XmlManager.XmlReader(@"./Setting.xml");
             playBackFilePath = reader.getNodeInnerText(@"/Root/SynchronousPlayPath");
             reader.Dispose();
@@ -341,6 +338,11 @@ namespace MultipleKinectMaster
         }
 
         #endregion
+
+        private void testMotion_Click(object sender, RoutedEventArgs e)
+        {
+            masterKinectProcessor.testMotion();
+        }
 
 
 

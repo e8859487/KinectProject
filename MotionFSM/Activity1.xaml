@@ -1,0 +1,710 @@
+﻿<Activity mc:Ignorable="sap sap2010 sads" x:Class="MotionFSM.Activity1" sap2010:ExpressionActivityEditor.ExpressionActivityEditor="C#" sap2010:WorkflowViewState.IdRef="MotionFSM.Activity1_1"
+ xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+ xmlns:av="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:local="clr-namespace:MotionFSM"
+ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+ xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+ xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+ xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+ xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=mscorlib"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.Text</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.ServiceModel</AssemblyReference>
+      <AssemblyReference>System.Xml</AssemblyReference>
+      <AssemblyReference>System.Xml.Linq</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <StateMachine DisplayName="MotionFSM" sap2010:WorkflowViewState.IdRef="StateMachine_1">
+    <StateMachine.InitialState>
+      <State x:Name="__ReferenceID3" DisplayName="S_UnKnow" sap2010:WorkflowViewState.IdRef="State_1">
+        <State.Transitions>
+          <Transition DisplayName="E_Walk" sap2010:WorkflowViewState.IdRef="Transition_1">
+            <Transition.Trigger>
+              <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_1" ResponseName="E_Walk" />
+            </Transition.Trigger>
+            <Transition.To>
+              <State x:Name="__ReferenceID0" DisplayName="S_Walking" sap2010:WorkflowViewState.IdRef="State_3">
+                <State.Transitions>
+                  <Transition DisplayName="E_Stop" sap2010:WorkflowViewState.IdRef="Transition_9">
+                    <Transition.Trigger>
+                      <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_2" ResponseName="E_Stop" />
+                    </Transition.Trigger>
+                    <Transition.To>
+                      <State x:Name="__ReferenceID1" DisplayName="S_Standing" sap2010:WorkflowViewState.IdRef="State_4">
+                        <State.Transitions>
+                          <Transition DisplayName="E_Walk" sap2010:WorkflowViewState.IdRef="Transition_2">
+                            <Transition.Trigger>
+                              <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_3" ResponseName="E_Walk" />
+                            </Transition.Trigger>
+                            <Transition.To>
+                              <x:Reference>__ReferenceID0</x:Reference>
+                            </Transition.To>
+                          </Transition>
+                          <Transition DisplayName="E_SitDown" sap2010:WorkflowViewState.IdRef="Transition_7">
+                            <Transition.Trigger>
+                              <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_4" ResponseName="E_SitDown" />
+                            </Transition.Trigger>
+                            <Transition.To>
+                              <State x:Name="__ReferenceID2" DisplayName="S_Sitting" sap2010:WorkflowViewState.IdRef="State_6">
+                                <State.Transitions>
+                                  <Transition DisplayName="E_StandUp" sap2010:WorkflowViewState.IdRef="Transition_3">
+                                    <Transition.Trigger>
+                                      <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_5" ResponseName="E_StandUp" />
+                                    </Transition.Trigger>
+                                    <Transition.To>
+                                      <x:Reference>__ReferenceID1</x:Reference>
+                                    </Transition.To>
+                                  </Transition>
+                                  <Transition DisplayName="E_LieDown" sap2010:WorkflowViewState.IdRef="Transition_12">
+                                    <Transition.Trigger>
+                                      <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_10" ResponseName="E_LieDown" />
+                                    </Transition.Trigger>
+                                    <Transition.To>
+                                      <State x:Name="__ReferenceID4" DisplayName="S_Lying" sap2010:WorkflowViewState.IdRef="State_5">
+                                        <State.Transitions>
+                                          <Transition DisplayName="E_GetUp" sap2010:WorkflowViewState.IdRef="Transition_11">
+                                            <Transition.Trigger>
+                                              <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_11" ResponseName="E_GetUp" />
+                                            </Transition.Trigger>
+                                            <Transition.To>
+                                              <x:Reference>__ReferenceID2</x:Reference>
+                                            </Transition.To>
+                                          </Transition>
+                                          <Transition DisplayName="E_Stop_Walk_StandUp_FallDown_SitDown" sap2010:WorkflowViewState.IdRef="Transition_17">
+                                            <Transition.Trigger>
+                                              <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_12" ResponseName="E_Unknow" />
+                                            </Transition.Trigger>
+                                            <Transition.To>
+                                              <x:Reference>__ReferenceID3</x:Reference>
+                                            </Transition.To>
+                                          </Transition>
+                                          <Transition DisplayName="E_LieDown" sap2010:WorkflowViewState.IdRef="Transition_25">
+                                            <Transition.Trigger>
+                                              <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_25" ResponseName="E_LieDown" />
+                                            </Transition.Trigger>
+                                            <Transition.To>
+                                              <x:Reference>__ReferenceID4</x:Reference>
+                                            </Transition.To>
+                                          </Transition>
+                                        </State.Transitions>
+                                      </State>
+                                    </Transition.To>
+                                  </Transition>
+                                  <Transition DisplayName="E_Stop_Walk_FallDown_GetUp" sap2010:WorkflowViewState.IdRef="Transition_18">
+                                    <Transition.Trigger>
+                                      <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_13" ResponseName="E_Unknow" />
+                                    </Transition.Trigger>
+                                    <Transition.To>
+                                      <x:Reference>__ReferenceID3</x:Reference>
+                                    </Transition.To>
+                                  </Transition>
+                                  <Transition DisplayName="E_SitDown" sap2010:WorkflowViewState.IdRef="Transition_29">
+                                    <Transition.Trigger>
+                                      <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_31" ResponseName="E_SitDown" />
+                                    </Transition.Trigger>
+                                    <Transition.To>
+                                      <x:Reference>__ReferenceID2</x:Reference>
+                                    </Transition.To>
+                                  </Transition>
+                                  <Transition DisplayName="E_GetUp" sap2010:WorkflowViewState.IdRef="Transition_30">
+                                    <Transition.Trigger>
+                                      <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_32" ResponseName="E_GetUp" />
+                                    </Transition.Trigger>
+                                    <Transition.To>
+                                      <x:Reference>__ReferenceID2</x:Reference>
+                                    </Transition.To>
+                                  </Transition>
+                                  <Transition DisplayName="E_FallDown" sap2010:WorkflowViewState.IdRef="Transition_6">
+                                    <Transition.Trigger>
+                                      <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_6" ResponseName="E_FallDown" />
+                                    </Transition.Trigger>
+                                    <Transition.To>
+                                      <State x:Name="__ReferenceID5" DisplayName="S_Failing" sap2010:WorkflowViewState.IdRef="State_2">
+                                        <State.Transitions>
+                                          <Transition DisplayName="E_Stop_Walk_SitDown_LieDown" sap2010:WorkflowViewState.IdRef="Transition_16">
+                                            <Transition.Trigger>
+                                              <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_7" ResponseName="E_Unknow" />
+                                            </Transition.Trigger>
+                                            <Transition.To>
+                                              <x:Reference>__ReferenceID3</x:Reference>
+                                            </Transition.To>
+                                          </Transition>
+                                          <Transition DisplayName="E_StandUp" sap2010:WorkflowViewState.IdRef="Transition_5">
+                                            <Transition.Trigger>
+                                              <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_8" ResponseName="E_StandUp" />
+                                            </Transition.Trigger>
+                                            <Transition.To>
+                                              <x:Reference>__ReferenceID1</x:Reference>
+                                            </Transition.To>
+                                          </Transition>
+                                          <Transition DisplayName="E_GetUp" sap2010:WorkflowViewState.IdRef="Transition_4">
+                                            <Transition.Trigger>
+                                              <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_9" ResponseName="E_GetUp" />
+                                            </Transition.Trigger>
+                                            <Transition.To>
+                                              <x:Reference>__ReferenceID2</x:Reference>
+                                            </Transition.To>
+                                          </Transition>
+                                          <Transition DisplayName="E_FallDown" sap2010:WorkflowViewState.IdRef="Transition_24">
+                                            <Transition.Trigger>
+                                              <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_23" ResponseName="E_FallDown" />
+                                            </Transition.Trigger>
+                                            <Transition.To>
+                                              <x:Reference>__ReferenceID5</x:Reference>
+                                            </Transition.To>
+                                          </Transition>
+                                        </State.Transitions>
+                                      </State>
+                                    </Transition.To>
+                                  </Transition>
+                                </State.Transitions>
+                              </State>
+                            </Transition.To>
+                          </Transition>
+                          <Transition DisplayName="E_GetUp_LieDown" sap2010:WorkflowViewState.IdRef="Transition_19">
+                            <Transition.Trigger>
+                              <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_14" ResponseName="E_Unknow" />
+                            </Transition.Trigger>
+                            <Transition.To>
+                              <x:Reference>__ReferenceID3</x:Reference>
+                            </Transition.To>
+                          </Transition>
+                          <Transition DisplayName="E_FallDown" sap2010:WorkflowViewState.IdRef="Transition_8">
+                            <Transition.Trigger>
+                              <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_15" ResponseName="E_FallDown" />
+                            </Transition.Trigger>
+                            <Transition.To>
+                              <x:Reference>__ReferenceID5</x:Reference>
+                            </Transition.To>
+                          </Transition>
+                          <Transition DisplayName="E_StandUp" sap2010:WorkflowViewState.IdRef="Transition_27">
+                            <Transition.Trigger>
+                              <Sequence sap2010:WorkflowViewState.IdRef="Sequence_4">
+                                <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_27" ResponseName="E_StandUp" />
+                              </Sequence>
+                            </Transition.Trigger>
+                            <Transition.To>
+                              <x:Reference>__ReferenceID1</x:Reference>
+                            </Transition.To>
+                          </Transition>
+                          <Transition DisplayName="E_Stop" sap2010:WorkflowViewState.IdRef="Transition_31">
+                            <Transition.Trigger>
+                              <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_33" ResponseName="E_Stop" />
+                            </Transition.Trigger>
+                            <Transition.To>
+                              <x:Reference>__ReferenceID1</x:Reference>
+                            </Transition.To>
+                          </Transition>
+                        </State.Transitions>
+                      </State>
+                    </Transition.To>
+                  </Transition>
+                  <Transition DisplayName="E_FallDown" sap2010:WorkflowViewState.IdRef="Transition_13">
+                    <Transition.Trigger>
+                      <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_16" ResponseName="E_FallDown" />
+                    </Transition.Trigger>
+                    <Transition.To>
+                      <x:Reference>__ReferenceID5</x:Reference>
+                    </Transition.To>
+                  </Transition>
+                  <Transition DisplayName="E_StandUp_GetUp_SitDown_LieDown" sap2010:WorkflowViewState.IdRef="Transition_20">
+                    <Transition.Trigger>
+                      <Sequence sap2010:WorkflowViewState.IdRef="Sequence_5">
+                        <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_17" ResponseName="E_Unknow" />
+                      </Sequence>
+                    </Transition.Trigger>
+                    <Transition.To>
+                      <x:Reference>__ReferenceID3</x:Reference>
+                    </Transition.To>
+                  </Transition>
+                  <Transition DisplayName="E_Walk" sap2010:WorkflowViewState.IdRef="Transition_28">
+                    <Transition.Trigger>
+                      <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_24" ResponseName="E_Walk" />
+                    </Transition.Trigger>
+                    <Transition.To>
+                      <x:Reference>__ReferenceID0</x:Reference>
+                    </Transition.To>
+                  </Transition>
+                </State.Transitions>
+              </State>
+            </Transition.To>
+          </Transition>
+          <Transition DisplayName="E_FallDown" sap2010:WorkflowViewState.IdRef="Transition_15">
+            <Transition.Trigger>
+              <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_18" ResponseName="E_FallDown" />
+            </Transition.Trigger>
+            <Transition.To>
+              <x:Reference>__ReferenceID5</x:Reference>
+            </Transition.To>
+          </Transition>
+          <Transition DisplayName="E_StandUp_Stop" sap2010:WorkflowViewState.IdRef="Transition_21">
+            <Transition.Trigger>
+              <Sequence sap2010:WorkflowViewState.IdRef="Sequence_2">
+                <Pick sap2010:WorkflowViewState.IdRef="Pick_1">
+                  <PickBranch DisplayName="Branch1" sap2010:WorkflowViewState.IdRef="PickBranch_1">
+                    <PickBranch.Trigger>
+                      <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_19" ResponseName="E_StandUp" />
+                    </PickBranch.Trigger>
+                  </PickBranch>
+                  <PickBranch DisplayName="Branch2" sap2010:WorkflowViewState.IdRef="PickBranch_2">
+                    <PickBranch.Trigger>
+                      <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_22" ResponseName="E_Stop" />
+                    </PickBranch.Trigger>
+                  </PickBranch>
+                </Pick>
+              </Sequence>
+            </Transition.Trigger>
+            <Transition.To>
+              <x:Reference>__ReferenceID1</x:Reference>
+            </Transition.To>
+          </Transition>
+          <Transition DisplayName="E_SitDown_GetUp" sap2010:WorkflowViewState.IdRef="Transition_22">
+            <Transition.Trigger>
+              <Sequence sap2010:WorkflowViewState.IdRef="Sequence_6">
+                <Pick sap2010:WorkflowViewState.IdRef="Pick_4">
+                  <PickBranch DisplayName="Branch1" sap2010:WorkflowViewState.IdRef="PickBranch_7">
+                    <PickBranch.Trigger>
+                      <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_20" ResponseName="E_SitDown" />
+                    </PickBranch.Trigger>
+                  </PickBranch>
+                  <PickBranch DisplayName="Branch2" sap2010:WorkflowViewState.IdRef="PickBranch_8">
+                    <PickBranch.Trigger>
+                      <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_30" ResponseName="E_GetUp" />
+                    </PickBranch.Trigger>
+                  </PickBranch>
+                </Pick>
+              </Sequence>
+            </Transition.Trigger>
+            <Transition.To>
+              <x:Reference>__ReferenceID2</x:Reference>
+            </Transition.To>
+          </Transition>
+          <Transition DisplayName="E_LieDown" sap2010:WorkflowViewState.IdRef="Transition_23">
+            <Transition.Trigger>
+              <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_21" ResponseName="E_LieDown" />
+            </Transition.Trigger>
+            <Transition.To>
+              <x:Reference>__ReferenceID4</x:Reference>
+            </Transition.To>
+          </Transition>
+        </State.Transitions>
+      </State>
+    </StateMachine.InitialState>
+    <x:Reference>__ReferenceID3</x:Reference>
+    <x:Reference>__ReferenceID5</x:Reference>
+    <x:Reference>__ReferenceID0</x:Reference>
+    <x:Reference>__ReferenceID1</x:Reference>
+    <x:Reference>__ReferenceID4</x:Reference>
+    <x:Reference>__ReferenceID2</x:Reference>
+    <sads:DebugSymbol.Symbol>d1tDOlxVc2Vyc1zogZbmlrlcT25lRHJpdmVcR3JhZHVhdGVDb2RlXFJCRy1EX01PU1RfUHJvamVjdF9LNFd2Ml9XUEZcTW90aW9uRlNNXEFjdGl2aXR5MS54YW1sLyADuwISAgEBIgeyAg8CASWJASesAS8CAR8pD/QBFwIBGDAX1gEfAgEPTidpLwIBCj8fsAEnAgECJg8mjwECATX5AQ/5AZQBAgE0gQIPjgIaAgEulgIPowIaAgEoqwIPqwKTAQIBJ40BL40BsQECASSVAS+VAbIBAgEjnQEvnQGwAQIBIqUBL6UBtAECASEtFy2XAQIBHtsBF9sBnAECAR3jARflASICARvtARftAZgBAgEaNB80nwECARc8HzyiAQIBFrUBH7UBogECARW9AR+9AaQBAgEUxQEfxwEqAgESzwEfzwGgAQIBEVIvUrEBAgEOWi9asgECAQ1iL2KzAQIBDEMnQ6oBAgEJSydLqwECAQhuJ26qAQIBB3YndqsBAgEGfid+qQECAQWGASeGAasBAgEEggIRjQIYAgEvlwIRogIYAgEp5AEZ5AGcAQIBHMYBIcYBpQECARODAhOHAiACATKIAhOMAiACATCYAhOcAiACASydAhOhAiACASqFAheFApsBAgEzigIXigKYAQIBMZoCF5oCmwECAS2fAhefApkBAgEr</sads:DebugSymbol.Symbol>
+  </StateMachine>
+  <sap2010:WorkflowViewState.ViewStateManager>
+    <sap2010:ViewStateManager>
+      <sap2010:ViewStateData Id="WaitForResponse`1_1" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="WaitForResponse`1_2" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="WaitForResponse`1_3" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_2" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">407.12,389.6 407.12,359.6 406.8,359.6 406.8,300</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">42</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">47</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_4" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="WaitForResponse`1_5" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_3" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">732,445.44 702,445.44 702,444.48 467.6,444.48</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">61</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">52</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_10" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="WaitForResponse`1_11" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_11" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">983.2,438.24 953.2,438.24 953.2,445.44 868,445.44</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">61</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">60</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_12" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_17" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">1028.64,450.4 1028.64,634.074280825758 16,634.074280825758 16,324</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">31</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">7</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_25" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_25" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">1068.4,450.4 1068.4,490.236559459352 1091.12,490.236559459352 1091.12,450.4</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">59</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">75</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="State_5" sap:VirtualizedContainerService.HintSize="113.6,60.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">983.2,389.6</av:Point>
+            <av:Size x:Key="ShapeSize">113.6,60.8</av:Size>
+            <x:Boolean x:Key="IsPinned">False</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Transition_12" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">868,398.8 898,398.8 898,407.84 983.2,407.84</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">16</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">21</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_13" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_18" sap:VirtualizedContainerService.HintSize="430.4,512">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">779.6,462.4 779.6,578.897469680354 48,578.897469680354 48,324</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">27</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">23</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_31" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_29" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">820.4,462.4 820.4,471.4 828.090799102323,471.4 828.090799102323,492.449362784012 840.8,492.449362784012 840.8,462.4</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">51</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">63</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_32" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_30" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">800,462.4 800,516.026119210287 861.2,516.026119210287 861.2,462.4</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">39</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">75</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_6" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="WaitForResponse`1_7" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_16" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">800,229.6 800,109.090445566722 96,109.090445566722 96,229.6</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">38</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">46</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_8" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_5" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">743.2,278.24 716.702282906138,278.24 716.702282906138,314.837414832087 454.16,314.837414832087 454.16,389.6</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">61</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">70</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_9" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_4" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">788.64,290.4 788.64,320.4 772.8,320.4 772.8,377.6</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">31</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">22</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_23" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_24" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">856.8,260 875.44,260 875.44,199.6 845.44,199.6 845.44,229.6</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">36</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">70</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="State_2" sap:VirtualizedContainerService.HintSize="113.6,60.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">743.2,229.6</av:Point>
+            <av:Size x:Key="ShapeSize">113.6,60.8</av:Size>
+            <x:Boolean x:Key="IsPinned">False</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Transition_6" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">861.2,377.6 861.2,347.6 828.4,347.6 828.4,290.4</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">74</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">59</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="State_6" sap:VirtualizedContainerService.HintSize="136,84.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">732,377.6</av:Point>
+            <av:Size x:Key="ShapeSize">136,84.8</av:Size>
+            <x:Boolean x:Key="IsPinned">False</x:Boolean>
+            <x:Double x:Key="StateContainerWidth">121.59402986595524</x:Double>
+            <x:Double x:Key="StateContainerHeight">48.69602404561158</x:Double>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Transition_7" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">467.6,417.04 497.6,417.04 497.6,424.24 732,424.24</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">24</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">41</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_14" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_19" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">380.24,468 380.24,533.797492215412 104,533.797492215412 104,324</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">27</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">51</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_15" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_8" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">467.6,401.36 493.967031774825,401.36 493.967031774825,352.589152311971 754.56,352.589152311971 754.56,290.4</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">8</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">7</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_27" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Sequence_4" sap:VirtualizedContainerService.HintSize="222.4,147.2">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Transition_27" sap:VirtualizedContainerService.HintSize="430.4,595.2">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">420.56,468 420.56,477 429.531345229575,477 429.531345229575,498.062876218839 440.72,498.062876218839 440.72,468</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">51</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">63</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_33" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_31" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">400.4,468 400.4,514.903416523321 460.88,514.903416523321 460.88,468</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">39</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">75</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="State_4" sap:VirtualizedContainerService.HintSize="134.4,78.4">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">333.2,389.6</av:Point>
+            <av:Size x:Key="ShapeSize">134.4,78.4</av:Size>
+            <x:Boolean x:Key="IsPinned">False</x:Boolean>
+            <x:Double x:Key="StateContainerWidth">120.65674449719273</x:Double>
+            <x:Double x:Key="StateContainerHeight">41.65452198558495</x:Double>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Transition_9" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">368.4,300 368.4,330 366.8,330 366.8,389.6</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">23</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">18</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_16" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_13" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">458,247.2 488,247.2 488,247.84 743.2,247.84</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">16</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">21</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_17" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Sequence_5" sap:VirtualizedContainerService.HintSize="222.4,147.2">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Transition_20" sap:VirtualizedContainerService.HintSize="430.4,595.2">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">406.8,229.6 406.8,173.268399282524 128,173.268399282524 128,229.6</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">46</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">62</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_24" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_28" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">426,229.6 426,180.872920844993 445.2,180.872920844993 445.2,229.6</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">58</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">70</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="State_3" sap:VirtualizedContainerService.HintSize="128,70.4">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">330,229.6</av:Point>
+            <av:Size x:Key="ShapeSize">128,70.4</av:Size>
+            <x:Boolean x:Key="IsPinned">False</x:Boolean>
+            <x:Double x:Key="StateContainerWidth">113.95281217875566</x:Double>
+            <x:Double x:Key="StateContainerHeight">33.599348667532695</x:Double>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Transition_1" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">160,281.52 190,281.52 190,264.8 330,264.8</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">40</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">37</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_18" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_15" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">112,229.6 112,128.910107743661 771.6,128.910107743661 771.6,229.6</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">54</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">18</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_19" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="PickBranch_1" sap:VirtualizedContainerService.HintSize="230.4,318.4" />
+      <sap2010:ViewStateData Id="WaitForResponse`1_22" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="PickBranch_2" sap:VirtualizedContainerService.HintSize="230.4,318.4" />
+      <sap2010:ViewStateData Id="Pick_1" sap:VirtualizedContainerService.HintSize="614.4,364.8" />
+      <sap2010:ViewStateData Id="Sequence_2" sap:VirtualizedContainerService.HintSize="636.8,489.6">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Transition_21" sap:VirtualizedContainerService.HintSize="678.4,937.6">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">128,324 128,498 353.36,498 353.36,468</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">63</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">11</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_20" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="PickBranch_7" sap:VirtualizedContainerService.HintSize="230.4,318.4" />
+      <sap2010:ViewStateData Id="WaitForResponse`1_30" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="PickBranch_8" sap:VirtualizedContainerService.HintSize="230.4,318.4" />
+      <sap2010:ViewStateData Id="Pick_4" sap:VirtualizedContainerService.HintSize="614.4,364.8" />
+      <sap2010:ViewStateData Id="Sequence_6" sap:VirtualizedContainerService.HintSize="636.8,489.6">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Transition_22" sap:VirtualizedContainerService.HintSize="678.4,937.6">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">72,324 72,548.074109287253 745.6,548.074109287253 745.6,462.4</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">35</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">7</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_21" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_23" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">32,324 32,601.985303967857 1005.92,601.985303967857 1005.92,450.4</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">15</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">15</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="State_1" sap:VirtualizedContainerService.HintSize="160,94.4">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">0,229.6</av:Point>
+            <av:Size x:Key="ShapeSize">160,94.4</av:Size>
+            <x:Boolean x:Key="IsPinned">False</x:Boolean>
+            <x:Double x:Key="StateContainerWidth">145.45621550693491</x:Double>
+            <x:Double x:Key="StateContainerHeight">58.035505310296855</x:Double>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="StateMachine_1" sap:VirtualizedContainerService.HintSize="1118.4,707.2">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">False</x:Boolean>
+            <av:Point x:Key="ShapeLocation">0,52.4</av:Point>
+            <x:Double x:Key="StateContainerWidth">1104</x:Double>
+            <x:Double x:Key="StateContainerHeight">670.31318725367532</x:Double>
+            <av:PointCollection x:Key="ConnectorLocation">36,127.6 36,157.6 79.2,157.6 79.2,229.6</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="MotionFSM.Activity1_1" sap:VirtualizedContainerService.HintSize="1158.4,787.2" />
+    </sap2010:ViewStateManager>
+  </sap2010:WorkflowViewState.ViewStateManager>
+</Activity>
