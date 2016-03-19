@@ -21,6 +21,7 @@ namespace ConsoleTest
 {
     using MyCollections;
     using System.Diagnostics;
+    using MathNet.Numerics.LinearAlgebra;
     //using Microsoft.Kinect;
 
     class Program :IWorkflowView
@@ -178,29 +179,75 @@ namespace ConsoleTest
            return false;
        }
 
+         class aaa
+       {
+           public int i = 0;
+           public aaa(int input)
+           {
+               i = input;
+           }
+       }
+
+
+
         static void Main(string[] args)
         {
-            Debug.WriteLine("123");
+
+            float[,] x = { {2,2,5}, {-2,1,2},{6,3,9} };
+
+            var M = Matrix<float>.Build;
+           Matrix<float> matrix =   M.DenseOfArray( x);
+           float a = matrix[0, 1];
+           Console.WriteLine(matrix.Inverse());
+
+            
+           
 
 
+
+
+
+            #region test object shadowcopy
+            /*
+            aaa[] a3 = new aaa[3];
+            aaa[] b3 = new aaa[3];
+            for (int i = 0; i < a3.Length; i++)
+            {
+                a3[i] = new aaa(1);
+                b3[i] = new aaa(2);
+            }
+
+            Array.Copy(a3, b3, 3);
+
+            Console.WriteLine("b3" + b3[1].i);
+            a3[1].i = 10;
+            Console.WriteLine("b3" + b3[1].i);
+            b3[1].i = 15;
+            Console.WriteLine("b3" + b3[1].i);
+            Console.WriteLine("a3" + a3[1].i); 
+ */
+            #endregion
+
+            #region WWF test 2
+            /*
             Program pg = new Program();
 
             WorkflowInstance wfInstance = new WorkflowInstance(pg);
             wfInstance.Run();
 
-            statemachineStateTracker= wfInstance.StateTracker;
+            statemachineStateTracker = wfInstance.StateTracker;
             string eventName = string.Empty;
 
-           
+
 
             string str;
             string a;
 
-             while ((a = Console.ReadLine()) != null)
+            while ((a = Console.ReadLine()) != null)
             {
                 switch (a.ToLower())
                 {
-                    case "walk" :
+                    case "walk":
                         eventName = Enum.GetName(typeof(MotionTransitions), MotionTransitions.E_Walk);//
                         break;
 
@@ -230,7 +277,7 @@ namespace ConsoleTest
 
                     case "print":
                         printOutEvent();
-                        
+
                         break;
 
                     case "globelState":
@@ -240,7 +287,7 @@ namespace ConsoleTest
                 }
 
                 if (IsEventExist(statemachineStateTracker, eventName))
-                { 
+                {
                     wfInstance.ResumeBookmark(eventName);
                 }
                 else
@@ -248,8 +295,9 @@ namespace ConsoleTest
                     wfInstance.ResumeBookmark("E_Unknow");
                 }
 
-            }
-
+            } 
+            */
+            #endregion
 
             #region test wf print state
 
@@ -284,17 +332,6 @@ namespace ConsoleTest
             */
             
             #endregion
-
-
-
-
-
-
-
-
-
-
-
 
             #region test Enum
             /*

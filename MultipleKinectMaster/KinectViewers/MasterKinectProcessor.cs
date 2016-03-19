@@ -380,9 +380,6 @@ namespace MultipleKinectMaster
 
         #endregion
 
-        
-
-        
         #region private Method
 
         private void Reader_MultiSourceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
@@ -631,8 +628,6 @@ namespace MultipleKinectMaster
 
         
         #endregion
-
-    
 
     }
 }

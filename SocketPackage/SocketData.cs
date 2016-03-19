@@ -141,6 +141,13 @@ namespace SocketPackage
 
             userId = string.Empty;
         }
+        public void init()
+        {
+            foreach (string js in Enum.GetNames(typeof(JointType)))
+            {
+                joints.Add((JointType)Enum.Parse(typeof(JointType),js), null);
+            }
+        }
     }
 
     public class myCameraSpacePoint
@@ -148,7 +155,14 @@ namespace SocketPackage
        public float X;
        public float Y;
        public float Z;
+       public string joints_XYZ = string.Empty;
 
+        /// <summary>
+        /// Set x,y,z.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
         public myCameraSpacePoint(float x, float y, float z)
         {
             X = x;
@@ -156,8 +170,18 @@ namespace SocketPackage
             Z = z;
         }
 
-        public myCameraSpacePoint(string joints_XYZ)
+        /// <summary>
+        /// Transform string into float.
+        /// </summary>
+        /// <param name="joints_XYZ">Format : X,Y,Z</param>
+        /// <param name="isStoreString"></param>
+        public myCameraSpacePoint(string joints_XYZ,Boolean isStoreString = false)
         {
+            if (isStoreString) 
+            { 
+                 this.joints_XYZ = joints_XYZ;
+            }
+
             string[] pieces = joints_XYZ.Split(',');
 
             //check data type length

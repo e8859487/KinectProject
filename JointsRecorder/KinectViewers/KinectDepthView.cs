@@ -1,36 +1,63 @@
-﻿using Microsoft.Kinect;
+﻿//------------------------------------------------------------------------------
+// <copyright file="KinectDepthView.cs" company="Microsoft">
+//     Copyright (c) Microsoft Corporation.  All rights reserved.
+// </copyright>
+//------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-
-using SocketPackage;
-using Img_Serializable;
-using XmlManager;
-
-using System.Windows.Resources;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.IO;
-
-using System.ComponentModel;
-
-using log4net;
-using log4net.Config;
-
-
-namespace MultipleKinectClient
+namespace JointsRecorder
 {
-    public delegate void clientRecordEventHandler(object sender, StatusEventArgs e);
+    using System;
+    using System.Windows;
+    using System.Windows.Media;
+    using System.Windows.Media.Imaging;
+    using Microsoft.Kinect;
+    using System.Collections.Generic;
+    using System.Text;
+    using System.IO;
+    using System.ComponentModel;
 
-    public   class ClientKinectProcessor : IDisposable,INotifyPropertyChanged
+    using SocketPackage;
+
+    /// <summary>
+    /// Visualizes the Kinect Depth stream for display in the UI
+    /// </summary>
+    public sealed class KinectDepthView : IDisposable, INotifyPropertyChanged
     {
-        #region Private Region Parameters
+        /// <summary>
+        /// Map depth range to byte range
+        /// </summary>
+        private const int MapDepthToByte = 8000 / 256;
+
+        /// <summary>
+        /// Reader for depth frames
+        /// </summary>
+        private MultiSourceFrameReader multiFrameSourceReader = null;
+
+        /// <summary>
+        /// Description of the data contained in the depth frame
+        /// </summary>
+        private FrameDescription depthFrameDescription = null;
+
+        /// <summary>
+        /// Bitmap to display
+        /// </summary>
+        private WriteableBitmap depthBitmap = null;
+
+        /// <summary>
+        /// Intermediate storage for frame data converted to color
+        /// </summary>
+        private byte[] depthPixels = null;
+
+        private DrawingGroup drawingGroup;
+
+        private DrawingImage imageSource;
+
+        private List<Tuple<JointType, JointType>> bones;
+
+        private List<Pen> bodyColors;
+
+        private readonly Pen inferredBonePen = new Pen(Brushes.Gray, 1);
+
         private Body[] bodies = null;
 
         private const double JointThickness = 3;
@@ -39,15 +66,9 @@ namespace MultipleKinectClient
 
         private readonly Brush inferredJointBrush = Brushes.Yellow;
 
-        private readonly Pen inferredBonePen = new Pen(Brushes.Gray, 1);
-
-        private DrawingGroup drawingGroup;
-
-        private DrawingImage imageSource;
+        FrameDescription frameDescription = null;
 
         private CoordinateMapper coordinateMapper = null;
-
-        private List<Tuple<JointType, JointType>> bones;
 
         //Display window width
         private int displayWidth;
@@ -55,45 +76,42 @@ namespace MultipleKinectClient
         //Display window Height
         private int displayHeight;
 
-        private List<Pen> bodyColors;
+        /// <summary>
+        /// 使用者編號 / 骨架座標
+        /// </summary>
+        Dictionary<int, MyBody> _JointsPosDict = new Dictionary<int, MyBody>();
 
-        private WriteableBitmap depthBitmap = null;
-        private byte[] depthPixels = null;
+        CSV_Writter csv_Writter = null;
 
-        private const int MapDepthToByte = 8000 / 256;
-
-        FrameDescription frameDescription = null;
-        private MultiSourceFrameReader multiFrameSourceReader = null;
-
-        //定義客戶端傳輸socket
-        SocketClient socketClient = null;
-        private string IpAddr = null;
-        private int Port;
-
-        int stride = 0;
-        byte[] imgBuffer = null;
-        
-        int framesNumber = 0;
 
         /// <summary>
-        /// 記錄當下偵測到的人體骨架數量
+        /// 紀錄是否需要刷新骨架資料
         /// </summary>
-        int bodyNumbers = 0;
+        Boolean FrameRecordFlag = true;
 
-        //記錄當下偵測到的人體骨架編號
-        string bodyIndex = string.Empty;
+        /// <summary>
+        /// 上一幀骨架資料
+        /// </summary>
+        MyBody[] preFrameBody = null;
 
-        Dictionary<int, string> _JointsPosDict = new Dictionary<int, string>(); 
+        /// <summary>
+        /// 當下要輸出的骨架資料
+        /// </summary>
+        MyBody[] nowFrameBody = null;
 
-        //用來評估程式碼計算的時間
-        System.Diagnostics.Stopwatch swTimer = new System.Diagnostics.Stopwatch();
+        /// <summary>
+        /// 目前幀數
+        /// </summary>
+        int frames = 0;
 
-        //Log Declare
-        private ILog log = null;
 
-        #endregion
 
-        public ClientKinectProcessor(KinectSensor kinectSensor)
+
+        /// <summary>
+        /// Initializes a new instance of the KinectDepthView class
+        /// </summary>
+        /// <param name="kinectSensor">Active instance of the Kinect sensor</param>
+        public KinectDepthView(KinectSensor kinectSensor)
         {
             if (kinectSensor == null)
             {
@@ -105,6 +123,7 @@ namespace MultipleKinectClient
 
             this.multiFrameSourceReader.MultiSourceFrameArrived += this.Reader_MultiSourceFrameArrived;
 
+
             this.coordinateMapper = kinectSensor.CoordinateMapper;
 
             frameDescription = kinectSensor.DepthFrameSource.FrameDescription;
@@ -113,12 +132,16 @@ namespace MultipleKinectClient
             this.displayHeight = kinectSensor.DepthFrameSource.FrameDescription.Height;   //424
             this.displayWidth = kinectSensor.DepthFrameSource.FrameDescription.Width;     //512
 
+            // get FrameDescription from DepthFrameSource
+            this.depthFrameDescription = kinectSensor.DepthFrameSource.FrameDescription;
 
-            // Allocate space to put the pixels being received and converted
-            this.depthPixels = new byte[this.displayWidth * this.displayHeight];
+            // allocate space to put the pixels being received and converted
+            this.depthPixels = new byte[this.depthFrameDescription.Width * this.depthFrameDescription.Height];
 
-            //create bitmap to display
-            this.depthBitmap = new WriteableBitmap(this.displayWidth, this.displayHeight, 96.0, 96.0, PixelFormats.Gray8, null);
+            // create the bitmap to display
+            this.depthBitmap = new WriteableBitmap(this.depthFrameDescription.Width, this.depthFrameDescription.Height, 96.0, 96.0, PixelFormats.Gray8, null);
+
+
 
             this.bones = new List<Tuple<JointType, JointType>>();
             #region bone implement
@@ -175,168 +198,64 @@ namespace MultipleKinectClient
             this.drawingGroup = new DrawingGroup();
             this.imageSource = new DrawingImage(this.drawingGroup);
 
+            csv_Writter = new CSV_Writter(@".\skeletons.csv");
 
-            //network processes
-            //= "140.118.170.215";              //127.0.0.1  me 140.118.170.215  wai 140.118.170.214
-            XmlReader reader = new XmlReader(@"./Setting.xml");
-            IpAddr = reader.getNodeInnerText(@"/Root/IPAddress");
-            Port = int.Parse(reader.getNodeInnerText(@"/Root/Port"));
-            reader.Dispose();
-
-            this.socketClient = new SocketClient(IpAddr, Port);
-            this.socketClient.Connect();
-            this.socketClient.clientDataChanged += new clientDataChangeEventHandler(StatusChange);
-
-            // Stride = (Width) * (bytes per pixel)
-            this.stride = (int)depthBitmap.PixelWidth * ((depthBitmap.Format.BitsPerPixel + 7) / 8);//每列影像列的位元長度(bytes)
-            this.imgBuffer = new byte[(int)depthBitmap.PixelHeight * stride];
-
-            //Log Setting
-            XmlConfigurator.Configure(new System.IO.FileInfo(@"./config.xml"));
-            log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-            log.Info("Motion Detector Client Start!!");
-
-        }
-
-        #region CallBack Event and Event handler
-
-        private void StatusChange(object sender, StatusEventArgs e)
-        {
-            //Status changed
-            OnChanged(e);
-        }
-
-        public event clientRecordEventHandler changed;
-
-        protected virtual void OnChanged(StatusEventArgs e)
-        {
-            if (changed != null)
+            preFrameBody = new MyBody[6];
+            nowFrameBody = new MyBody[6];
+            for (int i = 0; i < preFrameBody.Length; i++)
             {
-                changed(this, e);
+                preFrameBody[i] = new MyBody();
+                preFrameBody[i].init();
+
+                nowFrameBody[i] = new MyBody();
+                nowFrameBody[i].init();
             }
-        }
-
-        #endregion
-
-        private byte[] CombomBinaryArray(byte[] srcArray1, byte[] srcArray2)
-        {
-            //根據要合併的兩個byte陣列長度建立一個新的byte[]
-            byte[] newArray = new byte[srcArray1.Length + srcArray2.Length];
-
-            //把第一個陣列複製到新的陣列
-            Array.Copy(srcArray1, 0, newArray, 0, srcArray1.Length);
-
-            //把第二個陣列貼到第一個陣列之後
-            Array.Copy(srcArray2, 0, newArray, srcArray1.Length, srcArray2.Length);
-
-            return newArray;
         }
 
         /// <summary>
-        /// Send All Data to Server to server va network
+        /// Gets the bitmap to display
         /// </summary>
-        public void SendDataToServer()
-        {
-            byte[] bodyNumbers_byte = System.Text.Encoding.UTF8.GetBytes(bodyNumbers.ToString());
-            
-            //深度 + 人體骨架數量
-            byte[] Depth_BodyNum_byte = CombomBinaryArray(depthPixels, bodyNumbers_byte);
-
-            //深度 + 人體骨架數量 + 骨架點
-            byte[] Depth_BodyNum_Skeleton_byte = Depth_BodyNum_byte;
-
-            byte[] bodySkeletons_byteArray =null;
-
-            if (bodyNumbers > 0)
-            {
-                //找出人體的index
-                string[] dictKey = bodyIndex.Split(',');
-
-                if (dictKey != null && dictKey.Length > 1)
-                {
-                    for (int i = 0; i < dictKey.Length - 1; i++)
-                    {
-                        //骨架位置字串
-                        byte[] skeleton_Joints_byte =  System.Text.Encoding.UTF8.GetBytes( _JointsPosDict[int.Parse(dictKey[i])]);
-
-                        //骨架字串的長度
-                        byte[] str_SkeletonJoints_Len_byte = System.Text.Encoding.UTF8.GetBytes(_JointsPosDict[int.Parse(dictKey[i])].Length.ToString());
-
-                        //
-                        if (bodySkeletons_byteArray == null) {
-                            bodySkeletons_byteArray = CombomBinaryArray(str_SkeletonJoints_Len_byte, skeleton_Joints_byte);
-                        }
-                        else {
-                            bodySkeletons_byteArray = CombomBinaryArray(bodySkeletons_byteArray, CombomBinaryArray(str_SkeletonJoints_Len_byte, skeleton_Joints_byte));
-                        }
-                    }
-                }
-            }
-            //沒有任何人體骨架
-            if (bodySkeletons_byteArray == null)
-            {
-                //送出深度影像 + 骨架數量(0)
-                socketClient.SendBytes(Depth_BodyNum_byte);
-            }
-            else  //一個以上的人體骨架
-            {
-                Depth_BodyNum_Skeleton_byte = CombomBinaryArray(Depth_BodyNum_Skeleton_byte, bodySkeletons_byteArray);
-                //送出 深度影像 + 骨架數量(n) + (骨架字串長度 +  骨架字串) * n
-                socketClient.SendBytes(Depth_BodyNum_Skeleton_byte);
-            }
-        }
-
-        public void CatchImgBitmap()
-        {
-            //測試程式碼消耗時間
-            swTimer.Reset();
-            swTimer.Start();
-            SendDataToServer();
-       
-            swTimer.Stop();
-            string consumeTime = swTimer.Elapsed.TotalMilliseconds.ToString();
-            MessageBox.Show("消耗時間為:" + consumeTime);
-        }
-
-        public void RenderBitmap()
-        {
- 
-        }
-
         public ImageSource ImageSource
         {
             get
             {
-                 return this.imageSource;
+                return this.imageSource;
+
                 //return this.depthBitmap;
             }
         }
 
-        #region GUI Getter and Setter
         public event PropertyChangedEventHandler PropertyChanged;
 
 
-        public string Bodyindex
+        private string frameTimeSpan = string.Empty;
+        /// <summary>
+        /// 顯示於GUI上
+        /// </summary>
+        public string FrameTimeSpan
         {
             get
             {
-                return this.bodyIndex;
+                return this.frameTimeSpan;
             }
             set
             {
-                if (bodyIndex != value)
+                if (frameTimeSpan != value)
                 {
-                    bodyIndex = value;
+                    frameTimeSpan = value;
                     if (PropertyChanged != null)
                     {
-                        this.PropertyChanged(this, new PropertyChangedEventArgs("Bodyindex"));
+                        this.PropertyChanged(this, new PropertyChangedEventArgs("FrameTimeSpan"));
                     }
                 }
             }
-        } 
-        #endregion
+        }
 
 
+
+        /// <summary>
+        /// Disposes the DepthFrameReader
+        /// </summary>
         public void Dispose()
         {
             if (this.multiFrameSourceReader != null)
@@ -345,8 +264,6 @@ namespace MultipleKinectClient
                 this.multiFrameSourceReader.Dispose();
                 this.multiFrameSourceReader = null;
             }
-
-            socketClient.DisCounect();
         }
 
         #region Private Method
@@ -407,6 +324,65 @@ namespace MultipleKinectClient
                 if (dataReceived)
                 {
                     this.UpdateBodyFrame(this.bodies);
+                    frames++;
+
+                    FrameTimeSpan = depthFrame.RelativeTime.ToString();
+                    //display timespan to screen
+                    //write in datas into csv
+                    if (frames % 30 == 0)
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        int i = 0;
+                        foreach (MyBody mb in nowFrameBody)
+                        {
+                            sb.Clear();
+                            if (mb.isTracked == true)
+                            {
+                                sb.Append(FrameTimeSpan + ",");
+                                sb.Append(mb.userId + ",,");
+                                foreach (myCameraSpacePoint csp in mb.joints.Values)
+                                {
+                                    sb.Append(string.Format("{0},", csp.joints_XYZ));
+                                }
+
+                                sb.Append(",");
+                                //計算兩frame之差
+                                if (preFrameBody[i].isTracked == true)
+                                {
+                                    foreach (JointType jt in preFrameBody[i].joints.Keys)
+                                    {
+                                        float distance = (float)Math.Pow((float)
+                                            (
+                                            Math.Pow(preFrameBody[i].joints[jt].X - mb.joints[jt].X, 2) +
+                                            Math.Pow(preFrameBody[i].joints[jt].Y - mb.joints[jt].Y, 2) +
+                                            Math.Pow(preFrameBody[i].joints[jt].Z - mb.joints[jt].Z, 2)
+                                            ), 0.5);
+                                        sb.Append(string.Format("{0},", distance.ToString()));    
+                                    }
+                                }
+
+
+                                //write into csv file
+                                csv_Writter.WriteLine(sb.ToString());
+
+                                //deepcopy data as pre frame
+                                foreach (JointType jp in mb.joints.Keys)
+                                {
+
+                                    preFrameBody[i].joints[jp] = new myCameraSpacePoint(mb.joints[jp].joints_XYZ);
+                                }
+                                preFrameBody[i].userId = mb.userId;
+                            }
+                            preFrameBody[i].isTracked = mb.isTracked;
+
+                            i++;
+
+                            //代表資料已寫出
+                            FrameRecordFlag = true;
+                        }
+
+
+                    }
                 }
             }
             finally
@@ -422,13 +398,6 @@ namespace MultipleKinectClient
 
             }
 
-            //Send image Obj to master at 15 FPS
-           //  if (framesNumber % 2  == 0)
-            {
-                //Send Image to Server
-                this.SendDataToServer();
-            }
-            framesNumber++;
         }
 
         private void UpdateBodyFrame(Body[] bodies)
@@ -440,32 +409,20 @@ namespace MultipleKinectClient
                     // dc.DrawRectangle(Brushes.Black, null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                     dc.DrawImage(depthBitmap, new System.Windows.Rect(0, 0, depthBitmap.PixelWidth, depthBitmap.PixelHeight));
 
-
-                    //顯示當下使用者編號於視窗中。
-                    string _bodyIndex = string.Empty;
-
                     //foreach counter(LoopIndex)
                     int BodyIndex = 0;
 
-                    bodyNumbers = 0;
-
-                    StringBuilder sb_skeletonJoints ;
                     Dictionary<JointType, Point> jointPoints = null;
+
                     foreach (Body body in bodies)
                     {
                         Pen drawPen = this.bodyColors[BodyIndex++];
-                        sb_skeletonJoints = new StringBuilder();
-                        int testnumber = 0;
                         if (body.IsTracked)
                         {
                             IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
                             // convert the joint points to depth (display) space
-                             jointPoints = new Dictionary<JointType, Point>();
+                            jointPoints = new Dictionary<JointType, Point>();
 
-                             //紀錄人體編號
-                             sb_skeletonJoints.Append(body.TrackingId.ToString() + ":" );
-
-                            bodyNumbers++;
                             foreach (JointType jointType in joints.Keys)
                             {
                                 // sometimes the depth(Z) of an inferred joint may show as negative
@@ -479,32 +436,27 @@ namespace MultipleKinectClient
                                 DepthSpacePoint depthSpacePoint = this.coordinateMapper.MapCameraPointToDepthSpace(position);
                                 jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
 
-                                //紀錄骨架座標於string中  jointType == JointType.ShoulderRight || jointType == JointType.ShoulderLeft || jointType == JointType.Head
+                                if (FrameRecordFlag == true)
                                 {
-                                    sb_skeletonJoints.Append(string.Format("{0},{1},{2}|", position.X.ToString("0.0000"), position.Y.ToString("0.0000"), position.Z.ToString("0.0000")));
-                                }
-                                testnumber++;
-                            }
+                                    //全部預設為false;
+                                    foreach (MyBody mb in nowFrameBody)
+                                    {
+                                        mb.isTracked = false;
+                                    }
 
-                            //將joints點存入dictionary中準備傳到server
-                            if (!_JointsPosDict.ContainsKey(BodyIndex))
-                            {
-                                _JointsPosDict.Add(BodyIndex, sb_skeletonJoints.ToString());
+                                    nowFrameBody[BodyIndex].isTracked = true;
+                                    //紀錄人體編號
+                                    nowFrameBody[BodyIndex].userId = body.TrackingId.ToString();
+                                    nowFrameBody[BodyIndex].joints[jointType] = new myCameraSpacePoint(string.Format("{0},{1},{2}", position.X.ToString("0.0000"), position.Y.ToString("0.0000"), position.Z.ToString("0.0000")), true);
+                                }
                             }
-                            else
-                            {
-                                _JointsPosDict[BodyIndex] = sb_skeletonJoints.ToString();
-                            }
-                            sb_skeletonJoints.Clear();
-                            _bodyIndex = _bodyIndex + BodyIndex.ToString()+",";
+                            FrameRecordFlag = false;
 
                             this.DrawBody(joints, jointPoints, dc, drawPen);
                         }//if (body.IsTracked) End
 
                     }
 
-                    //更新使用者視窗tracked人數textbox
-                    Bodyindex = _bodyIndex;
                     this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                 }
             }
@@ -601,5 +553,9 @@ namespace MultipleKinectClient
         }
 
         #endregion
+
+
+
+
     }
 }
