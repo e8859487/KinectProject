@@ -193,6 +193,8 @@ namespace ConsoleTest
         static void Main(string[] args)
         {
 
+            Console.WriteLine("hello brench");
+
             float[,] x = { {2,2,5}, {-2,1,2},{6,3,9} };
 
             var M = Matrix<float>.Build;
