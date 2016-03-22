@@ -146,7 +146,6 @@ namespace MultipleKinectMaster
                 // Start running the playback asynchronously
                 OneArgDelegate playback = new OneArgDelegate(this.PlaybackClip);
                 playback.BeginInvoke(filePath, null, null);
-
             }
         }
 
@@ -343,12 +342,6 @@ namespace MultipleKinectMaster
         {
             masterKinectProcessor.testMotion();
         }
-
-
-
-
-
-
 
 
     }

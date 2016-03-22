@@ -193,16 +193,43 @@ namespace ConsoleTest
         static void Main(string[] args)
         {
 
-            Console.WriteLine("hello brench");
 
-            float[,] x = { {2,2,5}, {-2,1,2},{6,3,9} };
+            List<int> list1 = new List<int>();
+            List<int> list2 = new List<int>();
+            for(int i = 0;i<5;i++){
+                list1.Add(i);
+            }
 
-            var M = Matrix<float>.Build;
-           Matrix<float> matrix =   M.DenseOfArray( x);
-           float a = matrix[0, 1];
-           Console.WriteLine(matrix.Inverse());
+            for (int i = 3; i < 8; i++)
+            {
+                list2.Add(i);
+            }
+
+            list2 = new List<int>(list1);
+            list2[1] = 9999;
+            Console.WriteLine("list1: ");
+            foreach (int i in list1)
+            {
+                Console.WriteLine(i);
+            }
+
+            Console.WriteLine("list2");
+            foreach (int i in list2)
+            {
+                Console.WriteLine(i);
+            }
+
+            #region matrix operate
+
+            //float[,] x = { { 2, 2, 5 }, { -2, 1, 2 }, { 6, 3, 9 } };
+
+            //var M = Matrix<float>.Build;
+            //Matrix<float> matrix = M.DenseOfArray(x);
+            //float a = matrix[0, 1];
+            //Console.WriteLine(matrix.Inverse());
 
             
+            #endregion
            
 
 

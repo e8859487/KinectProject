@@ -72,9 +72,7 @@ namespace MultipleKinectMaster
 
         //skeleton joints information
         public string B_Head1 = string.Empty;
-        //public string B_Torso1 = string.Empty;
-        //public string B_LShouder1 = string.Empty;
-        //public string B_RShouder1 = string.Empty;
+
         //Total Frame
         public int B_FrameNumbers1 = 0;
         //Frame Rate
@@ -84,10 +82,6 @@ namespace MultipleKinectMaster
         
 
         public string txb2_skeletonInfo = string.Empty;
-
-        //public string B_Torso2 = string.Empty;
-        //public string B_LShouder2 = string.Empty;
-        //public string B_RShouder2 = string.Empty;
 
         //Log Declare
         private ILog log = null;
@@ -193,7 +187,6 @@ namespace MultipleKinectMaster
             //Timer start 
             swTimer.Start();
 
-            //
 
         }
 
@@ -439,13 +432,10 @@ namespace MultipleKinectMaster
                     }
                     bodyFrame.GetAndRefreshBodyData(this.bodies);
                     dataReceived = true;
-
-       
                 }
                 if (dataReceived)
                 {
                     this.UpdateBodyFrame(this.bodies);
-
                 }
 
                 #endregion
