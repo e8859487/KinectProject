@@ -1,0 +1,50 @@
+﻿<Window x:Class="MultipleKinectMaster3D.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:h="http://helix-toolkit.org/wpf"
+        xmlns:local ="clr-namespace:MultipleKinectMaster3D"
+
+        Title="MotionDetectSystem" Height="350" Width="525">
+    <Window.Resources>
+        <SolidColorBrush x:Key="MediumGreyBrush" Color="#ff6e6e6e"/>
+ 
+        <local:DataTemplate3D x:Key="TemplateJointsPoint">
+            <h:SphereVisual3D Center="{Binding Position}" Radius="{Binding Radius}" Fill="{Binding Brushes}"/>
+        </local:DataTemplate3D>
+
+        <local:DataTemplate3D x:Key="TemplateJointPipe">
+            <h:PipeVisual3D   Point1="{Binding Point1}" Point2="{Binding Point2}" Diameter="{Binding Radius}"   Fill="{Binding Brushes}"/>
+        </local:DataTemplate3D>
+        
+    </Window.Resources>
+    <DockPanel>
+
+            <StackPanel DockPanel.Dock="Right">
+                <TextBlock  HorizontalAlignment="Center" Text="MotionDetectSystem" Padding="8" Foreground="Black"/>
+
+            <Button x:Name="PlayButton" Content="PLAY" Click="PlayButton_Click" />
+            <Button x:Name="SynchronousPlay" Content="SynchronousPlay" Click="SynChronousButton_Click"/>
+            <StatusBar Height="100" VerticalAlignment="Bottom" Foreground="{StaticResource MediumGreyBrush}">
+                <StatusBarItem Content="{Binding KinectStatusText}" />
+            </StatusBar>
+        </StackPanel>
+
+
+
+        <h:HelixViewport3D x:Name="view1" ModelUpDirection="0,1,0" ShowCoordinateSystem="True" Background="WhiteSmoke"> 
+            <h:HelixViewport3D.Camera>
+                <PerspectiveCamera Position="5,30,40" LookDirection="-5,-30,-40" FieldOfView="45" UpDirection="0,1,0"  />
+            </h:HelixViewport3D.Camera>
+            <h:DefaultLights/>
+            <local:ItemsVisual3D ItemTemplate="{StaticResource TemplateJointsPoint}" ItemsSource="{Binding ObservableJoints}"/>
+            <local:ItemsVisual3D ItemTemplate="{StaticResource TemplateJointPipe}" ItemsSource="{Binding ObservablePipe}"/>
+
+            <h:GridLinesVisual3D Normal="0,1,0" LengthDirection="1,0,0" Length="1000" Width="1000" Center="0,0,0" Fill="Red" MajorDistance="100" MinorDistance="10" Thickness="0.2"/>
+            <h:CubeVisual3D Center="0,300,0" SideLength="1000" Material="{h:Material Red, Opacity=0.01}"/>
+
+
+        </h:HelixViewport3D>
+    </DockPanel>
+    
+    
+</Window>
