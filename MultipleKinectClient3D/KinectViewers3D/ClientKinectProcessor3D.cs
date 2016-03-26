@@ -3,18 +3,18 @@ using SocketPackage;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
-using System.Windows.Threading;
+using XmlManager;
 
-namespace MultipleKinectMaster3D
+namespace MultipleKinectClient3D
 {
-    class MasterKinectProcessor3D
+    class ClientKinectProcessor3D
     {
 
         #region Private Variables
@@ -31,6 +31,16 @@ namespace MultipleKinectMaster3D
         private Body[] bodies = null;
 
         private MultiSourceFrameReader multiFrameSourceReader = null;
+
+        /// <summary>
+        /// 記錄當下偵測到的人體骨架數量
+        /// </summary>
+        private int bodyNumbers = 0;
+
+        //記錄當下偵測到的人體骨架編號
+        private string bodyIndex = string.Empty;
+
+        private Dictionary<int, string> _JointsPosDict = new Dictionary<int, string>();
 
 
         #region Delegate declare
@@ -62,37 +72,27 @@ namespace MultipleKinectMaster3D
         #endregion
 
 
-        private SocketServer socketServer = null;
+        //定義客戶端傳輸socket
+        private SocketClient socketClient = null;
+        private readonly string IpAddr = null;
+        private readonly int Port;
 
-        private const int PORT = 81;
 
-        private Dispatcher dispatcher = null;
-
-        object thisLock = new object();
-
-        private static Semaphore _pool;
 
         #endregion
 
 
 
-        public MasterKinectProcessor3D(KinectSensor kinectSensor, Dispatcher dispatcher)
+        public ClientKinectProcessor3D(KinectSensor kinectSensor)
         {
             if (kinectSensor == null)
             {
                 throw new ArgumentNullException("kinectSensor");
             }
-            this.dispatcher = dispatcher;
 
             //multipleFrameReader 
             this.multiFrameSourceReader = kinectSensor.OpenMultiSourceFrameReader(FrameSourceTypes.Depth | FrameSourceTypes.Body);
             this.multiFrameSourceReader.MultiSourceFrameArrived += this.Reader_MultiSourceFrameArrived;
-
-            socketServer = new SocketServer(PORT);
-            socketServer.Start();
-            // socketServer.changed += new changeEventHandler(SocketServer_changed);
-
-
 
             #region Bone Implement
             this.bones = new List<Tuple<JointType, JointType>>();
@@ -182,44 +182,25 @@ namespace MultipleKinectMaster3D
             });
             #endregion
 
+            //Network Data Init
+            //= "140.118.170.215";              //127.0.0.1  me 140.118.170.215  wai 140.118.170.214
+            XmlReader reader = new XmlReader(@"./Setting.xml");
+            IpAddr = reader.getNodeInnerText(@"/Root/IPAddress");
+            Port = int.Parse(reader.getNodeInnerText(@"/Root/Port"));
+            reader.Dispose();
+
+            this.socketClient = new SocketClient(IpAddr, Port);
+             this.socketClient.Connect();
+            // this.socketClient.clientDataChanged += new clientDataChangeEventHandler(StatusChange);
+
+
+
 
         }
 
-        private   void SocketServer_changed(object sender, EventArgs e)
+        private void StatusChange(object sender, StatusEventArgs e)
         {
-            SocketPackage.SocketServer.imgObj.ProcessJointsInfo();
-            lock (thisLock)
-            {
-                //清空使用者清單
-                bodyManager.WorkList_client.Clear();
-            }
-
-            for (int i = 0; i < 7; i++)
-            {
-                MyBody body = SocketPackage.SocketServer.imgObj.Body[i];
-                //畫出3D骨架
-
-                if (body.isTracked)
-                {
-                    Pen clientPen = new Pen(Brushes.Black, 3);
-                    lock (thisLock)
-                    {
-                        bodyManager.CurrentBodyIdx = body.TrackingId;
-
-                        if (!bodyManager.BodyState.ContainsKey(bodyManager.CurrentBodyIdx))
-                        {
-                            bodyManager.BodyState.Add(bodyManager.CurrentBodyIdx, DrawStatus.NewUser);
-                        }
-
-                        //紀錄追蹤清單
-                        bodyManager.WorkList_client.Add(bodyManager.CurrentBodyIdx);
-
-                    }
-                    //bodyManager.AddClientBody(body.jointsInfo, clientPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx]);
-                      this.DrawBody3D(body.jointsInfo, clientPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx]);
-                }
-            }
-
+            throw new NotImplementedException();
         }
 
         public void Dispose()
@@ -230,10 +211,37 @@ namespace MultipleKinectMaster3D
                 this.multiFrameSourceReader.Dispose();
                 this.multiFrameSourceReader = null;
             }
+
+            socketClient.DisCounect();
         }
 
+
+        #region GUI Getter and Setter
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public string Bodyindex
+        {
+            get
+            {
+                return this.bodyIndex;
+            }
+            set
+            {
+                if (bodyIndex != value)
+                {
+                    bodyIndex = value;
+                    if (PropertyChanged != null)
+                    {
+                        this.PropertyChanged(this, new PropertyChangedEventArgs("Bodyindex"));
+                    }
+                }
+            }
+        }
+        #endregion
+
+
         int frameIndex = 0;
-        private   void Reader_MultiSourceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
+        private void Reader_MultiSourceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
         {
             DepthFrame depthFrame = null;
             BodyFrame bodyFrame = null;
@@ -264,7 +272,7 @@ namespace MultipleKinectMaster3D
                 {
                     if ((this.frameIndex % 2) == 0)
                     {
-                          this.UpdateBodyFrame(this.bodies);
+                        this.UpdateBodyFrame(this.bodies);
                     }
                 }
             }
@@ -283,28 +291,53 @@ namespace MultipleKinectMaster3D
                     multiSourceFrame = null;
                 }
             }
+            if (frameIndex % 10 == 0)
+            {
+                if (socketClient.IsConnected())
+                {
+                    this.SendDataToServer();
+                }
+
+            }
+
         }
 
         private BodyManager bodyManager = new BodyManager();
 
         private void UpdateBodyFrame(Body[] bodies)
         {
+
             int penIndex = 0;
-            int drawIdx = 0;
-            lock (thisLock)
-            {
-                bodyManager.CurrentBodyIdx = 0;
-                //清空使用者清單
-                bodyManager.WorkList_server.Clear();
-            }
+            bodyManager.CurrentBodyIdx = 0;
+
+            //清空使用者清單
+            bodyManager.WorkList.Clear();
+
+            //顯示當下使用者編號於視窗中。
+            string _bodyIndex = string.Empty;
+            bodyNumbers = 0;
+
+            StringBuilder sb_skeletonJoints;
+
+
 
             foreach (Body body in bodies)
             {
                 Pen drawPen = this.bodyColors[penIndex++];
 
+                sb_skeletonJoints = new StringBuilder();
+
                 if (body.IsTracked)
                 {
+                    bodyNumbers++;
+
+
                     IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
+
+
+                    //sb_skeletonJoints.Append(body.TrackingId.ToString() + ":");!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    sb_skeletonJoints.Append("72057594037927999:");
+
                     foreach (JointType jointType in joints.Keys)
                     {
                         CameraSpacePoint position = joints[jointType].Position;
@@ -312,98 +345,64 @@ namespace MultipleKinectMaster3D
                         {
                             position.Z = 0.1f;
                         }
-                    }
-                    lock (thisLock)
-                    {
-                        bodyManager.CurrentBodyIdx = body.TrackingId;
 
-                        if (!bodyManager.BodyState.ContainsKey(bodyManager.CurrentBodyIdx))
+                        //紀錄骨架座標於string中  jointType == JointType.ShoulderRight || jointType == JointType.ShoulderLeft || jointType == JointType.Head
                         {
-                            bodyManager.BodyState.Add(bodyManager.CurrentBodyIdx, DrawStatus.NewUser);
+                            //debug 
+                            string fakeZ = (position.Z  +0.9).ToString("0.0000");
+                            sb_skeletonJoints.Append(string.Format("{0},{1},{2}|", position.X.ToString("0.0000"), position.Y.ToString("0.0000"), fakeZ));
                         }
-                        //紀錄追蹤清單
-                        bodyManager.WorkList_server.Add(bodyManager.CurrentBodyIdx);
+                    }
+                    bodyManager.CurrentBodyIdx = body.TrackingId;
+
+                    if (!bodyManager.BodyState.ContainsKey(bodyManager.CurrentBodyIdx))
+                    {
+                        bodyManager.BodyState.Add(bodyManager.CurrentBodyIdx, DrawStatus.NewUser);
                     }
 
-                    //畫出3D骨架
-                    DrawBody3D(joints, drawPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx], true, drawIdx);
-                    drawIdx++;
+                    //將joints點存入dictionary中準備傳到server
+                    if (!_JointsPosDict.ContainsKey(penIndex))
+                    {
+                        _JointsPosDict.Add(penIndex, sb_skeletonJoints.ToString());
+                    }
+                    else
+                    {
+                        _JointsPosDict[penIndex] = sb_skeletonJoints.ToString();
+                    }
+                    sb_skeletonJoints.Clear();
+                    _bodyIndex = _bodyIndex + penIndex.ToString() + ",";
+
+                    //紀錄追蹤清單
+                    bodyManager.WorkList.Add(bodyManager.CurrentBodyIdx);
+
+                    this.DrawBody3D(joints, drawPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx]);
                 }
-
+                Bodyindex = _bodyIndex;
             }
 
-
-            #region 3D clientPoints
-
-            SocketPackage.SocketServer.imgObj.ProcessJointsInfo();
-            lock (thisLock)
+            //比對清單，濾出舊資料有，而新資料不復存在的骨架點
+            IEnumerable<ulong> exceptOutcome = bodyManager.WorkList_Pre.Except(bodyManager.WorkList);
+            if (exceptOutcome.Count() > 0)
             {
-                //清空使用者清單
-                bodyManager.WorkList_client.Clear();
-            }
-
-            for (int i = 0; i < 7; i++)
-            {
-                MyBody body = SocketPackage.SocketServer.imgObj.Body[i];
-                //畫出3D骨架
-
-                if (body.isTracked)
+                Element[] e = new Element[ObservableJoints.Count];
+                ObservableJoints.CopyTo(e, 0);
+                foreach (Element ee in e)
                 {
-                    Pen clientPen = new Pen(Brushes.Black, 3);
-                    lock (thisLock)
-                    {
-                        bodyManager.CurrentBodyIdx = body.TrackingId;
-
-                        if (!bodyManager.BodyState.ContainsKey(bodyManager.CurrentBodyIdx))
-                        {
-                            bodyManager.BodyState.Add(bodyManager.CurrentBodyIdx, DrawStatus.NewUser);
-                        }
-
-                        //紀錄追蹤清單
-                        bodyManager.WorkList_client.Add(bodyManager.CurrentBodyIdx);
-
-                    }
-                    //bodyManager.AddClientBody(body.jointsInfo, clientPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx]);
-                        this.DrawBody3D(body.jointsInfo, clientPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx],true,drawIdx);
-                        drawIdx++;
+                    ObservableJoints.Remove(ee);
                 }
-            }
 
-            #endregion
-
-
-            lock (thisLock)
-            {
-                bodyManager.WorkList.Clear();
-                bodyManager.SynchronousWorkList(bodyManager.WorkList_server);
-                bodyManager.SynchronousWorkList(bodyManager.WorkList_client);
-
-                //比對清單，濾出舊資料有，而新資料不復存在的骨架點
-                IEnumerable<ulong> exceptOutcome = bodyManager.WorkList_Pre.Except(bodyManager.WorkList);
-                if (exceptOutcome.Count() > 0)
+                Element[] ep = new Element[ObservablePipe.Count];
+                ObservablePipe.CopyTo(ep, 0);
+                foreach (Element ee in ep)
                 {
-                    Element[] e = new Element[ObservableJoints.Count];
-                    ObservableJoints.CopyTo(e, 0);
-                    foreach (Element ee in e)
-                    {
-                        ObservableJoints.Remove(ee);
-                    }
-
-                    Element[] ep = new Element[ObservablePipe.Count];
-                    ObservablePipe.CopyTo(ep, 0);
-                    foreach (Element ee in ep)
-                    {
-                        ObservablePipe.Remove(ee);
-                    }
-
-                    bodyManager.BodyState.Clear();
+                    ObservablePipe.Remove(ee);
                 }
 
-                bodyManager.WorkList_Pre = new List<ulong>(bodyManager.WorkList);
+                bodyManager.BodyState.Clear();
             }
 
+            bodyManager.WorkList_Pre = new List<ulong>(bodyManager.WorkList);
         }
-
 
         /// <summary>
         /// DrawBody3D
@@ -412,25 +411,14 @@ namespace MultipleKinectMaster3D
         /// <param name="drawingPen"></param>
         /// <param name="drawStatus"></param>
         /// <param name="IsCheckTrackingState">Check body State</param>
-        private  void    DrawBody3D(IReadOnlyDictionary<JointType, Joint> joints, Pen drawingPen, DrawStatus drawStatus, Boolean IsCheckTrackingState = true,int idx=0)
+        private void DrawBody3D(IReadOnlyDictionary<JointType, Joint> joints, Pen drawingPen, DrawStatus drawStatus, Boolean IsCheckTrackingState = true)
         {
             int bonesIndex = 0;
             foreach (var bone in this.bones)
             {
-                this.DrawBone(joints, bone.Item1, bone.Item2, drawingPen, drawStatus, bonesIndex + 24 * (idx ), IsCheckTrackingState);
+                this.DrawBone(joints, bone.Item1, bone.Item2, drawingPen, drawStatus, bonesIndex + 24 * (bodyManager.WorkList.Count - 1), IsCheckTrackingState);
                 bonesIndex++;
             }
-
-            lock (thisLock)
-            {
-
-                foreach (ulong u in bodyManager.WorkList)
-                {
-                    Debug.Print("WorkList : {0}", u);
-                }
-                Debug.Print("currentBodyIndex : {0}", bodyManager.CurrentBodyIdx);
-            }
-
 
             foreach (JointType jointType in joints.Keys)
             {
@@ -449,56 +437,23 @@ namespace MultipleKinectMaster3D
                 {
                     if (drawStatus == DrawStatus.NewUser)
                     {
-                        object[] myArray = new object[3];
-                        myArray[0] = CameraSpace2Point3D(joints[jointType].Position);
-                        myArray[1] = drawBrush;
-                        myArray[2] = 5;
-
-                        //this.dispatcher.BeginInvoke(AddPoint, myArray);
-
                         AddPoint(CameraSpace2Point3D(joints[jointType].Position),
-                                drawBrush,
-                                5);
-
-                        Action GUIAddPoint = delegate()
-                        {
-                            AddPoint(CameraSpace2Point3D(joints[jointType].Position),
-                                drawBrush,
-                                5);
-                        };
-                        //await this.dispatcher.InvokeAsync(GUIAddPoint);
-
+                            drawBrush,
+                            5);
                     }
                     else
                     {
                         if (drawStatus == DrawStatus.TrackedUser)
                         {
-                            lock (thisLock)
-                            {
-                                //int JointsNumber = (int)jointType + 25 * (bodyManager.WorkList.Count - 1);
-                                int JointsNumber = (int)jointType + 25 * idx;
-                                if (this.ObservableJoints.Count > JointsNumber && this.ObservableJoints.Count > 0)
-                                {
-                                    this.ObservableJoints[JointsNumber].Position = CameraSpace2Point3D(joints[jointType].Position);
-                                    Debug.Print("currentBodyIndex{2} total:{0}, actual:{1}", this.ObservableJoints.Count, JointsNumber,bodyManager.CurrentBodyIdx);
-
-                                }
-                                else
-                                {
-                                    Debug.Print("Onfalse total:{0}, actual:{1}", this.ObservableJoints.Count, JointsNumber);
-
-                                }
-                            }
+                            this.ObservableJoints[(int)jointType + 25 * (bodyManager.WorkList.Count - 1)].Position = CameraSpace2Point3D(joints[jointType].Position);
                         }
                     }
                 }
 
             }
-            lock (thisLock)
-            {
-                //畫出joints and bone  後將此user設為Tracked
-                bodyManager.BodyState[bodyManager.CurrentBodyIdx] = DrawStatus.TrackedUser;
-            }
+            //畫出joints and bone  後將此user設為Tracked
+            bodyManager.BodyState[bodyManager.CurrentBodyIdx] = DrawStatus.TrackedUser;
+
         }
 
         /// /// <param name="drawingPen">specifies color to draw a specific bone</param>
@@ -529,6 +484,7 @@ namespace MultipleKinectMaster3D
             {
                 this.ObservablePipe[boneIndex].Point1 = CameraSpace2Point3D(joints[jointType0].Position);
                 this.ObservablePipe[boneIndex].Point2 = CameraSpace2Point3D(joints[jointType1].Position);
+
             }
         }
 
@@ -538,6 +494,79 @@ namespace MultipleKinectMaster3D
         }
 
 
+        /// <summary>
+        /// Send All Data to Server to server va network
+        /// </summary>
+        public void SendDataToServer()
+        {
+            byte[] bodyNumbers_byte = System.Text.Encoding.UTF8.GetBytes(bodyNumbers.ToString());
+
+            //深度 + 人體骨架數量
+            //byte[] Depth_BodyNum_byte = CombomBinaryArray(depthPixels, bodyNumbers_byte);
+
+            //深度 + 人體骨架數量 + 骨架點
+            byte[] Depth_BodyNum_Skeleton_byte = bodyNumbers_byte;
+
+            byte[] bodySkeletons_byteArray = null;
+
+            if (bodyNumbers > 0)
+            {
+                //找出人體的index
+                string[] dictKey = bodyIndex.Split(',');
+
+                if (dictKey != null && dictKey.Length > 1)
+                {
+                    for (int i = 0; i < dictKey.Length - 1; i++)
+                    {
+                        //骨架位置字串
+                        byte[] skeleton_Joints_byte = System.Text.Encoding.UTF8.GetBytes(_JointsPosDict[int.Parse(dictKey[i])]);
+
+                        //骨架字串的長度
+                        byte[] str_SkeletonJoints_Len_byte = System.Text.Encoding.UTF8.GetBytes(_JointsPosDict[int.Parse(dictKey[i])].Length.ToString());
+
+                        //
+                        if (bodySkeletons_byteArray == null)
+                        {
+                            bodySkeletons_byteArray = CombomBinaryArray(str_SkeletonJoints_Len_byte, skeleton_Joints_byte);
+                        }
+                        else
+                        {
+                            bodySkeletons_byteArray = CombomBinaryArray(bodySkeletons_byteArray, CombomBinaryArray(str_SkeletonJoints_Len_byte, skeleton_Joints_byte));
+                        }
+                    }
+                }
+            }
+            //沒有任何人體骨架
+            if (bodySkeletons_byteArray == null)
+            {
+                //送出深度影像 + 骨架數量(0)
+                socketClient.SendBytes(bodyNumbers_byte);
+                //Debug.Print(string.Format(" >> SendDataToServer :bodySkeletons_byteArray:  {0}", bodyNumbers_byte.Length));
+
+            }
+            else  //一個以上的人體骨架
+            {
+                Depth_BodyNum_Skeleton_byte = CombomBinaryArray(Depth_BodyNum_Skeleton_byte, bodySkeletons_byteArray);
+                //送出 深度影像 + 骨架數量(n) + (骨架字串長度 +  骨架字串) * n
+                socketClient.SendBytes(Depth_BodyNum_Skeleton_byte);
+                //Debug.Print(string.Format(" >> SendDataToServer :Depth_BodyNum_Skeleton_byte: {0}", Depth_BodyNum_Skeleton_byte.Length));
+
+            }
+        }
+
+        private byte[] CombomBinaryArray(byte[] srcArray1, byte[] srcArray2)
+        {
+            //根據要合併的兩個byte陣列長度建立一個新的byte[]
+            byte[] newArray = new byte[srcArray1.Length + srcArray2.Length];
+
+            //把第一個陣列複製到新的陣列
+            Array.Copy(srcArray1, 0, newArray, 0, srcArray1.Length);
+
+            //把第二個陣列貼到第一個陣列之後
+            Array.Copy(srcArray2, 0, newArray, srcArray1.Length, srcArray2.Length);
+
+            return newArray;
+        }
 
     }
 }

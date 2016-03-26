@@ -27,8 +27,8 @@ namespace SocketPackage
 
         /// 遠端 socket server IP 位址
         private string _RemoteIpAddress;
-    
-       /// 遠端 socket server 所監聽的 port number
+
+        /// 遠端 socket server 所監聽的 port number
         private int _RemotePortNumber;
 
         /// socket client 物件(連接遠端 socket server 用)
@@ -40,15 +40,15 @@ namespace SocketPackage
         #endregion
 
         #region public static property
-       /// <summary>
-       /// Indicate server socket status
-       /// </summary>
+        /// <summary>
+        /// Indicate server socket status
+        /// </summary>
         public static Status socketStatus = new Status();
-       
+
         #endregion
 
         #region constructor
-        
+
         /// <summary>
         /// constructor
         /// </summary>
@@ -62,7 +62,7 @@ namespace SocketPackage
             //設定Log
             XmlConfigurator.Configure(new System.IO.FileInfo(@"./config.xml"));
             log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-            
+
             //
             socketStatus.changed += new changedEventHandler(socketStatusChange);
         }
@@ -88,6 +88,23 @@ namespace SocketPackage
                 _TcpClient.Close();
                 _TcpClient = null;
                 log.Info("Client Socket Program - Server DisConnected");
+            }
+        }
+
+
+        public Boolean IsConnected()
+        {
+            if (_TcpClient == null)
+            {
+                return false;
+            }
+            else
+            {
+                if (_TcpClient.Connected)
+                {
+                    return true;
+                }
+                return false;
             }
         }
 
@@ -136,7 +153,7 @@ namespace SocketPackage
 
         public async void SendBytes(byte[] bytes)
         {
-          //  try
+            //  try
             {
                 //取得用來傳送訊息至 socket server 的 stream 物件
                 NetworkStream serverStream = _TcpClient.GetStream();
@@ -152,14 +169,14 @@ namespace SocketPackage
                     int status = int.Parse(System.Text.Encoding.UTF8.GetString(status_byte));
 
                     SocketClient.socketStatus.SocketStatus = (SocketPackage.TRANSMIT_STATUS)Enum.ToObject(typeof(SocketPackage.TRANSMIT_STATUS), status);
- 
+
                 }
-                
+
             }
-           // catch (Exception ee)
+            // catch (Exception ee)
             {
 
-               // log.Error("SendImg Error", ee);
+                // log.Error("SendImg Error", ee);
             }
 
         }

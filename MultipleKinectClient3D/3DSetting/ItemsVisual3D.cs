@@ -8,7 +8,7 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace MultipleKinectMaster3D
+namespace MultipleKinectClient3D
 {
     using System;
     using System.Collections;

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MultipleKinectMaster3D
+namespace MultipleKinectClient3D
 {
     public enum DrawStatus
     {
@@ -70,28 +70,6 @@ namespace MultipleKinectMaster3D
             set { workList_Pre = value; }
         }
 
-        private List<ulong> workList_server;
-
-        public List<ulong> WorkList_server
-        {
-            get
-            {
-                return workList_server;
-            }
-            set { workList_server = value; }
-        }
-
-        private List<ulong> workList_client;
-
-        public List<ulong> WorkList_client
-        {
-            get
-            {
-                return workList_client;
-            }
-            set { workList_client = value; }
-        }
-
 
 
         public BodyManager()
@@ -99,30 +77,7 @@ namespace MultipleKinectMaster3D
             bodyState = new Dictionary<ulong, DrawStatus>();
             workList = new List<ulong>();
             workList_Pre = new List<ulong>();
-            workList_client = new List<ulong>();
-            workList_server = new List<ulong>();
         }
 
-        public void SynchronousWorkList(List<ulong> list)
-        {
-            foreach (ulong l in list)
-            {
-                if (!WorkList.Contains(l))
-                {
-                    WorkList.Add(l);
-                }
-            }
-        }
-
-
-        //Dictionary<Microsoft.Kinect.JointType, Microsoft.Kinect.Joint> dictionary
-
-        //    System.Windows.Media.Pen clientPen
-        //        DrawStatus drawStatus
-        //internal void AddClientBody(Dictionary<Microsoft.Kinect.JointType, Microsoft.Kinect.Joint> dictionary, System.Windows.Media.Pen clientPen, DrawStatus drawStatus)
-        //{
-
-
-        //}
     }
 }

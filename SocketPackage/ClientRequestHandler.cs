@@ -8,12 +8,13 @@ using System.IO;
 
 using log4net;
 using log4net.Config;
+using System.Diagnostics;
 
 namespace SocketPackage
 {
     public class ClientRequestHandler
     {
-          public  const int IMG_SIZE = 217088;
+          public  const int IMG_SIZE = 0;
           public  const int BODY_NUMBER_SIZE = 1;
           public  const int BODY_SKELETION_STR_SIZE = 3;
  
@@ -64,16 +65,23 @@ namespace SocketPackage
             NetworkStream netStream = null;
             BinaryReader binaryReader = null;
             //server & client 已經連線完成
+
+
             while (_TcpClient.Connected)
             {
+
                 //取得網路串流物件，取得來自 socket client 的訊息
                 netStream = _TcpClient.GetStream();
                 if (_TcpClient.ReceiveBufferSize > 0 && netStream.CanRead)
                 {
                    // try
                     {
+
                         binaryReader = new BinaryReader(netStream);
-                        SocketServer.imgObj.ImgBuffer = binaryReader.ReadBytes(IMG_SIZE);
+                        //使用2D版本時需要uncommant
+                        //SocketServer.imgObj.ImgBuffer = binaryReader.ReadBytes(IMG_SIZE);
+
+                        SocketServer.imgObj.ImgBuffer = null;
 
                         string a;
                         a = System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(BODY_NUMBER_SIZE));
@@ -89,6 +97,7 @@ namespace SocketPackage
                             int strLength = int.Parse(System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(BODY_SKELETION_STR_SIZE)));
                             SocketServer.imgObj.SBodyJoints[i] = System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(strLength));
                             body.isTracked = true;
+
                         }
 
                         //設定其他骨架為未追蹤

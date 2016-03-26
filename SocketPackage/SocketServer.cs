@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 using log4net;
 using log4net.Config;
+using System.Diagnostics;
 
 namespace SocketPackage
 {
@@ -43,7 +44,7 @@ namespace SocketPackage
 
         public static  Status status = new Status();
 
-        static public SocketData imgObj = new SocketData();
+        public static  SocketData imgObj = new SocketData();
         
         private void StatusChange(object sender,EventArgs e)
         {
@@ -131,6 +132,10 @@ namespace SocketPackage
                 //啟動 listener
                 _tcpListener.Start();
                 log.Info(">> Server Started");
+
+                Debug.Print(">> Server Started");
+
+
                 //========== 持續接受監聽 socket client 的連線 ========== (start)
                 while (true)
                 {
@@ -140,8 +145,8 @@ namespace SocketPackage
                     //累加 socket client 識別編號
                     _ClientNo++;
                     log.Info(" >> " + "Client Request No:" + Convert.ToString(_ClientNo) + " started!");
-
-                    //sMessages.Add(" >> " + "Client Request No:" + Convert.ToString(_ClientNo) + " started!");
+                    
+                    Debug.Print(string.Format(" >> " + "Client Request No: {0} started!", Convert.ToString(_ClientNo)));
 
                     //產生 BackgroundWorker 負責處理每一個 Socket Client 的要求
                     ClientRequestHandler handler = new ClientRequestHandler(_ClientNo, socket4Client);

@@ -1,7 +1,12 @@
-﻿using System;
+﻿using Microsoft.Kinect;
+using Microsoft.Kinect.Tools;
+using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,28 +18,20 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace MultipleKinectMaster3D
+namespace MultipleKinectClient3D
 {
-    using Microsoft.Kinect;
-    using Microsoft.Kinect.Tools;
-    using Microsoft.Win32;
-    using System.ComponentModel;
-    using System.Threading;
-
     /// <summary>
     /// MainWindow.xaml 的互動邏輯
     /// </summary>
-    /// 
-
     public partial class MainWindow : Window, INotifyPropertyChanged, IDisposable
     {
 
         private KinectSensor kinectSensor = null;
 
         private string kinectStatusText = String.Empty;
-        
+
         private bool isPlaying = false;
-       
+
         private string lastFile = string.Empty;
 
         private delegate void OneArgDelegate(string arg);
@@ -42,7 +39,7 @@ namespace MultipleKinectMaster3D
         private delegate void NoArgDelegate();
 
 
-        private MasterKinectProcessor3D masterKinectProcessor3D = null;
+        private ClientKinectProcessor3D masterKinectProcessor3D = null;
         public MainWindow()
         {
             InitializeComponent();
@@ -53,7 +50,7 @@ namespace MultipleKinectMaster3D
             this.KinectStatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
                                                 : Properties.Resources.SensorNotAvailableStatusText;
 
-            this.masterKinectProcessor3D = new MasterKinectProcessor3D(kinectSensor, this.Dispatcher);
+            this.masterKinectProcessor3D = new ClientKinectProcessor3D(kinectSensor);
 
             // set data context for display in UI
             this.DataContext = this.masterKinectProcessor3D;
@@ -90,7 +87,7 @@ namespace MultipleKinectMaster3D
                 }
             }
         }
- 
+
         private void Sensor_IsAvailableChanged(object sender, IsAvailableChangedEventArgs e)
         {
             this.KinectStatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
@@ -166,6 +163,5 @@ namespace MultipleKinectMaster3D
         {
 
         }
-
     }
 }

@@ -12,6 +12,16 @@ namespace SocketPackage
     {
         public event changeEventHandler changed;
 
+        protected virtual void OnChange(EventArgs e)
+        {
+            if (changed != null)
+            {
+                changed(this, e);
+            }
+        }
+
+
+        #region Properties and getter,setter
         MyBody[] body = new MyBody[7];
 
         public MyBody[] Body
@@ -42,8 +52,12 @@ namespace SocketPackage
         private string[] _SBodyJoints = new string[7];
         public string[] SBodyJoints
         {
-            get { return _SBodyJoints; }
-            set { _SBodyJoints = value; }
+            get { return _SBodyJoints; 
+            }
+            set { 
+                _SBodyJoints = value;
+            OnChange(EventArgs.Empty);
+            }
         }
 
         //是否追蹤到
@@ -52,13 +66,14 @@ namespace SocketPackage
         {
             get { return _IsTracked; }
             set { _IsTracked = value; }
-        }
+        } 
+        #endregion
 
 
-        //constructor
+        //Constructor
         public SocketData() {
 
-            //初始化人體物件陣列
+            //初始化人體物件陣列 預設7個  [0-6]
             for (int i = 0; i < body.Length; ++i)
             {
                 body[i] = new MyBody();
@@ -66,22 +81,79 @@ namespace SocketPackage
         
         }
 
+
+
+        /// <summary>
+        ///  將骨架座標字串轉換成 Mybody 物件儲存，存入jointsInfo Dictionrys內
+        /// </summary>
+        public void ProcessJointsInfo()
+        {
+            int index = 0;
+            foreach (MyBody b in body)
+            {
+                if (b.isTracked)
+                {
+                    string[] pieces = SBodyJoints[index].Split(':');
+
+                    string skeletonIndex = pieces[0];
+
+                    //設定使用者ID
+                    b.TrackingId = (ulong)Int64.Parse( skeletonIndex);
+
+                    if (pieces.Length > 1)
+                    {
+
+                        string[] jointsPieces = pieces[1].Split('|');
+
+                        //將所有骨架座標轉成 CameraSpacePoint 存到 joints 裡面
+                        foreach (string JointKey in Enum.GetNames(typeof(JointType)))
+                        {
+
+                            JointType jointType = (JointType)Enum.Parse(typeof(JointType), JointKey);
+
+                            int jointTypeValue = (int)jointType;
+
+                            Joint tempJoint = new Joint();
+
+                            tempJoint.TrackingState = TrackingState.Tracked;
+                            tempJoint.JointType =jointType;
+
+                            tempJoint.Position = jointsStr2CameraSpacePoint(jointsPieces[jointTypeValue]);
+
+                            if (b.jointsInfo.ContainsKey(jointType))
+                            {
+                                b.jointsInfo[jointType] = tempJoint;
+                            }
+                            else
+                            {
+                                b.jointsInfo.Add(jointType, tempJoint);
+                            }
+
+                        }
+                    }
+                }
+
+                index++; 
+            }
+        }
+
+        /// <summary>
+        ///  [Not Suggest] 如果要使用jointsInfo 請改用 ProcessJointsInfo()
+        ///  將骨架座標轉換成Mybody物件儲存，存入joints Dictionrys內
+        /// </summary>
         public void processJoints( )
         {
             int index = 0;
             foreach (MyBody b in body)
             {
-
                 if (b.isTracked)
                 {
-
                     string[] pieces = SBodyJoints[index].Split(':');
 
                     string skeletonIndex = pieces[0];
 
                     //設定使用者ID
                     b.userId = skeletonIndex;
-
 
                     if (pieces.Length > 1)
                     {
@@ -114,14 +186,27 @@ namespace SocketPackage
             }
         }
 
-
-        protected virtual void OnChange(EventArgs e)
+        private CameraSpacePoint jointsStr2CameraSpacePoint(string joints)
         {
-            if (changed != null)
+            CameraSpacePoint csp = new CameraSpacePoint();
+            string[] pieces = joints.Split(',');
+            if (pieces.Length == 3)
             {
-                changed(this, e);
+                csp.X = float.Parse(pieces[0]);
+                csp.Y = float.Parse(pieces[1]);
+                csp.Z = float.Parse(pieces[2]);
             }
+            else
+            {
+                csp.X = 0;
+                csp.Y = 0;
+                csp.Z = 0;
+            }
+            return csp;
         }
+
+
+     
 
     }
 
@@ -129,18 +214,34 @@ namespace SocketPackage
     {
         public Boolean isTracked ;
 
+        /// <summary>
+        /// [Not Suggest] please use jointsInfo intead.
+        /// </summary>
         public Dictionary<JointType, myCameraSpacePoint> joints;
 
+        /// <summary>
+        /// 儲存詳細骨架資料
+        /// </summary>
+        public Dictionary<JointType, Joint> jointsInfo;
+
+        /// <summary>
+        /// [not supported] please use trackingId instead.
+        /// </summary>
         public string userId;
- 
+
+        public ulong TrackingId { get; set; }
+
         public MyBody(){
 
             joints = new Dictionary<JointType, myCameraSpacePoint>();
+
+            jointsInfo = new Dictionary<JointType, Joint>();
 
             isTracked = false;
 
             userId = string.Empty;
         }
+
         public void init()
         {
             foreach (string js in Enum.GetNames(typeof(JointType)))
