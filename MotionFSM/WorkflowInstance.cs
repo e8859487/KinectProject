@@ -9,8 +9,8 @@ namespace MotionFSM
     using System.Activities;
     using Microsoft.Activities.Extensions.Tracking;
     using System.ComponentModel;
-    
-    public  class WorkflowInstance : INotifyPropertyChanged
+
+    public class WorkflowInstance : INotifyPropertyChanged
     {
         internal static readonly Activity workflowDefinition = new Activity1();
 
@@ -20,16 +20,16 @@ namespace MotionFSM
 
         private readonly IWorkflowView view;
 
-        static bool IsEventExist(StateMachineStateTracker stateMachineStateTracker, string EventName)
+        public bool IsEventExist(string EventName)
         {
             //目前是事件為: S_Unknow 則所有事件都可以成立
-            if (stateMachineStateTracker.CurrentState == "S_UnKnow")
+            if (StateTracker.CurrentState == "S_UnKnow")
             {
                 return true;
             }
 
             //Trusted transitions
-            foreach (System.Activities.Statements.Transition ts in stateMachineStateTracker.Transitions)
+            foreach (System.Activities.Statements.Transition ts in StateTracker.Transitions)
             {
                 if (String.Equals(ts.DisplayName, EventName))
                 {
@@ -42,7 +42,7 @@ namespace MotionFSM
         }
 
 
-        public WorkflowInstance(IWorkflowView view,StateMachineStateTracker stateMachineStateTracker = null)
+        public WorkflowInstance(IWorkflowView view, StateMachineStateTracker stateMachineStateTracker = null)
         {
             this.view = view;
             this.StateTracker = stateMachineStateTracker ?? new StateMachineStateTracker(workflowDefinition);
@@ -64,9 +64,9 @@ namespace MotionFSM
             this.Host.Run();
         }
 
- 
 
-        public void ResumeBookmark(string bookmark,string info = null)
+
+        public void ResumeBookmark(string bookmark, string info = null)
         {
             Host.ResumeBookmark(bookmark, info);
         }

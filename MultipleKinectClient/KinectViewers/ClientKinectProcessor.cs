@@ -445,7 +445,7 @@ namespace MultipleKinectClient
                     string _bodyIndex = string.Empty;
 
                     //foreach counter(LoopIndex)
-                    int BodyIndex = 0;
+                    int loopIndex = 0;
 
                     bodyNumbers = 0;
 
@@ -453,7 +453,7 @@ namespace MultipleKinectClient
                     Dictionary<JointType, Point> jointPoints = null;
                     foreach (Body body in bodies)
                     {
-                        Pen drawPen = this.bodyColors[BodyIndex++];
+                        Pen drawPen = this.bodyColors[loopIndex++];
                         sb_skeletonJoints = new StringBuilder();
                         int testnumber = 0;
                         if (body.IsTracked)
@@ -487,16 +487,16 @@ namespace MultipleKinectClient
                             }
 
                             //將joints點存入dictionary中準備傳到server
-                            if (!_JointsPosDict.ContainsKey(BodyIndex))
+                            if (!_JointsPosDict.ContainsKey(loopIndex))
                             {
-                                _JointsPosDict.Add(BodyIndex, sb_skeletonJoints.ToString());
+                                _JointsPosDict.Add(loopIndex, sb_skeletonJoints.ToString());
                             }
                             else
                             {
-                                _JointsPosDict[BodyIndex] = sb_skeletonJoints.ToString();
+                                _JointsPosDict[loopIndex] = sb_skeletonJoints.ToString();
                             }
                             sb_skeletonJoints.Clear();
-                            _bodyIndex = _bodyIndex + BodyIndex.ToString()+",";
+                            _bodyIndex = _bodyIndex + loopIndex.ToString()+",";
 
                             this.DrawBody(joints, jointPoints, dc, drawPen);
                         }//if (body.IsTracked) End

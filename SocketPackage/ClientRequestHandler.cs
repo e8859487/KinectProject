@@ -97,7 +97,6 @@ namespace SocketPackage
                             int strLength = int.Parse(System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(BODY_SKELETION_STR_SIZE)));
                             SocketServer.imgObj.SBodyJoints[i] = System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(strLength));
                             body.isTracked = true;
-
                         }
 
                         //設定其他骨架為未追蹤

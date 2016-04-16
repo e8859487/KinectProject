@@ -191,7 +191,7 @@ namespace MultipleKinectClient3D
 
             this.socketClient = new SocketClient(IpAddr, Port);
              this.socketClient.Connect();
-            // this.socketClient.clientDataChanged += new clientDataChangeEventHandler(StatusChange);
+            //this.socketClient.clientDataChanged += new clientDataChangeEventHandler(StatusChange);
 
 
 
@@ -291,7 +291,7 @@ namespace MultipleKinectClient3D
                     multiSourceFrame = null;
                 }
             }
-            if (frameIndex % 10 == 0)
+            if (frameIndex % 2 == 0)
             {
                 if (socketClient.IsConnected())
                 {
@@ -335,8 +335,10 @@ namespace MultipleKinectClient3D
                     IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
 
 
-                    //sb_skeletonJoints.Append(body.TrackingId.ToString() + ":");!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    sb_skeletonJoints.Append("72057594037927999:");
+                    //sb_skeletonJoints.Append(body.TrackingId.ToString() + ":"); 
+                    sb_skeletonJoints.Append(body.TrackingId.ToString().Substring(1) + ":"); 
+
+                    //sb_skeletonJoints.Append("72057594037927999:");
 
                     foreach (JointType jointType in joints.Keys)
                     {

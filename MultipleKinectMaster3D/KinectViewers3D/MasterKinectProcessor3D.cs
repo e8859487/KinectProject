@@ -11,10 +11,14 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
+using MotionFSM;
+using Microsoft.Activities.Extensions.Tracking;
+using System.Activities;
+using System.ComponentModel;
 
 namespace MultipleKinectMaster3D
 {
-    class MasterKinectProcessor3D
+    class MasterKinectProcessor3D : IWorkflowView, INotifyPropertyChanged
     {
 
         #region Private Variables
@@ -70,7 +74,9 @@ namespace MultipleKinectMaster3D
 
         object thisLock = new object();
 
-        private static Semaphore _pool;
+
+
+
 
         #endregion
 
@@ -90,7 +96,7 @@ namespace MultipleKinectMaster3D
 
             socketServer = new SocketServer(PORT);
             socketServer.Start();
-            // socketServer.changed += new changeEventHandler(SocketServer_changed);
+            socketServer.changed += new changeEventHandler(SocketServer_changed);
 
 
 
@@ -182,43 +188,43 @@ namespace MultipleKinectMaster3D
             });
             #endregion
 
-
+            this.InitialWorkflowInstance();
         }
 
-        private   void SocketServer_changed(object sender, EventArgs e)
+        private void SocketServer_changed(object sender, EventArgs e)
         {
-            SocketPackage.SocketServer.imgObj.ProcessJointsInfo();
             lock (thisLock)
             {
+                SocketPackage.SocketServer.imgObj.ProcessJointsInfo();
                 //清空使用者清單
-                bodyManager.WorkList_client.Clear();
+                //bodyManager.WorkList_client.Clear();
             }
 
-            for (int i = 0; i < 7; i++)
-            {
-                MyBody body = SocketPackage.SocketServer.imgObj.Body[i];
-                //畫出3D骨架
+            //for (int i = 0; i < 7; i++)
+            //{
+            //    MyBody body = SocketPackage.SocketServer.imgObj.Body[i];
+            //    //畫出3D骨架
 
-                if (body.isTracked)
-                {
-                    Pen clientPen = new Pen(Brushes.Black, 3);
-                    lock (thisLock)
-                    {
-                        bodyManager.CurrentBodyIdx = body.TrackingId;
+            //    if (body.isTracked)
+            //    {
+            //        Pen clientPen = new Pen(Brushes.Black, 3);
+            //        lock (thisLock)
+            //        {
+            //            bodyManager.CurrentBodyIdx = body.TrackingId;
 
-                        if (!bodyManager.BodyState.ContainsKey(bodyManager.CurrentBodyIdx))
-                        {
-                            bodyManager.BodyState.Add(bodyManager.CurrentBodyIdx, DrawStatus.NewUser);
-                        }
+            //            if (!bodyManager.BodyState.ContainsKey(bodyManager.CurrentBodyIdx))
+            //            {
+            //                bodyManager.BodyState.Add(bodyManager.CurrentBodyIdx, DrawStatus.NewUser);
+            //            }
 
-                        //紀錄追蹤清單
-                        bodyManager.WorkList_client.Add(bodyManager.CurrentBodyIdx);
+            //            //紀錄追蹤清單
+            //            bodyManager.WorkList_client.Add(bodyManager.CurrentBodyIdx);
 
-                    }
-                    //bodyManager.AddClientBody(body.jointsInfo, clientPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx]);
-                      this.DrawBody3D(body.jointsInfo, clientPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx]);
-                }
-            }
+            //        }
+            //        //bodyManager.AddClientBody(body.jointsInfo, clientPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx]);
+            //          this.DrawBody3D(body.jointsInfo, clientPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx]);
+            //    }
+            //}
 
         }
 
@@ -233,7 +239,11 @@ namespace MultipleKinectMaster3D
         }
 
         int frameIndex = 0;
-        private   void Reader_MultiSourceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
+        TimeSpan startTime = new TimeSpan(0,0,0);
+        TimeSpan tsp;
+
+        private bool IsDeviceHeightReady = false;
+        private void Reader_MultiSourceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
         {
             DepthFrame depthFrame = null;
             BodyFrame bodyFrame = null;
@@ -256,15 +266,31 @@ namespace MultipleKinectMaster3D
                     }
                     bodyFrame.GetAndRefreshBodyData(this.bodies);
                     dataReceived = true;
+                    if (startTime.TotalSeconds != 0)
+                    {
+                        tsp = (bodyFrame.RelativeTime - startTime) ;
+                        Lbl_TimeStamp = new TimeSpan(0, tsp.Minutes, tsp.Seconds).ToString();
+                        motionAnalyzer.timespan = Lbl_TimeStamp;
+                    }
+                    else
+                    {
+                        startTime = bodyFrame.RelativeTime;
+                    }
+ 
                 }
 
 
                 this.frameIndex++;
                 if (dataReceived)
                 {
-                    if ((this.frameIndex % 2) == 0)
+                    if ((this.frameIndex % 3) == 0)
                     {
-                          this.UpdateBodyFrame(this.bodies);
+                        this.UpdateBodyFrame(this.bodies);
+                    }
+                    if (bodyFrame.FloorClipPlane.W != 0 && !IsDeviceHeightReady)
+                    {
+                    motionAnalyzer.SetFloorClipPlane(bodyFrame.FloorClipPlane);
+                    IsDeviceHeightReady = true;
                     }
                 }
             }
@@ -291,67 +317,58 @@ namespace MultipleKinectMaster3D
         {
             int penIndex = 0;
             int drawIdx = 0;
-            lock (thisLock)
-            {
-                bodyManager.CurrentBodyIdx = 0;
-                //清空使用者清單
-                bodyManager.WorkList_server.Clear();
-            }
 
-            foreach (Body body in bodies)
-            {
-                Pen drawPen = this.bodyColors[penIndex++];
+            //bodyManager.CurrentBodyIdx = 0;
+            ////清空使用者清單
+            //bodyManager.WorkList_server.Clear();
+            //foreach (Body body in bodies)
+            //{
+            //    Pen drawPen = this.bodyColors[penIndex++];
 
-                if (body.IsTracked)
-                {
-                    IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
-                    foreach (JointType jointType in joints.Keys)
-                    {
-                        CameraSpacePoint position = joints[jointType].Position;
-                        if (position.Z < 0)
-                        {
-                            position.Z = 0.1f;
-                        }
-                    }
-                    lock (thisLock)
-                    {
-                        bodyManager.CurrentBodyIdx = body.TrackingId;
+            //    if (body.IsTracked)
+            //    {
+            //        IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
+            //        foreach (JointType jointType in joints.Keys)
+            //        {
+            //            CameraSpacePoint position = joints[jointType].Position;
+            //            if (position.Z < 0)
+            //            {
+            //                position.Z = 0.1f;
+            //            }
+            //        }
+            //        bodyManager.CurrentBodyIdx = body.TrackingId;
 
-                        if (!bodyManager.BodyState.ContainsKey(bodyManager.CurrentBodyIdx))
-                        {
-                            bodyManager.BodyState.Add(bodyManager.CurrentBodyIdx, DrawStatus.NewUser);
-                        }
-                        //紀錄追蹤清單
-                        bodyManager.WorkList_server.Add(bodyManager.CurrentBodyIdx);
-                    }
+            //        if (!bodyManager.BodyState.ContainsKey(bodyManager.CurrentBodyIdx))
+            //        {
+            //            bodyManager.BodyState.Add(bodyManager.CurrentBodyIdx, DrawStatus.NewUser);
+            //        }
+            //        //紀錄追蹤清單
+            //        bodyManager.WorkList_server.Add(bodyManager.CurrentBodyIdx);
 
-                    //畫出3D骨架
-                    DrawBody3D(joints, drawPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx], true, drawIdx);
-                    drawIdx++;
-                }
+            //        //畫出3D骨架
+            //        //DrawBody3D(joints, drawPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx], true, drawIdx);
 
-            }
+
+            //        drawIdx++;
+
+            //    }
+            //}
 
 
             #region 3D clientPoints
 
-            SocketPackage.SocketServer.imgObj.ProcessJointsInfo();
+            //清空使用者清單
+            bodyManager.WorkList_client.Clear();
             lock (thisLock)
             {
-                //清空使用者清單
-                bodyManager.WorkList_client.Clear();
-            }
-
-            for (int i = 0; i < 7; i++)
-            {
-                MyBody body = SocketPackage.SocketServer.imgObj.Body[i];
-                //畫出3D骨架
-
-                if (body.isTracked)
+                for (int i = 0; i < 7; i++)
                 {
-                    Pen clientPen = new Pen(Brushes.Black, 3);
-                    lock (thisLock)
+                    MyBody body = SocketPackage.SocketServer.imgObj.Body[i];
+                    //畫出3D骨架
+
+                    if (body.isTracked)
                     {
+                        Pen clientPen = new Pen(Brushes.Black, 3);
                         bodyManager.CurrentBodyIdx = body.TrackingId;
 
                         if (!bodyManager.BodyState.ContainsKey(bodyManager.CurrentBodyIdx))
@@ -362,16 +379,27 @@ namespace MultipleKinectMaster3D
                         //紀錄追蹤清單
                         bodyManager.WorkList_client.Add(bodyManager.CurrentBodyIdx);
 
-                    }
-                    //bodyManager.AddClientBody(body.jointsInfo, clientPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx]);
-                        this.DrawBody3D(body.jointsInfo, clientPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx],true,drawIdx);
+                        //bodyManager.AddClientBody(body.jointsInfo, clientPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx]);
+                        this.DrawBody3D(body.jointsInfo, clientPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx], true, drawIdx);
                         drawIdx++;
+
+
+                        //Motion Detect!!
+                        if (i == 0 && ClientFrameCounter % 4 == 0)
+                        {
+                            motionAnalyzer.EventAnalyze(body);
+                            Lbl_MotionState = motionAnalyzer.GetCurrentState();
+                            //Debug.Print(motionAnalyzer.GetCurrentState());
+                        }
+                        ClientFrameCounter++;
+                    }
                 }
             }
 
             #endregion
 
 
+            #region 比對資料
             lock (thisLock)
             {
                 bodyManager.WorkList.Clear();
@@ -401,9 +429,10 @@ namespace MultipleKinectMaster3D
 
                 bodyManager.WorkList_Pre = new List<ulong>(bodyManager.WorkList);
             }
+            #endregion
 
         }
-
+        int ClientFrameCounter = 0;
 
         /// <summary>
         /// DrawBody3D
@@ -412,90 +441,59 @@ namespace MultipleKinectMaster3D
         /// <param name="drawingPen"></param>
         /// <param name="drawStatus"></param>
         /// <param name="IsCheckTrackingState">Check body State</param>
-        private  void    DrawBody3D(IReadOnlyDictionary<JointType, Joint> joints, Pen drawingPen, DrawStatus drawStatus, Boolean IsCheckTrackingState = true,int idx=0)
+        private void DrawBody3D(IReadOnlyDictionary<JointType, Joint> joints, Pen drawingPen, DrawStatus drawStatus, Boolean IsCheckTrackingState = true, int idx = 0)
         {
             int bonesIndex = 0;
             foreach (var bone in this.bones)
             {
-                this.DrawBone(joints, bone.Item1, bone.Item2, drawingPen, drawStatus, bonesIndex + 24 * (idx ), IsCheckTrackingState);
+                this.DrawBone(joints, bone.Item1, bone.Item2, drawingPen, drawStatus, bonesIndex + 24 * idx, IsCheckTrackingState);
                 bonesIndex++;
             }
 
-            lock (thisLock)
+            //lock (thisLock)
             {
-
-                foreach (ulong u in bodyManager.WorkList)
+                foreach (JointType jointType in joints.Keys)
                 {
-                    Debug.Print("WorkList : {0}", u);
-                }
-                Debug.Print("currentBodyIndex : {0}", bodyManager.CurrentBodyIdx);
-            }
-
-
-            foreach (JointType jointType in joints.Keys)
-            {
-                Brush drawBrush = null;
-                TrackingState trackingState = joints[jointType].TrackingState;
-                if (trackingState == TrackingState.Tracked || !IsCheckTrackingState)
-                {
-                    drawBrush = this.trackedJointBrush;
-                }
-                else if (trackingState == TrackingState.Inferred)
-                {
-                    drawBrush = this.inferredJointBrush;
-                }
-
-                if (drawBrush != null)
-                {
-                    if (drawStatus == DrawStatus.NewUser)
+                    Brush drawBrush = null;
+                    TrackingState trackingState = joints[jointType].TrackingState;
+                    if (trackingState == TrackingState.Tracked || !IsCheckTrackingState)
                     {
-                        object[] myArray = new object[3];
-                        myArray[0] = CameraSpace2Point3D(joints[jointType].Position);
-                        myArray[1] = drawBrush;
-                        myArray[2] = 5;
+                        drawBrush = this.trackedJointBrush;
+                    }
+                    else if (trackingState == TrackingState.Inferred)
+                    {
+                        drawBrush = this.inferredJointBrush;
+                    }
 
-                        //this.dispatcher.BeginInvoke(AddPoint, myArray);
-
-                        AddPoint(CameraSpace2Point3D(joints[jointType].Position),
-                                drawBrush,
-                                5);
-
-                        Action GUIAddPoint = delegate()
+                    if (drawBrush != null)
+                    {
+                        if (drawStatus == DrawStatus.NewUser)
                         {
                             AddPoint(CameraSpace2Point3D(joints[jointType].Position),
-                                drawBrush,
-                                5);
-                        };
-                        //await this.dispatcher.InvokeAsync(GUIAddPoint);
-
-                    }
-                    else
-                    {
-                        if (drawStatus == DrawStatus.TrackedUser)
+                                    drawBrush,
+                                    5);
+                        }
+                        else
                         {
-                            lock (thisLock)
+                            if (drawStatus == DrawStatus.TrackedUser)
                             {
-                                //int JointsNumber = (int)jointType + 25 * (bodyManager.WorkList.Count - 1);
-                                int JointsNumber = (int)jointType + 25 * idx;
-                                if (this.ObservableJoints.Count > JointsNumber && this.ObservableJoints.Count > 0)
+                                lock (thisLock)
                                 {
-                                    this.ObservableJoints[JointsNumber].Position = CameraSpace2Point3D(joints[jointType].Position);
-                                    Debug.Print("currentBodyIndex{2} total:{0}, actual:{1}", this.ObservableJoints.Count, JointsNumber,bodyManager.CurrentBodyIdx);
-
-                                }
-                                else
-                                {
-                                    Debug.Print("Onfalse total:{0}, actual:{1}", this.ObservableJoints.Count, JointsNumber);
-
+                                    int JointsNumber = (int)jointType + 25 * idx;
+                                    if (this.ObservableJoints.Count > JointsNumber && this.ObservableJoints.Count > 0)
+                                    {
+                                        this.ObservableJoints[JointsNumber].Position = CameraSpace2Point3D(joints[jointType].Position);
+                                    }
+                                    else
+                                    {
+                                        Debug.Print("Onfalse total:{0}, actual:{1}", this.ObservableJoints.Count, JointsNumber);
+                                    }
                                 }
                             }
                         }
                     }
                 }
 
-            }
-            lock (thisLock)
-            {
                 //畫出joints and bone  後將此user設為Tracked
                 bodyManager.BodyState[bodyManager.CurrentBodyIdx] = DrawStatus.TrackedUser;
             }
@@ -527,8 +525,16 @@ namespace MultipleKinectMaster3D
             }
             else if (drawStatus == DrawStatus.TrackedUser)
             {
-                this.ObservablePipe[boneIndex].Point1 = CameraSpace2Point3D(joints[jointType0].Position);
-                this.ObservablePipe[boneIndex].Point2 = CameraSpace2Point3D(joints[jointType1].Position);
+                if (boneIndex >= ObservablePipe.Count)
+                {
+                    Debug.Print(">> error  DrawBone try to read  boneIndex:  {0}/{2} CurrentBodyIdx {1}", boneIndex, bodyManager.CurrentBodyIdx, ObservablePipe.Count);
+                }
+                else
+                {
+
+                    this.ObservablePipe[boneIndex].Point1 = CameraSpace2Point3D(joints[jointType0].Position);
+                    this.ObservablePipe[boneIndex].Point2 = CameraSpace2Point3D(joints[jointType1].Position);
+                }
             }
         }
 
@@ -538,6 +544,79 @@ namespace MultipleKinectMaster3D
         }
 
 
+        public event PropertyChangedEventHandler PropertyChanged;
 
+        private string bodyMotion = string.Empty;
+
+        public string Lbl_MotionState
+        {
+            get
+            {
+                return bodyMotion;
+            }
+            set
+            {
+                //if (bodyMotion != value)
+                {
+                    bodyMotion = value;
+                    if (this.PropertyChanged != null)
+                    {
+                        this.PropertyChanged(this, new PropertyChangedEventArgs("Lbl_MotionState"));
+                    }
+                }
+            }
+        }
+
+        private string timeStamp = string.Empty;
+
+        public string Lbl_TimeStamp
+        {
+            get
+            {
+                return timeStamp;
+            }
+            set
+            {
+                if (timeStamp != value)
+                {
+                    timeStamp = value;
+                    if (this.PropertyChanged != null)
+                    {
+                        this.PropertyChanged(this, new PropertyChangedEventArgs("Lbl_TimeStamp"));
+                    }
+                }
+            }
+        }
+
+        private MotionsAnalyze motionAnalyzer = null;
+
+        private void InitialWorkflowInstance()
+        {
+
+            motionAnalyzer = new MotionsAnalyze(this);
+
+            //Thread.Sleep(2000);
+            //motionAnalyzer.ResumeBookmark(MotionTransitions.E_Walk);
+
+
+        }
+
+        public void OnIdle(System.Activities.WorkflowApplicationIdleEventArgs args)
+        {
+
+            // Lbl_MotionState = motionAnalyzer.GetCurrentState();
+
+        }
+
+        UnhandledExceptionAction IWorkflowView.OnUnhandledException(WorkflowApplicationUnhandledExceptionEventArgs args)
+        {
+            return UnhandledExceptionAction.Terminate;
+        }
+
+
+        internal void ResetStartTime()
+        {
+            startTime = new TimeSpan(0, 0, 0);
+        }
     }
 }

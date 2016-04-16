@@ -229,6 +229,9 @@ namespace SocketPackage
         /// </summary>
         public string userId;
 
+        /// <summary>
+        /// UserID
+        /// </summary>
         public ulong TrackingId { get; set; }
 
         public MyBody(){

@@ -8,6 +8,7 @@ namespace MotionFSM
 {
     public enum MotionTransitions
     {
+        E_Null,
         E_FallDown,
         E_GetUp,
         E_StandUp,

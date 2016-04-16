@@ -57,6 +57,8 @@ namespace MultipleKinectMaster3D
 
             // set data context for display in UI
             this.DataContext = this.masterKinectProcessor3D;
+            this.Lbl_MotionState.DataContext = this.masterKinectProcessor3D;
+            this.Lbl_TimeStamp.DataContext = this.masterKinectProcessor3D;
             this.KinectStatus.DataContext = this;
         }
 
@@ -109,6 +111,7 @@ namespace MultipleKinectMaster3D
 
                 // Start running the playback asynchronously
                 OneArgDelegate playback = new OneArgDelegate(this.PlaybackClip);
+                masterKinectProcessor3D.ResetStartTime();
                 playback.BeginInvoke(filePath, null, null);
             }
         }

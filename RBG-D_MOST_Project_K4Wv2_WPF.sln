@@ -16,6 +16,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NewFolder1", "NewFolder1", "{057C2FBD-B68A-420E-8A71-A37659AD9EAD}"
 	ProjectSection(SolutionItems) = preProject
 		MultipleKinectClient\bin\x64\Debug\Setting.xml = MultipleKinectClient\bin\x64\Debug\Setting.xml
+		MultipleKinectClient3D\bin\Debug\Setting.xml = MultipleKinectClient3D\bin\Debug\Setting.xml
+		MultipleKinectMaster3D\bin\Debug\Setting.xml = MultipleKinectMaster3D\bin\Debug\Setting.xml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XmlManager", "XmlManager\XmlManager.csproj", "{E796A79C-D0F4-4AA4-9EDA-EE5725EB070F}"

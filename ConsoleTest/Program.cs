@@ -193,31 +193,12 @@ namespace ConsoleTest
         static void Main(string[] args)
         {
 
+            MotionsAnalyze motionAnalyzer = new MotionsAnalyze();
+            Thread.Sleep(1000);
+            motionAnalyzer.ResumeBookmark(MotionTransitions.E_Walk);
+            Thread.Sleep(1000);
+            motionAnalyzer.ResumeBookmark(MotionTransitions.E_Stop);
 
-            List<int> list1 = new List<int>();
-            List<int> list2 = new List<int>();
-            for(int i = 0;i<5;i++){
-                list1.Add(i);
-            }
-
-            for (int i = 3; i < 8; i++)
-            {
-                list2.Add(i);
-            }
-
-            list2 = new List<int>(list1);
-            list2[1] = 9999;
-            Console.WriteLine("list1: ");
-            foreach (int i in list1)
-            {
-                Console.WriteLine(i);
-            }
-
-            Console.WriteLine("list2");
-            foreach (int i in list2)
-            {
-                Console.WriteLine(i);
-            }
 
             #region matrix operate
 
@@ -259,6 +240,7 @@ namespace ConsoleTest
 
             #region WWF test 2
             /*
+            
             Program pg = new Program();
 
             WorkflowInstance wfInstance = new WorkflowInstance(pg);
@@ -266,8 +248,6 @@ namespace ConsoleTest
 
             statemachineStateTracker = wfInstance.StateTracker;
             string eventName = string.Empty;
-
-
 
             string str;
             string a;

@@ -172,6 +172,14 @@
                                       </State>
                                     </Transition.To>
                                   </Transition>
+                                  <Transition DisplayName="E_Walk" sap2010:WorkflowViewState.IdRef="Transition_33">
+                                    <Transition.Trigger>
+                                      <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_35" ResponseName="E_Walk" />
+                                    </Transition.Trigger>
+                                    <Transition.To>
+                                      <x:Reference>__ReferenceID0</x:Reference>
+                                    </Transition.To>
+                                  </Transition>
                                 </State.Transitions>
                               </State>
                             </Transition.To>
@@ -238,6 +246,14 @@
                     </Transition.Trigger>
                     <Transition.To>
                       <x:Reference>__ReferenceID0</x:Reference>
+                    </Transition.To>
+                  </Transition>
+                  <Transition DisplayName="E_SitDown" sap2010:WorkflowViewState.IdRef="Transition_32">
+                    <Transition.Trigger>
+                      <local:WaitForResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="WaitForResponse`1_34" ResponseName="E_SitDown" />
+                    </Transition.Trigger>
+                    <Transition.To>
+                      <x:Reference>__ReferenceID2</x:Reference>
                     </Transition.To>
                   </Transition>
                 </State.Transitions>
@@ -311,7 +327,7 @@
     <x:Reference>__ReferenceID1</x:Reference>
     <x:Reference>__ReferenceID4</x:Reference>
     <x:Reference>__ReferenceID2</x:Reference>
-    <sads:DebugSymbol.Symbol>d1tDOlxVc2Vyc1zogZbmlrlcT25lRHJpdmVcR3JhZHVhdGVDb2RlXFJCRy1EX01PU1RfUHJvamVjdF9LNFd2Ml9XUEZcTW90aW9uRlNNXEFjdGl2aXR5MS54YW1sLyADuwISAgEBIgeyAg8CASWJASesAS8CAR8pD/QBFwIBGDAX1gEfAgEPTidpLwIBCj8fsAEnAgECJg8mjwECATX5AQ/5AZQBAgE0gQIPjgIaAgEulgIPowIaAgEoqwIPqwKTAQIBJ40BL40BsQECASSVAS+VAbIBAgEjnQEvnQGwAQIBIqUBL6UBtAECASEtFy2XAQIBHtsBF9sBnAECAR3jARflASICARvtARftAZgBAgEaNB80nwECARc8HzyiAQIBFrUBH7UBogECARW9AR+9AaQBAgEUxQEfxwEqAgESzwEfzwGgAQIBEVIvUrEBAgEOWi9asgECAQ1iL2KzAQIBDEMnQ6oBAgEJSydLqwECAQhuJ26qAQIBB3YndqsBAgEGfid+qQECAQWGASeGAasBAgEEggIRjQIYAgEvlwIRogIYAgEp5AEZ5AGcAQIBHMYBIcYBpQECARODAhOHAiACATKIAhOMAiACATCYAhOcAiACASydAhOhAiACASqFAheFApsBAgEzigIXigKYAQIBMZoCF5oCmwECAS2fAhefApkBAgEr</sads:DebugSymbol.Symbol>
+    <sads:DebugSymbol.Symbol>d1tDOlxVc2Vyc1zogZbmlrlcT25lRHJpdmVcR3JhZHVhdGVDb2RlXFJCRy1EX01PU1RfUHJvamVjdF9LNFd2Ml9XUEZcTW90aW9uRlNNXEFjdGl2aXR5MS54YW1sMSADywISAgEBIgfCAg8CASeJASesAS8CASEpD4QCFwIBGTAX3gEfAgEQTidpLwIBCz8fuAEnAgECJg8mjwECATeJAg+JApQBAgE2kQIPngIaAgEwpgIPswIaAgEquwIPuwKTAQIBKY0BL40BsQECASaVAS+VAbIBAgElnQEvnQGwAQIBJKUBL6UBtAECASMtFy2XAQIBIOMBF+MBnAECAR/rARftASICAR31ARf1AZgBAgEc/QEX/QGbAQIBGzQfNJ8BAgEYPB88ogECARe9AR+9AaIBAgEWxQEfxQGkAQIBFc0BH88BKgIBE9cBH9cBoAECARJSL1KxAQIBD1ovWrIBAgEOYi9iswECAQ1DJ0OqAQIBCksnS6sBAgEJbiduqgECAQh2J3arAQIBB34nfqkBAgEGhgEnhgGrAQIBBbEBJ7EBqAECAQSSAhGdAhgCATGnAhGyAhgCASvsARnsAZwBAgEezgEhzgGlAQIBFJMCE5cCIAIBNJgCE5wCIAIBMqgCE6wCIAIBLq0CE7ECIAIBLJUCF5UCmwECATWaAheaApgBAgEzqgIXqgKbAQIBL68CF68CmQECAS0=</sads:DebugSymbol.Symbol>
   </StateMachine>
   <sap2010:WorkflowViewState.ViewStateManager>
     <sap2010:ViewStateManager>
@@ -476,6 +492,16 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_35" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_33" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">732,390.32 528,390.32 528,264.8 458,264.8</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">9</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">36</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="State_6" sap:VirtualizedContainerService.HintSize="136,84.8">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
@@ -597,6 +623,16 @@
             <av:PointCollection x:Key="ConnectorLocation">426,229.6 426,180.872920844993 445.2,180.872920844993 445.2,229.6</av:PointCollection>
             <x:Int32 x:Key="SrcConnectionPointIndex">58</x:Int32>
             <x:Int32 x:Key="DestConnectionPointIndex">70</x:Int32>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WaitForResponse`1_34" sap:VirtualizedContainerService.HintSize="200,22.4" />
+      <sap2010:ViewStateData Id="Transition_32" sap:VirtualizedContainerService.HintSize="430.4,508.8">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:PointCollection x:Key="ConnectorLocation">458,285.92 511.2,285.92 511.2,407.28 732,407.28</av:PointCollection>
+            <x:Int32 x:Key="SrcConnectionPointIndex">60</x:Int32>
+            <x:Int32 x:Key="DestConnectionPointIndex">25</x:Int32>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
