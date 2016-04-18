@@ -140,9 +140,9 @@ namespace MotionFSM
 
 
             #region Decision Tree
-            if (head_Ini.Y - head.Y > 0.2 && torsol_Ini.Y - torsol.Y > 0.2) //第一個分支點  :初始與現在的頭與身 Dy 大於200
+            if (head_Ini.Y - head.Y > 0.05 && torsol_Ini.Y - torsol.Y > 0.05) //第一個分支點  :初始與現在的頭與身 Dy 大於200
             {
-                if (head.Y - head_Pre.Y > 0.1 && torsol.Y - torsol_Pre.Y > 0.1) //第三個分支點.20 40//  前後頭身Dy 大於35
+                if (head.Y - head_Pre.Y > 0.13 && torsol.Y - torsol_Pre.Y > 0.13) //第三個分支點.20 40//  前後頭身Dy 大於35
                 {
                     if (head_Ini.Y - head.Y > 0.3 && torsol_Ini.Y - torsol.Y > 0.3)
                         transitionOutcome = MotionTransitions.E_GetUp; // INCIDENT_SIT_UP; //坐起來
@@ -179,9 +179,10 @@ namespace MotionFSM
             }
             else//頭與身 Dy 小於200
             {
-                if (head.Y - head_Pre.Y > 0.1 && torsol.Y - torsol_Pre.Y > 0.1)//現在的頭與身與上一幀 Dy 大於100
-                    transitionOutcome = MotionTransitions.E_StandUp; //站起來
-                else if ((head_Pre.X - head.X) * (head_Pre.X - head.X) + (head_Pre.Z - head.Z) * (head_Pre.Z - head.Z) > 0.003 &&
+                //if (head.Y - head_Pre.Y > 0.1 && torsol.Y - torsol_Pre.Y > 0.1)//現在的頭與身與上一幀 Dy 大於100
+                //    transitionOutcome = MotionTransitions.E_StandUp; //站起來
+                //else 
+                if ((head_Pre.X - head.X) * (head_Pre.X - head.X) + (head_Pre.Z - head.Z) * (head_Pre.Z - head.Z) > 0.003 &&
                          (torsol_Pre.X - torsol.X) * (torsol_Pre.X - torsol.X) + (torsol_Pre.Z - torsol.Z) * (torsol_Pre.Z - torsol.Z) > 0.003) //第二個分支點.
                     transitionOutcome = MotionTransitions.E_Walk;//走
                 else

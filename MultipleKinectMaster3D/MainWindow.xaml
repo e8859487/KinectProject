@@ -36,7 +36,7 @@
 
         <h:HelixViewport3D x:Name="view1" ModelUpDirection="0,1,0" ShowCoordinateSystem="True" Background="WhiteSmoke">
             <h:HelixViewport3D.Camera>
-                <PerspectiveCamera Position="500,500,-300" LookDirection="-500,-500,300" FieldOfView="45" UpDirection="0,1,0"  />
+                <PerspectiveCamera Position="500,500,-0" LookDirection="-500,-550,300" FieldOfView="45" UpDirection="0,1,0"  />
             </h:HelixViewport3D.Camera>
             <h:DefaultLights/>
 
