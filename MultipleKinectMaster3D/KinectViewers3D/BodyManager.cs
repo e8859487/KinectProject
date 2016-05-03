@@ -10,12 +10,13 @@ namespace MultipleKinectMaster3D
     {
         NewUser,
         TrackedUser,
-
     }
+
     class BodyManager
     {
 
         private int totalBody = 0;
+    
         /// <summary>
         /// 目前偵測總人數
         /// </summary>
@@ -114,15 +115,6 @@ namespace MultipleKinectMaster3D
             }
         }
 
-
-        //Dictionary<Microsoft.Kinect.JointType, Microsoft.Kinect.Joint> dictionary
-
-        //    System.Windows.Media.Pen clientPen
-        //        DrawStatus drawStatus
-        //internal void AddClientBody(Dictionary<Microsoft.Kinect.JointType, Microsoft.Kinect.Joint> dictionary, System.Windows.Media.Pen clientPen, DrawStatus drawStatus)
-        //{
-
-
-        //}
+ 
     }
 }

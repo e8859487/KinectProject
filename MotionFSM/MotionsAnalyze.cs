@@ -5,28 +5,49 @@ using System.Text;
 using System.Threading.Tasks;
 using SocketPackage;
 
-
 namespace MotionFSM
 {
     using XmlManager;
     using Microsoft.Kinect;
     using Microsoft.Activities.Extensions.Tracking;
     using System.Diagnostics;
+    using System.ComponentModel;
 
-    public class MotionsAnalyze
+    public class MotionsAnalyze : INotifyPropertyChanged
     {
-        internal static readonly Dictionary<string, int> THS = new Dictionary<string, int>();
+        public event PropertyChangedEventHandler PropertyChanged;
 
-        public StateMachineStateTracker stateMachineStateTracker;
+        internal static readonly Dictionary<string, int> THS = new Dictionary<string, int>();
 
         private WorkflowInstance wfInstance;
 
-        private Vector4 FloorClipPlane;
+        private Vector4 floorClipPlane;
 
-        private float DeviceHeight = 0;
+        private float deviceHeight = 0;
 
-        private float UserHeight = 0;
 
+        public string currentMotions = string.Empty;
+        /// <summary>
+        /// 記錄當下動作
+        /// </summary>
+        public string CurrentMotions{
+            get
+            {
+                return currentMotions;
+            }
+            set
+            {
+                currentMotions = value;
+                if (PropertyChanged != null)
+                {
+                    this.PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CurrentMotions"));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 讀取初始資料
+        /// </summary>
         internal void InitialThreadSheld()
         {
             if (THS.Count < 10)
@@ -49,8 +70,7 @@ namespace MotionFSM
         MyBody initBody = null;
         MyBody preBody = null;
         MyBody nowBody = null;
-        CSV_Writter csv_Writter;
-
+       // CSV_Writter csv_Writter;
 
         public MotionsAnalyze(IWorkflowView w)
         {
@@ -62,7 +82,7 @@ namespace MotionFSM
 
             nowBody = new MyBody();
             string fileName = DateTime.Now.ToString("MMddyy-HHmmss");
-            csv_Writter = new CSV_Writter(fileName + ".csv");
+            //csv_Writter = new CSV_Writter(fileName + ".csv");
 
         }
 
@@ -99,6 +119,7 @@ namespace MotionFSM
 
             MotionTransitions transitionOutcome = MotionTransitions.E_Null;
 
+            #region Skeleton Define
             CameraSpacePoint head_Ini = Init.jointsInfo[JointType.Head].Position;
 
             CameraSpacePoint head_Pre = pre.jointsInfo[JointType.Head].Position;
@@ -119,7 +140,8 @@ namespace MotionFSM
 
             CameraSpacePoint SpineShoulder_Ini = Init.jointsInfo[JointType.SpineShoulder].Position;
             CameraSpacePoint SpineShoulder_Pre = pre.jointsInfo[JointType.SpineShoulder].Position;
-            CameraSpacePoint SpineShoulder = now.jointsInfo[JointType.SpineShoulder].Position;
+            CameraSpacePoint SpineShoulder = now.jointsInfo[JointType.SpineShoulder].Position; 
+            #endregion
             
 
             if (!IsInitBodyHeight)
@@ -131,12 +153,8 @@ namespace MotionFSM
             {
                 fallDownThreshold = getHeightFromPoint(head_Ini) / 2.3f;
                 IsInitBodyHeight2 = true;
-                Debug.Print("FDT = " + fallDownThreshold);
-                Debug.Print("SpinBase = " + SpineBase_Ini.Y.ToString());
-
+               // Debug.Print("FDT = " + fallDownThreshold);
             }
-           Debug.Print(String.Format("SpinShouder{0} , SpinBase{1}",SpineShoulder.Y,SpineBase.Y));
-               Debug.Print(String.Format("SpineBase_Ini{0} , SpineBase{1}",SpineBase_Ini.Y,SpineBase.Y));
 
 
             #region Decision Tree
@@ -147,16 +165,13 @@ namespace MotionFSM
                     if (head_Ini.Y - head.Y > 0.3 && torsol_Ini.Y - torsol.Y > 0.3)
                         transitionOutcome = MotionTransitions.E_GetUp; // INCIDENT_SIT_UP; //坐起來
                 }
-                //else if (head_Ini.Y - head.Y > fallDownThreshold && torsol_Ini.Y - torsol.Y > fallDownThreshold)//跌倒的判斷式很奇怪
                 else if (SpineBase_Ini.Y - SpineBase.Y > fallDownThreshold)//新版跌倒判斷機制
                 {
                     if (head.Y - neckkk.Y > 0.06)
                         transitionOutcome = MotionTransitions.E_FallDown;//跌倒
                     else
                         Debug.Print("E_FallDown's don't care\n");
-
                 }
-               // else if (head.Y - torsol.Y > 0.2)//原始判斷機制
                  else if (head.Y  - SpineBase.Y >  0.28 )
                 {
                     if (head_Ini.Y - head.Y > 0.3 && torsol_Ini.Y - torsol.Y > 0.3 && head.Y - head_Pre.Y < -0.030 && torsol.Y - torsol_Pre.Y < -0.030)
@@ -164,13 +179,6 @@ namespace MotionFSM
                         transitionOutcome = MotionTransitions.E_SitDown; //坐下
                     }
                     else {
-                        //Debug.Print(String.Format("head_Ini - head => {0} - {1} = {2}\n", head_Ini.Y, head.Y, head_Ini.Y - head.Y));
-                        //Debug.Print(String.Format("torsol_Ini - torsol => {0} - {1} = {2}\n", torsol_Ini.Y, torsol.Y, torsol_Ini.Y - torsol.Y));
-                        //Debug.Print(String.Format("head - head_Pre => {0} - {1} = {2}\n", head.Y, head_Pre.Y, head.Y - head_Pre.Y));
-                        //Debug.Print(String.Format("torsol - torsol_Pre => {0} - {1} = {2}\n", torsol.Y, torsol_Pre.Y, torsol.Y - torsol_Pre.Y));
-
-                        //, torsol_Ini{2} , torsol{3} , head_Pre{4}  torsol_Pre{5}  ", head_Ini.Y, head.Y, torsol_Ini.Y, torsol.Y, head_Pre.Y, torsol_Pre.Y));
-
                         Debug.Print("Sitdown's don't care\n");
                     }
                 }
@@ -179,9 +187,6 @@ namespace MotionFSM
             }
             else//頭與身 Dy 小於200
             {
-                //if (head.Y - head_Pre.Y > 0.1 && torsol.Y - torsol_Pre.Y > 0.1)//現在的頭與身與上一幀 Dy 大於100
-                //    transitionOutcome = MotionTransitions.E_StandUp; //站起來
-                //else 
                 if ((head_Pre.X - head.X) * (head_Pre.X - head.X) + (head_Pre.Z - head.Z) * (head_Pre.Z - head.Z) > 0.003 &&
                          (torsol_Pre.X - torsol.X) * (torsol_Pre.X - torsol.X) + (torsol_Pre.Z - torsol.Z) * (torsol_Pre.Z - torsol.Z) > 0.003) //第二個分支點.
                     transitionOutcome = MotionTransitions.E_Walk;//走
@@ -190,47 +195,24 @@ namespace MotionFSM
             }
             #endregion
 
-            Debug.Print(string.Format("TimeSpan:{0}, Transition:{1}, State:{2}", timespan, transitionOutcome, GetCurrentState()));
+            //Debug.Print(string.Format("TimeSpan:{0}, Transition:{1}, State:{2}", timespan, transitionOutcome, GetCurrentState()));
 
+            //write out to csv
+             //csv_Writter.WriteLine(string.Format("{0},{1},{2}", timespan, transitionOutcome, GetCurrentState()));
+                 
 
-            //Debug.Print(string.Format("Position:{0}", getHeightFromPoint(head)));
-             csv_Writter.WriteLine(string.Format("{0},{1},{2}", timespan, transitionOutcome, GetCurrentState()));
-
-
-            //Debug.Print(string.Format(" headIni.Y-head.Y = > {0} - {1} =  {2} , torsolIni.Y-torsol.Y = {3} - {4} = {5}  ", head_Ini.Y, 
-            //    head.Y,
-            //    head_Ini.Y - head.Y ,
-            //    torsol_Ini.Y, 
-            //    torsol.Y,
-            //    torsol_Ini.Y - torsol.Y
-            //    ));
-
-
-
-
-            /*
-            Debug.Print(string.Format(" head.Y:{0}-head_Pre.Y:{1}  torsol.Y:{2}-torsol_Pre.Y:{3}  ", head.Y, head_Pre.Y,torsol.Y,torsol_Pre.Y));
-            Debug.Print(string.Format("head_Pre.X:{0}- head.X:{1}   head_Pre.Z:{2}-head.Z:{3}     ", head_Pre.X, head.X, head_Pre.Z, head.Z));
-            Debug.Print(string.Format("torsol_Pre.X:{0}- torsol.X:{1}={4}   torsol_Pre.Z:{2}-torsol.Z:{3} = {5}  \n", torsol_Pre.X, torsol.X, torsol_Pre.Z,torsol.Z,
-                (head_Pre.X - head.X) * (head_Pre.X - head.X) + (head_Pre.Z - head.Z) * (head_Pre.Z - head.Z) , 
-                (torsol_Pre.X - torsol.X) * (torsol_Pre.X - torsol.X) + (torsol_Pre.Z - torsol.Z) * (torsol_Pre.Z - torsol.Z)));
-            */
-            
-            
             if (transitionOutcome == MotionTransitions.E_Null)
             {
-
-
                 return;
             }
 
+            //Transimit a new event to new State
             this.ResumeBookmark(transitionOutcome);
             //Copy nowbody as pre body.
             this.DeepCopyBodyData(now, preBody);
 
+            this.CurrentMotions = GetCurrentState();
         }
-
-
 
         private float getHeightFromPoint(CameraSpacePoint CSP)
         {
@@ -243,32 +225,30 @@ namespace MotionFSM
 
         public void ResumeBookmark(MotionTransitions events)
         {
-            //if (stateMachineStateTracker != null)
+            string eventName = Enum.GetName(typeof(MotionTransitions), events);
+            if (wfInstance.IsEventExist(eventName))
             {
-                string eventName = Enum.GetName(typeof(MotionTransitions), events);
-                if (wfInstance.IsEventExist(eventName))
-                {
-                    wfInstance.ResumeBookmark(eventName);
-                }
-                else
-                {
-                    wfInstance.ResumeBookmark("E_Unknow");
-                }
+                wfInstance.ResumeBookmark(eventName);
+            }
+            else
+            {
+                wfInstance.ResumeBookmark("E_Unknow");
             }
         }
 
+        /// <summary>
+        /// 取得目前動作狀態
+        /// </summary>
+        /// <returns></returns>
         public string GetCurrentState()
         {
             return wfInstance.StateTracker.CurrentState;
         }
 
-
         internal void DeepCopyBodyData(MyBody SourceBody, MyBody TargetBody)
         {
             TargetBody.jointsInfo = new Dictionary<JointType, Joint>(SourceBody.jointsInfo);
-
         }
-
 
         float A;
         float B;
@@ -281,17 +261,22 @@ namespace MotionFSM
         float denominatore;
         public void SetFloorClipPlane(Vector4 v4)
         {
-            FloorClipPlane = v4;
-            DeviceHeight = v4.W;
-            A = FloorClipPlane.X;
-            B = FloorClipPlane.Y;
-            C = FloorClipPlane.Z;
-            D = FloorClipPlane.W;
+            floorClipPlane = v4;
+            deviceHeight = v4.W;
+            A = floorClipPlane.X;
+            B = floorClipPlane.Y;
+            C = floorClipPlane.Z;
+            D = floorClipPlane.W;
 
             addendo1_d = A * A;
             addendo2_d = B * B;
             addendo3_d = C * C;
             denominatore = (float)System.Math.Sqrt(addendo1_d + addendo2_d + addendo3_d);
+        }
+
+        public void Dispose()
+        {
+            wfInstance.Disposed();
         }
     }
 }

@@ -14,6 +14,9 @@ using XmlManager;
 
 namespace MultipleKinectClient3D
 {
+
+    public delegate void clientEventHandler(object sender, StatusEventArgs e);
+
     class ClientKinectProcessor3D
     {
 
@@ -190,17 +193,25 @@ namespace MultipleKinectClient3D
             reader.Dispose();
 
             this.socketClient = new SocketClient(IpAddr, Port);
-             this.socketClient.Connect();
-            //this.socketClient.clientDataChanged += new clientDataChangeEventHandler(StatusChange);
-
-
-
+            this.socketClient.Connect();
+            this.socketClient.clientDataChanged += new clientDataChangeEventHandler(StatusChange);
 
         }
 
         private void StatusChange(object sender, StatusEventArgs e)
         {
-            throw new NotImplementedException();
+            OnChanged(e);
+        }
+
+        //讓呼叫端進行委派的對象
+        public event clientEventHandler PlayerStateChanged;
+
+        protected virtual void OnChanged(StatusEventArgs e)
+        {
+            if (PlayerStateChanged != null)
+            {
+                PlayerStateChanged(this, e);
+            }
         }
 
         public void Dispose()

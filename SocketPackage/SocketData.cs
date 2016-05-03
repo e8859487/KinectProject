@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Windows;
 
 using Microsoft.Kinect;
+using System.Diagnostics;
 
 namespace SocketPackage
 {
@@ -81,6 +82,7 @@ namespace SocketPackage
         
         }
 
+      //  private ViewPointManager viewPointManager = new ViewPointManager();
 
 
         /// <summary>
@@ -108,7 +110,6 @@ namespace SocketPackage
                         //將所有骨架座標轉成 CameraSpacePoint 存到 joints 裡面
                         foreach (string JointKey in Enum.GetNames(typeof(JointType)))
                         {
-
                             JointType jointType = (JointType)Enum.Parse(typeof(JointType), JointKey);
 
                             int jointTypeValue = (int)jointType;
@@ -119,7 +120,6 @@ namespace SocketPackage
                             tempJoint.JointType =jointType;
 
                             tempJoint.Position = jointsStr2CameraSpacePoint(jointsPieces[jointTypeValue]);
-
                             if (b.jointsInfo.ContainsKey(jointType))
                             {
                                 b.jointsInfo[jointType] = tempJoint;
@@ -130,6 +130,28 @@ namespace SocketPackage
                             }
 
                         }
+
+                        //計算RT矩陣
+                        //viewPointManager.Analyze_RT_Matrix(b.jointsInfo[JointType.ShoulderLeft].Position, b.jointsInfo[JointType.ShoulderRight].Position, b.jointsInfo[JointType.SpineMid].Position,DEVICE_ID.DEVICE_B);
+
+
+                        ////視角轉換
+                        //foreach (KeyValuePair<JointType, Joint> item in b.jointsInfo)
+                        //{
+                        //    Joint tempJoint = item.Value;
+                        //    tempJoint.Position = viewPointManager.Transform(tempJoint.Position);
+
+                        //    if (b.jointsInfo_VPTransfored.ContainsKey(item.Key))
+                        //    {
+                        //        b.jointsInfo_VPTransfored[item.Key] = tempJoint;
+                        //    }
+                        //    else
+                        //    {
+                        //        b.jointsInfo_VPTransfored.Add(item.Key, tempJoint);
+                        //    }
+                            
+                        //}
+                        
                     }
                 }
 
@@ -212,6 +234,25 @@ namespace SocketPackage
 
     public class MyBody
     {
+        public static MyBody Body2Mybody(Body body)
+        {
+            MyBody newBody = new MyBody();
+
+
+            foreach(KeyValuePair<JointType,Joint> items in body.Joints){
+                  newBody.jointsInfo.Add(items.Key,items.Value);
+            }
+
+            newBody.isTracked = body.IsTracked;
+
+            newBody.TrackingId = body.TrackingId;
+
+
+
+            return newBody;
+        }
+
+
         public Boolean isTracked ;
 
         /// <summary>
@@ -223,6 +264,7 @@ namespace SocketPackage
         /// 儲存詳細骨架資料
         /// </summary>
         public Dictionary<JointType, Joint> jointsInfo;
+        public Dictionary<JointType, Joint> jointsInfo_VPTransfored = new Dictionary<JointType, Joint>();
 
         /// <summary>
         /// [not supported] please use trackingId instead.
@@ -302,4 +344,10 @@ namespace SocketPackage
             }
         }
     }
+
+    
+
+
+
+
 }

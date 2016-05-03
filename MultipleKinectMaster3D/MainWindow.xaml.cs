@@ -41,6 +41,7 @@ namespace MultipleKinectMaster3D
 
         private delegate void NoArgDelegate();
 
+        private string playBackFilePath;
 
         private MasterKinectProcessor3D masterKinectProcessor3D = null;
         public MainWindow()
@@ -54,12 +55,18 @@ namespace MultipleKinectMaster3D
                                                 : Properties.Resources.SensorNotAvailableStatusText;
 
             this.masterKinectProcessor3D = new MasterKinectProcessor3D(kinectSensor, this.Dispatcher);
+            this.masterKinectProcessor3D.SetMotionUI(LIB_Motion);
 
             // set data context for display in UI
             this.DataContext = this.masterKinectProcessor3D;
             this.Lbl_MotionState.DataContext = this.masterKinectProcessor3D;
             this.Lbl_TimeStamp.DataContext = this.masterKinectProcessor3D;
             this.KinectStatus.DataContext = this;
+
+            XmlManager.XmlReader reader = new XmlManager.XmlReader(@"./Setting.xml");
+            playBackFilePath = reader.getNodeInnerText(@"/Root/SynchronousPlayPath");
+            reader.Dispose();
+
         }
 
         public void Dispose()
@@ -167,6 +174,16 @@ namespace MultipleKinectMaster3D
 
         private void SynChronousButton_Click(object sender, RoutedEventArgs e)
         {
+            OneArgDelegate playback = new OneArgDelegate(this.PlaybackClip);
+            playback.BeginInvoke(playBackFilePath, null, null);
+
+            SocketPackage.SocketServer.SendStartAsychronousPlay();
+            //masterKinectProcessor3D.StartAsychronousPlay();
+        }
+
+        private void SetToUnknow_Click(object sender, RoutedEventArgs e)
+        {
+            masterKinectProcessor3D.SetMotionToUnknown();
 
         }
 

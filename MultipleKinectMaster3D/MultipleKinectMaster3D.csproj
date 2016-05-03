@@ -86,6 +86,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MotionAnalyzeManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -124,6 +125,10 @@
     <ProjectReference Include="..\SocketPackage\SocketPackage.csproj">
       <Project>{7b39a687-9cfa-4c8f-a3b7-69d34c257c6e}</Project>
       <Name>SocketPackage</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\XmlManager\XmlManager.csproj">
+      <Project>{e796a79c-d0f4-4aa4-9eda-ee5725eb070f}</Project>
+      <Name>XmlManager</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -239,7 +239,7 @@ namespace MultipleKinectMaster3D
         }
 
         int frameIndex = 0;
-        TimeSpan startTime = new TimeSpan(0,0,0);
+        TimeSpan startTime = new TimeSpan(0, 0, 0);
         TimeSpan tsp;
 
         private bool IsDeviceHeightReady = false;
@@ -268,7 +268,7 @@ namespace MultipleKinectMaster3D
                     dataReceived = true;
                     if (startTime.TotalSeconds != 0)
                     {
-                        tsp = (bodyFrame.RelativeTime - startTime) ;
+                        tsp = (bodyFrame.RelativeTime - startTime);
                         Lbl_TimeStamp = new TimeSpan(0, tsp.Minutes, tsp.Seconds).ToString();
                         motionAnalyzer.timespan = Lbl_TimeStamp;
                     }
@@ -276,7 +276,7 @@ namespace MultipleKinectMaster3D
                     {
                         startTime = bodyFrame.RelativeTime;
                     }
- 
+
                 }
 
 
@@ -289,8 +289,8 @@ namespace MultipleKinectMaster3D
                     }
                     if (bodyFrame.FloorClipPlane.W != 0 && !IsDeviceHeightReady)
                     {
-                    motionAnalyzer.SetFloorClipPlane(bodyFrame.FloorClipPlane);
-                    IsDeviceHeightReady = true;
+                        motionAnalyzer.SetFloorClipPlane(bodyFrame.FloorClipPlane);
+                        IsDeviceHeightReady = true;
                     }
                 }
             }
@@ -313,46 +313,84 @@ namespace MultipleKinectMaster3D
 
         private BodyManager bodyManager = new BodyManager();
 
+        private ViewPointManager viewPointManager = new ViewPointManager();
+
+        private int IsDeviceRotationMTReady_A = 0;
+        private int IsDeviceRotationMTReady_B = 0;
+        private int IsDeviceRotationMTReady = 0;
         private void UpdateBodyFrame(Body[] bodies)
         {
             int penIndex = 0;
             int drawIdx = 0;
 
-            //bodyManager.CurrentBodyIdx = 0;
-            ////清空使用者清單
-            //bodyManager.WorkList_server.Clear();
-            //foreach (Body body in bodies)
-            //{
-            //    Pen drawPen = this.bodyColors[penIndex++];
+            bodyManager.CurrentBodyIdx = 0;
+            //清空使用者清單
+            bodyManager.WorkList_server.Clear();
+            foreach (Body body in bodies)
+            {
+                Pen drawPen = this.bodyColors[penIndex++];
 
-            //    if (body.IsTracked)
-            //    {
-            //        IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
-            //        foreach (JointType jointType in joints.Keys)
-            //        {
-            //            CameraSpacePoint position = joints[jointType].Position;
-            //            if (position.Z < 0)
-            //            {
-            //                position.Z = 0.1f;
-            //            }
-            //        }
-            //        bodyManager.CurrentBodyIdx = body.TrackingId;
+                if (body.IsTracked)
+                {
+                    IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
+                    foreach (JointType jointType in joints.Keys)
+                    {
+                        CameraSpacePoint position = joints[jointType].Position;
+                        if (position.Z < 0)
+                        {
+                            position.Z = 0.1f;
+                        }
+                    }
+                    bodyManager.CurrentBodyIdx = body.TrackingId;
 
-            //        if (!bodyManager.BodyState.ContainsKey(bodyManager.CurrentBodyIdx))
-            //        {
-            //            bodyManager.BodyState.Add(bodyManager.CurrentBodyIdx, DrawStatus.NewUser);
-            //        }
-            //        //紀錄追蹤清單
-            //        bodyManager.WorkList_server.Add(bodyManager.CurrentBodyIdx);
+                    if (!bodyManager.BodyState.ContainsKey(bodyManager.CurrentBodyIdx))
+                    {
+                        bodyManager.BodyState.Add(bodyManager.CurrentBodyIdx, DrawStatus.NewUser);
+                    }
+                    //紀錄追蹤清單
+                    bodyManager.WorkList_server.Add(bodyManager.CurrentBodyIdx);
 
-            //        //畫出3D骨架
-            //        //DrawBody3D(joints, drawPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx], true, drawIdx);
+                    #region 視角轉換
+                    //經轉換過的骨架座標點與原始相關資料
+                    Dictionary<JointType, Joint> joints_transfered = new Dictionary<JointType, Joint>();
 
 
-            //        drawIdx++;
+                    //if (!IsDeviceRotationMTReady_A)
+                    {
 
-            //    }
-            //}
+                        //計算RT矩陣
+                        viewPointManager.Analyze_RT_Matrix(joints[JointType.ShoulderLeft].Position, joints[JointType.ShoulderRight].Position, joints[JointType.SpineMid].Position, DEVICE_ID.DEVICE_A);
+                        IsDeviceRotationMTReady_A += 1;
+                    }
+                    //視角轉換
+                    //foreach (KeyValuePair<JointType, Joint> item in joints)
+                    //{
+                    //    Joint tempJoint = item.Value;
+                    //    tempJoint.Position = viewPointManager.Transform(tempJoint.Position);
+
+                    //    if (joints_transfered.ContainsKey(item.Key))
+                    //    {
+                    //        joints_transfered[item.Key] = tempJoint;
+                    //    }
+                    //    else
+                    //    {
+                    //        joints_transfered.Add(item.Key, tempJoint);
+                    //    }
+                    //} 
+                    #endregion
+
+
+                    //動作追蹤系統
+                    motionAnalyzeManager.AddMotionAnalyzer(bodyManager.CurrentBodyIdx);
+                    motionAnalyzeManager.EventAnalyze(bodyManager.CurrentBodyIdx, MyBody.Body2Mybody(body));
+
+                    //畫出3D骨架
+                    DrawBody3D(joints, drawPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx], true, drawIdx);
+
+                    drawIdx++;
+
+                }
+            }
 
 
             #region 3D clientPoints
@@ -371,29 +409,80 @@ namespace MultipleKinectMaster3D
                         Pen clientPen = new Pen(Brushes.Black, 3);
                         bodyManager.CurrentBodyIdx = body.TrackingId;
 
+                        //client端骨架管理，若是新的使用者則新增進去
                         if (!bodyManager.BodyState.ContainsKey(bodyManager.CurrentBodyIdx))
                         {
+                            //骨架ID管理系統
                             bodyManager.BodyState.Add(bodyManager.CurrentBodyIdx, DrawStatus.NewUser);
+                            
+                            //動作追蹤系統
+                            motionAnalyzeManager.AddMotionAnalyzer(bodyManager.CurrentBodyIdx);
                         }
 
                         //紀錄追蹤清單
                         bodyManager.WorkList_client.Add(bodyManager.CurrentBodyIdx);
 
+
+                        //經轉換過的骨架座標點與原始相關資料
+                        Dictionary<JointType, Joint> joints_transfered = new Dictionary<JointType, Joint>();
+
+                        #region 視角轉換
+                        //計算RT矩陣
+                        // if (!IsDeviceRotationMTReady_B)
+                        {
+                            viewPointManager.Analyze_RT_Matrix(body.jointsInfo[JointType.ShoulderLeft].Position, body.jointsInfo[JointType.ShoulderRight].Position, body.jointsInfo[JointType.SpineMid].Position, DEVICE_ID.DEVICE_B);
+                            IsDeviceRotationMTReady_B += 1;
+
+                        }
+
+                        if (IsDeviceRotationMTReady_A > 1 && IsDeviceRotationMTReady_B > 1)
+                        {
+                            //  if (!IsDeviceRotationMTReady)
+                            {
+                                viewPointManager.Analyze_RT_Matrix_TwoDevice();
+                            }
+                            //視角轉換
+                            foreach (KeyValuePair<JointType, Joint> item in body.jointsInfo)
+                            {
+                                Joint tempJoint = item.Value;
+                                tempJoint.Position = viewPointManager.Transform_B2A(tempJoint.Position);
+
+                                if (joints_transfered.ContainsKey(item.Key))
+                                {
+                                    joints_transfered[item.Key] = tempJoint;
+                                }
+                                else
+                                {
+                                    joints_transfered.Add(item.Key, tempJoint);
+                                }
+                            } 
+                        #endregion
+                            this.DrawBody3D(joints_transfered, clientPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx], true, drawIdx);
+
+                        }
+                        else
+                        {
+                            this.DrawBody3D(body.jointsInfo, clientPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx], true, drawIdx);
+                        }
+
                         //bodyManager.AddClientBody(body.jointsInfo, clientPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx]);
-                        this.DrawBody3D(body.jointsInfo, clientPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx], true, drawIdx);
                         drawIdx++;
 
 
                         //Motion Detect!!
                         if (i == 0 && ClientFrameCounter % 4 == 0)
                         {
-                            motionAnalyzer.EventAnalyze(body);
-                            Lbl_MotionState = motionAnalyzer.GetCurrentState();
-                            //Debug.Print(motionAnalyzer.GetCurrentState());
+                            //motionAnalyzer.EventAnalyze(body);
+                            motionAnalyzeManager.motionDict[body.TrackingId].EventAnalyze(body);
                         }
-                        ClientFrameCounter++;
+                        //Updata UI motion 
+                        //Lbl_MotionState = motionAnalyzer.GetCurrentState();
+
+
                     }
                 }
+                ClientFrameCounter++;
+
             }
 
             #endregion
@@ -410,13 +499,14 @@ namespace MultipleKinectMaster3D
                 IEnumerable<ulong> exceptOutcome = bodyManager.WorkList_Pre.Except(bodyManager.WorkList);
                 if (exceptOutcome.Count() > 0)
                 {
+                    //清除所有joints
                     Element[] e = new Element[ObservableJoints.Count];
                     ObservableJoints.CopyTo(e, 0);
                     foreach (Element ee in e)
                     {
                         ObservableJoints.Remove(ee);
                     }
-
+                    //清除所有bones
                     Element[] ep = new Element[ObservablePipe.Count];
                     ObservablePipe.CopyTo(ep, 0);
                     foreach (Element ee in ep)
@@ -425,6 +515,12 @@ namespace MultipleKinectMaster3D
                     }
 
                     bodyManager.BodyState.Clear();
+
+                    foreach (ulong l in exceptOutcome)
+                    {
+                        motionAnalyzeManager.RemoveMotionAnalyzer(l);
+                    }
+
                 }
 
                 bodyManager.WorkList_Pre = new List<ulong>(bodyManager.WorkList);
@@ -543,7 +639,6 @@ namespace MultipleKinectMaster3D
             return new Point3D(cameraSpacePoint.X * 100, cameraSpacePoint.Y * 100, cameraSpacePoint.Z * 100);
         }
 
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         private string bodyMotion = string.Empty;
@@ -556,7 +651,7 @@ namespace MultipleKinectMaster3D
             }
             set
             {
-                //if (bodyMotion != value)
+                if (bodyMotion != value)
                 {
                     bodyMotion = value;
                     if (this.PropertyChanged != null)
@@ -588,18 +683,15 @@ namespace MultipleKinectMaster3D
             }
         }
 
+
         private MotionsAnalyze motionAnalyzer = null;
 
         private void InitialWorkflowInstance()
         {
-
             motionAnalyzer = new MotionsAnalyze(this);
 
-            //Thread.Sleep(2000);
-            //motionAnalyzer.ResumeBookmark(MotionTransitions.E_Walk);
-
-
         }
+
 
         public void OnIdle(System.Activities.WorkflowApplicationIdleEventArgs args)
         {
@@ -613,10 +705,25 @@ namespace MultipleKinectMaster3D
             return UnhandledExceptionAction.Terminate;
         }
 
-
         internal void ResetStartTime()
         {
             startTime = new TimeSpan(0, 0, 0);
         }
+
+        internal void SetMotionToUnknown()
+        {
+            //motionAnalyzer.setToUnknown();
+            //Lbl_MotionState = motionAnalyzer.GetCurrentState();
+        }
+
+        private MotionAnalyzeManager motionAnalyzeManager;
+
+        internal void SetMotionUI(System.Windows.Controls.ListBox LIB_Motion)
+        {
+            motionAnalyzeManager = new MotionAnalyzeManager(LIB_Motion);
+        }
+
+
+
     }
 }

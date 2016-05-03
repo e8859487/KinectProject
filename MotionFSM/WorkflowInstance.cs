@@ -28,6 +28,7 @@ namespace MotionFSM
                 return true;
             }
 
+            if (StateTracker != null) { 
             //Trusted transitions
             foreach (System.Activities.Statements.Transition ts in StateTracker.Transitions)
             {
@@ -36,7 +37,7 @@ namespace MotionFSM
                     return true;
                 }
             }
-
+            }
             //unknow transition
             return false;
         }
@@ -59,12 +60,14 @@ namespace MotionFSM
 
         public void Run()
         {
-
             this.CreateWorkflowApplication();
             this.Host.Run();
         }
 
-
+        public void Disposed()
+        {
+            this.Host.Terminate("Terminate");
+        }
 
         public void ResumeBookmark(string bookmark, string info = null)
         {

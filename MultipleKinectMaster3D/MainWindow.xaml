@@ -24,12 +24,13 @@
 
             <Button x:Name="PlayButton" Content="PLAY" Click="PlayButton_Click" />
             <Button x:Name="SynchronousPlay" Content="SynchronousPlay" Click="SynChronousButton_Click"/>
+            <Button x:Name="SetToUnknow" Content="SetToUnknow" Click="SetToUnknow_Click"/>
             <StatusBar Height="100" VerticalAlignment="Bottom" Foreground="{StaticResource MediumGreyBrush}">
                 <StatusBarItem x:Name="KinectStatus" />
             </StatusBar>
             <Label x:Name="Lbl_MotionState" Content="{Binding Lbl_MotionState}" Background="Beige"/>
             <Label x:Name="Lbl_TimeStamp" Content="{Binding Lbl_TimeStamp}" Background="NavajoWhite"/>
-
+            <ListBox x:Name="LIB_Motion" ></ListBox>
         </StackPanel>
 
 

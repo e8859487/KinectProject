@@ -22,9 +22,8 @@ namespace ConsoleTest
     using MyCollections;
     using System.Diagnostics;
     using MathNet.Numerics.LinearAlgebra;
-    //using Microsoft.Kinect;
 
-    class Program :IWorkflowView
+    class Program 
     {
         class EventListener
         {
@@ -47,138 +46,7 @@ namespace ConsoleTest
                 List = null;
             }
         }
-
-        private WorkflowApplication wfApp = null;
-
-        public static StateMachineStateTracker StateTracker;
-
-        private Activity workflowDefinition = new Activity1();
-        private void startFSMRuntime()
-        {
-
-            try
-            {
-                if (wfApp == null)
-                {
-                    wfApp = new WorkflowApplication(workflowDefinition)
-                    {
-                        // tells the  WorkflowRuntime  to run within the same  thread  as the application.
-                        OnUnhandledException = OnUnhandledException,
-                        Completed = OnWorkflowCompleted,
-                        Idle = OnWorkflowIdle,
-                    };
-                    StateTracker = new StateMachineStateTracker(workflowDefinition);
-                    wfApp.Extensions.Add(StateTracker);
-
-                    wfApp.Extensions.Add(new StateTrackerPersistenceProvider( StateTracker));
-                       
-
-                    wfApp.SynchronizationContext = SynchronizationContext.Current;
-                    wfApp.Run();
-                }
-            }
-            catch (Exception ee)
-            {
-
-                throw ee;
-            }
-        }
-
-        /// <summary>  
-        /// The on workflow completed.  
-        /// </summary>  
-        /// <param name="wc">  
-        /// The event args  
-        /// </param>  
-        private void OnWorkflowCompleted(WorkflowApplicationCompletedEventArgs wc)
-        {
-            Console.WriteLine("OnWorkflowCompleted");
-        }
-
-
-        /// <summary>  
-        /// Called when the workflow is idle  
-        /// </summary>  
-        /// <param name="args">  
-        /// The event args.  
-        /// </param>  
-        private void OnWorkflowIdle(WorkflowApplicationIdleEventArgs args)
-        {
-
-            var bookmarkList = new StringBuilder();
-
-            foreach (var bk in args.Bookmarks)
-            {
-                MotionTransitions ret;
-                Enum.TryParse(bk.BookmarkName, out ret);
  
-
-                bookmarkList.Append(bk.BookmarkName);
-            }
-            Console.WriteLine(bookmarkList.ToString());
-        }
-        private UnhandledExceptionAction
-     OnUnhandledException(WorkflowApplicationUnhandledExceptionEventArgs uh)
-        {
-            return UnhandledExceptionAction.Terminate;
-        }
-
-
-
-
-
-
-
-        public void OnIdle(WorkflowApplicationIdleEventArgs args)
-        {
-            Console.WriteLine(string.Format("Now State : {0}",statemachineStateTracker.CurrentState));
-
-        }
-
-        UnhandledExceptionAction IWorkflowView.OnUnhandledException(WorkflowApplicationUnhandledExceptionEventArgs args)
-        {
-            return UnhandledExceptionAction.Terminate;
-
-        }
-
-       public  static StateMachineStateTracker statemachineStateTracker;
-
-       public static void printOutEvent(){
-            StringBuilder sb = new StringBuilder();
-
-
-
-            foreach (System.Activities.Statements.Transition ts in statemachineStateTracker.Transitions)
-            {
-                sb.Append(ts.DisplayName);
-                sb.Append(", ");
-            }
-                Console.WriteLine(sb.ToString());
-        }
-
-
-
-       public static bool IsEventExist(StateMachineStateTracker stateMachineStateTracker, string EventName)
-       {
-           //Self transitions
-           if (stateMachineStateTracker.CurrentState == "S_UnKnow")
-           {
-               return true;
-           }
-
-           //Trusted transitions
-           foreach (System.Activities.Statements.Transition ts in stateMachineStateTracker.Transitions)
-           {
-               if (String.Equals(ts.DisplayName, EventName))
-               {
-                   return true;
-               }
-           }
-
-           //unknow transition
-           return false;
-       }
-
          class aaa
        {
            public int i = 0;
@@ -193,11 +61,11 @@ namespace ConsoleTest
         static void Main(string[] args)
         {
 
-            MotionsAnalyze motionAnalyzer = new MotionsAnalyze();
-            Thread.Sleep(1000);
-            motionAnalyzer.ResumeBookmark(MotionTransitions.E_Walk);
-            Thread.Sleep(1000);
-            motionAnalyzer.ResumeBookmark(MotionTransitions.E_Stop);
+            //MotionsAnalyze motionAnalyzer = new MotionsAnalyze();
+            //Thread.Sleep(1000);
+            //motionAnalyzer.ResumeBookmark(MotionTransitions.E_Walk);
+            //Thread.Sleep(1000);
+            //motionAnalyzer.ResumeBookmark(MotionTransitions.E_Stop);
 
 
             #region matrix operate

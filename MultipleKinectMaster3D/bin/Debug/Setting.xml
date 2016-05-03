@@ -4,7 +4,7 @@
    <!--140.118.170.215-->
    <IPAddress>127.0.0.1</IPAddress>  
  	<Port>81</Port>
-   <SynchronousPlayPath>D:\\FangTestRecord\\clientSynRecord1.xef</SynchronousPlayPath>
+   <SynchronousPlayPath>D:\\0KinectRecordfiles\\20160128SynRecords\\Server\\20160128\\onePeopleServer.xef</SynchronousPlayPath>
 
    <T1>200</T1>
    <T2>35</T2>
@@ -17,5 +17,5 @@
    <T9_1>300</T9_1>
    <T9_2>30</T9_2>
    
- 	<UpdateTime>2016-02-28</UpdateTime>
+ 	<UpdateTime>2016-04-26</UpdateTime>
  </Root>

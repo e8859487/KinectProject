@@ -95,7 +95,7 @@ namespace SocketPackage
                 _bgwServer.RunWorkerAsync();
         }
 
-        public void SendStartAsychronousRecord(){
+        public  void SendStartAsychronousRecord(){
             status.SocketStatus = TRANSMIT_STATUS.StartRecord;
         }
 
@@ -104,7 +104,7 @@ namespace SocketPackage
             status.SocketStatus = TRANSMIT_STATUS.StopRecord;
         }
 
-        public void SendStartAsychronousPlay()
+        public static void SendStartAsychronousPlay()
         {
             status.SocketStatus = TRANSMIT_STATUS.StartPlaybackClip;
         }

@@ -153,31 +153,20 @@ namespace SocketPackage
 
         public async void SendBytes(byte[] bytes)
         {
-            //  try
-            {
-                //取得用來傳送訊息至 socket server 的 stream 物件
-                NetworkStream serverStream = _TcpClient.GetStream();
 
-                //將資料寫入 stream object (表示傳送資料至 socket server)
-                await serverStream.WriteAsync(bytes, 0, bytes.Length);
+            //取得用來傳送訊息至 socket server 的 stream 物件
+            NetworkStream serverStream = _TcpClient.GetStream();
 
-                {
-                    byte[] status_byte = new byte[1];
-                    //int status = serverStream.ReadByte();
-                    await serverStream.ReadAsync(status_byte, 0, 1);
+            //將資料寫入 stream object (表示傳送資料至 socket server)
+            await serverStream.WriteAsync(bytes, 0, bytes.Length);
 
-                    int status = int.Parse(System.Text.Encoding.UTF8.GetString(status_byte));
+            byte[] status_byte = new byte[1];
+            //int status = serverStream.ReadByte();
+            await serverStream.ReadAsync(status_byte, 0, 1);
 
-                    SocketClient.socketStatus.SocketStatus = (SocketPackage.TRANSMIT_STATUS)Enum.ToObject(typeof(SocketPackage.TRANSMIT_STATUS), status);
+            int status = int.Parse(System.Text.Encoding.UTF8.GetString(status_byte));
 
-                }
-
-            }
-            // catch (Exception ee)
-            {
-
-                // log.Error("SendImg Error", ee);
-            }
+            SocketClient.socketStatus.SocketStatus = (SocketPackage.TRANSMIT_STATUS)Enum.ToObject(typeof(SocketPackage.TRANSMIT_STATUS), status);
 
         }
 

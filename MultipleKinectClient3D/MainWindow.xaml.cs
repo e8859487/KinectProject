@@ -38,6 +38,7 @@ namespace MultipleKinectClient3D
 
         private delegate void NoArgDelegate();
 
+        private string playBackFilePath;
 
         private ClientKinectProcessor3D masterKinectProcessor3D = null;
         public MainWindow()
@@ -51,10 +52,16 @@ namespace MultipleKinectClient3D
                                                 : Properties.Resources.SensorNotAvailableStatusText;
 
             this.masterKinectProcessor3D = new ClientKinectProcessor3D(kinectSensor);
+            this.masterKinectProcessor3D.PlayerStateChanged += new clientEventHandler(StatusChange);
 
             // set data context for display in UI
             this.DataContext = this.masterKinectProcessor3D;
             this.KinectStatus.DataContext = this;
+
+            //讀取同步播放檔案路徑
+            XmlManager.XmlReader reader = new XmlManager.XmlReader(@"./Setting.xml");
+            playBackFilePath = reader.getNodeInnerText(@"/Root/SynchronousPlayPath");
+            reader.Dispose();
         }
 
         public void Dispose()
@@ -93,6 +100,22 @@ namespace MultipleKinectClient3D
             this.KinectStatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
                                                   : Properties.Resources.SensorNotAvailableStatusText;
         }
+
+        /// <summary>
+        /// 處理Server端傳過來的資訊 ，同步控制撥放或是錄影
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void StatusChange(object sender, SocketPackage.StatusEventArgs e)
+        {
+            //control Record
+            if (e.Status == SocketPackage.TRANSMIT_STATUS.StartPlaybackClip || e.Status == SocketPackage.TRANSMIT_STATUS.StopPlaybackClip)
+            {
+                OneArgDelegate playback = new OneArgDelegate(this.PlaybackClip);
+                playback.BeginInvoke(playBackFilePath, null, null);
+            }
+        }
+
 
         private void PlayButton_Click(object sender, RoutedEventArgs e)
         {

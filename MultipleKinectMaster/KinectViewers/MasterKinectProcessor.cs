@@ -259,7 +259,8 @@ namespace MultipleKinectMaster
 
         public void StartAsychronousPlay()
         {
-            _socketServer.SendStartAsychronousPlay();
+            SocketServer.SendStartAsychronousPlay();
+            //_socketServer.SendStartAsychronousPlay();
         }
 
         public void StopAsychronousPlay()
