@@ -45,7 +45,6 @@ namespace MultipleKinectClient3D
 
         private Dictionary<int, string> _JointsPosDict = new Dictionary<int, string>();
 
-
         #region Delegate declare
         //Joints delegate
         private delegate void JointsDelegate(Point3D point3D, Brush brush, float radius);
@@ -74,13 +73,10 @@ namespace MultipleKinectClient3D
 
         #endregion
 
-
         //定義客戶端傳輸socket
         private SocketClient socketClient = null;
         private readonly string IpAddr = null;
         private readonly int Port;
-
-
 
         #endregion
 
@@ -187,7 +183,7 @@ namespace MultipleKinectClient3D
 
             //Network Data Init
             //= "140.118.170.215";              //127.0.0.1  me 140.118.170.215  wai 140.118.170.214
-            XmlReader reader = new XmlReader(@"./Setting.xml");
+            XmlReader reader = new XmlReader(@"./Setting/3DSetting.xml");
             IpAddr = reader.getNodeInnerText(@"/Root/IPAddress");
             Port = int.Parse(reader.getNodeInnerText(@"/Root/Port"));
             reader.Dispose();
@@ -195,7 +191,6 @@ namespace MultipleKinectClient3D
             this.socketClient = new SocketClient(IpAddr, Port);
             this.socketClient.Connect();
             this.socketClient.clientDataChanged += new clientDataChangeEventHandler(StatusChange);
-
         }
 
         private void StatusChange(object sender, StatusEventArgs e)
@@ -362,8 +357,8 @@ namespace MultipleKinectClient3D
                         //紀錄骨架座標於string中  jointType == JointType.ShoulderRight || jointType == JointType.ShoulderLeft || jointType == JointType.Head
                         {
                             //debug 
-                            string fakeZ = (position.Z  +0.9).ToString("0.0000");
-                            sb_skeletonJoints.Append(string.Format("{0},{1},{2}|", position.X.ToString("0.0000"), position.Y.ToString("0.0000"), fakeZ));
+                           // string fakeZ = (position.Z).ToString("0.0000");
+                            sb_skeletonJoints.Append(string.Format("{0},{1},{2}|", position.X.ToString("0.0000"), position.Y.ToString("0.0000"), position.Z.ToString("0.0000")));
                         }
                     }
                     bodyManager.CurrentBodyIdx = body.TrackingId;

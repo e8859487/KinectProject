@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Kinect;
 using MathNet;
 using MathNet.Numerics.LinearAlgebra;
+using System.Diagnostics;
 namespace SocketPackage
 {
     public class ViewPointManager
@@ -142,18 +143,20 @@ namespace SocketPackage
 
         private float[,] TMatrix_B2A;
 
-
+        Matrix<float> RMatrix_A2S_Inversed;
+        Matrix<float> RMatrix_B2S;
+        Matrix<float> TMatrix_BminusA;
         public void Analyze_RT_Matrix_TwoDevice()
         {
             var M = Matrix<float>.Build;
 
-            Matrix<float> RMatrix_A2S_Inversed = M.DenseOfArray(new float[,]{
+            RMatrix_A2S_Inversed = M.DenseOfArray(new float[,]{
                 {RMatrix_A[0],RMatrix_A[1],RMatrix_A[2]},
                 {RMatrix_A[3],RMatrix_A[4],RMatrix_A[5]}, 
                 {RMatrix_A[6],RMatrix_A[7],RMatrix_A[8]},
             }).Inverse();
 
-            Matrix<float> RMatrix_B2S = M.DenseOfArray(new float[,]{
+            RMatrix_B2S = M.DenseOfArray(new float[,]{
                 {RMatrix_B[0],RMatrix_B[1],RMatrix_B[2]},
                 {RMatrix_B[3],RMatrix_B[4],RMatrix_B[5]}, 
                 {RMatrix_B[6],RMatrix_B[7],RMatrix_B[8]},
@@ -161,10 +164,10 @@ namespace SocketPackage
 
             RMatrix_B2A = (RMatrix_A2S_Inversed * RMatrix_B2S).ToArray();
 
-            Matrix<float> TMatrix_BminusA = M.DenseOfArray(new float[,]{
-                {RMatrix_B[0] - RMatrix_A[0]},
-                {RMatrix_B[1] - RMatrix_A[1]},
-                {RMatrix_B[2] - RMatrix_A[2]}
+            TMatrix_BminusA = M.DenseOfArray(new float[,]{
+                {TMatrix_B[0] - TMatrix_A[0]},
+                {TMatrix_B[1] - TMatrix_A[1]},
+                {TMatrix_B[2] - TMatrix_A[2]}
             });
 
             TMatrix_B2A = (RMatrix_A2S_Inversed * TMatrix_BminusA).ToArray();
@@ -184,11 +187,11 @@ namespace SocketPackage
 
             CameraSpacePoint _Point = new CameraSpacePoint();
 
-            //假資料
-            RMatrix_B2A = new float[,] {{-1,0,0},{0,1,0},{0,0,-1}};
+            ////假資料
+           // RMatrix_B2A = new float[,] {{1,0,0},{0,1,0},{0,0,1}};
 
-            //假資料
-            TMatrix_B2A = new float[,] { { 0 }, { 0 }, { 9f } };
+            ////假資料
+           // TMatrix_B2A = new float[,] { { 0.004f }, { 0.03f }, { 0.05f } };
 
             _Point.X = RMatrix_B2A[0, 0] * Point.X + RMatrix_B2A[0, 1] * Point.Y + RMatrix_B2A[0, 2] * Point.Z + TMatrix_B2A[0, 0];
             _Point.Y = RMatrix_B2A[1, 0] * Point.X + RMatrix_B2A[1, 1] * Point.Y + RMatrix_B2A[1, 2] * Point.Z + TMatrix_B2A[1, 0];
@@ -196,14 +199,95 @@ namespace SocketPackage
 
             return _Point;
         }
+
+        public void displayMatrix()
+        {
+            if (false)
+            {
+
+                Debug.Print("-----RMatrix_A-----");
+
+                float[] mat = RMatrix_A;
+                for (int i = 0; i < mat.Length; i += 3)
+                {
+                    Debug.Print("{0} {1} {2}", mat[i], mat[i + 1], mat[i + 2]);
+                }
+
+                Debug.Print("TMatrix_A");
+                mat = TMatrix_A;
+                for (int i = 0; i < mat.Length; i += 3)
+                {
+                    Debug.Print("{0} {1} {2}", mat[i], mat[i + 1], mat[i + 2]);
+                }
+
+                Debug.Print("-------RMatrix_B-------");
+
+                mat = RMatrix_B;
+                for (int i = 0; i < mat.Length; i += 3)
+                {
+                    Debug.Print("{0} {1} {2}", mat[i], mat[i + 1], mat[i + 2]);
+                }
+
+                Debug.Print("TMatrix_B");
+                mat = TMatrix_B;
+                for (int i = 0; i < mat.Length; i += 3)
+                {
+                    Debug.Print("{0} {1} {2}", mat[i], mat[i + 1], mat[i + 2]);
+                }
+
+
+
+
+
+
+                Debug.Print("-------RMatrix_A2S_Inversed-------");
+
+                Matrix<float> matrix = RMatrix_A2S_Inversed;
+                for (int i = 0; i < mat.Length; i += 3)
+                {
+                    Debug.Print("{0} {1} {2}", matrix[i, 0], matrix[i, 1], matrix[i, 2]);
+                }
+
+                Debug.Print("-------TMatrix_BminusA-------");
+
+                matrix = TMatrix_BminusA;
+                Debug.Print("{0} {1} {2}", matrix[0, 0], matrix[1, 0], matrix[2, 0]);
+
+                //RMatrix_A2S_Inversed * TMatrix_BminusA
+
+
+                float[,] mat2;
+
+
+
+
+                Debug.Print("-------RMatrix_B2A-------");
+                mat2 = RMatrix_B2A;
+                for (int j = 0; j < mat2.GetLength(0); j++)
+                {
+                    Debug.Print("{0} {1} {2}", mat2[j, 0], mat2[j, 1], mat2[j, 2]);
+                }
+
+                Debug.Print("TMatrix_B2A");
+                mat2 = TMatrix_B2A;
+                for (int j = 0; j < mat2.GetLength(0); j++)
+                {
+                    Debug.Print("{0}  ", mat2[j, 0]);
+                }
+                
+            }
+
+           
+
+        }
     }
 
-        
+
 
     /// <summary>
     /// 裝置辨認編號
     /// </summary>
-   public  enum DEVICE_ID
+    public enum DEVICE_ID
     {
         DEVICE_A,
         DEVICE_B

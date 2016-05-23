@@ -59,7 +59,7 @@ namespace MultipleKinectClient3D
             this.KinectStatus.DataContext = this;
 
             //讀取同步播放檔案路徑
-            XmlManager.XmlReader reader = new XmlManager.XmlReader(@"./Setting.xml");
+            XmlManager.XmlReader reader = new XmlManager.XmlReader(@"./Setting/3DSetting.xml");
             playBackFilePath = reader.getNodeInnerText(@"/Root/SynchronousPlayPath");
             reader.Dispose();
         }
@@ -112,7 +112,9 @@ namespace MultipleKinectClient3D
             if (e.Status == SocketPackage.TRANSMIT_STATUS.StartPlaybackClip || e.Status == SocketPackage.TRANSMIT_STATUS.StopPlaybackClip)
             {
                 OneArgDelegate playback = new OneArgDelegate(this.PlaybackClip);
-                playback.BeginInvoke(playBackFilePath, null, null);
+                playback.BeginInvoke(playBackFilePath, null, null);     
+                //MessageBox.Show(playBackFilePath);
+
             }
         }
 

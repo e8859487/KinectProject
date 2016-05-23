@@ -18,7 +18,7 @@ using System.ComponentModel;
 
 namespace MultipleKinectMaster3D
 {
-    class MasterKinectProcessor3D : IWorkflowView, INotifyPropertyChanged
+    class MasterKinectProcessor3D :  INotifyPropertyChanged
     {
 
         #region Private Variables
@@ -80,8 +80,6 @@ namespace MultipleKinectMaster3D
 
         #endregion
 
-
-
         public MasterKinectProcessor3D(KinectSensor kinectSensor, Dispatcher dispatcher)
         {
             if (kinectSensor == null)
@@ -97,8 +95,6 @@ namespace MultipleKinectMaster3D
             socketServer = new SocketServer(PORT);
             socketServer.Start();
             socketServer.changed += new changeEventHandler(SocketServer_changed);
-
-
 
             #region Bone Implement
             this.bones = new List<Tuple<JointType, JointType>>();
@@ -188,7 +184,6 @@ namespace MultipleKinectMaster3D
             });
             #endregion
 
-            this.InitialWorkflowInstance();
         }
 
         private void SocketServer_changed(object sender, EventArgs e)
@@ -266,11 +261,12 @@ namespace MultipleKinectMaster3D
                     }
                     bodyFrame.GetAndRefreshBodyData(this.bodies);
                     dataReceived = true;
+
                     if (startTime.TotalSeconds != 0)
                     {
                         tsp = (bodyFrame.RelativeTime - startTime);
                         Lbl_TimeStamp = new TimeSpan(0, tsp.Minutes, tsp.Seconds).ToString();
-                        motionAnalyzer.timespan = Lbl_TimeStamp;
+                       // motionAnalyzer.timespan = Lbl_TimeStamp;
                     }
                     else
                     {
@@ -279,7 +275,6 @@ namespace MultipleKinectMaster3D
 
                 }
 
-
                 this.frameIndex++;
                 if (dataReceived)
                 {
@@ -287,11 +282,12 @@ namespace MultipleKinectMaster3D
                     {
                         this.UpdateBodyFrame(this.bodies);
                     }
-                    if (bodyFrame.FloorClipPlane.W != 0 && !IsDeviceHeightReady)
-                    {
-                        motionAnalyzer.SetFloorClipPlane(bodyFrame.FloorClipPlane);
-                        IsDeviceHeightReady = true;
-                    }
+                    //設定地板平面
+                    //if (bodyFrame.FloorClipPlane.W != 0 && !IsDeviceHeightReady)
+                    //{
+                    //    motionAnalyzer.SetFloorClipPlane(bodyFrame.FloorClipPlane);
+                    //    IsDeviceHeightReady = true;
+                    //}
                 }
             }
             finally
@@ -324,6 +320,8 @@ namespace MultipleKinectMaster3D
             int drawIdx = 0;
 
             bodyManager.CurrentBodyIdx = 0;
+
+            #region 3d Server Drawer
             //清空使用者清單
             bodyManager.WorkList_server.Clear();
             foreach (Body body in bodies)
@@ -379,21 +377,26 @@ namespace MultipleKinectMaster3D
                     //} 
                     #endregion
 
-
-                    //動作追蹤系統
-                    motionAnalyzeManager.AddMotionAnalyzer(bodyManager.CurrentBodyIdx);
-                    motionAnalyzeManager.EventAnalyze(bodyManager.CurrentBodyIdx, MyBody.Body2Mybody(body));
-
+                    if ( ClientFrameCounter % 4 == 0)
+                    {
+                        //動作追蹤系統
+                        motionAnalyzeManager.AddMotionAnalyzer(bodyManager.CurrentBodyIdx);
+                        motionAnalyzeManager.EventAnalyze(bodyManager.CurrentBodyIdx, MyBody.Body2Mybody(body));
+                    }
                     //畫出3D骨架
                     DrawBody3D(joints, drawPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx], true, drawIdx);
 
                     drawIdx++;
+                }
+                foreach(ulong l in motionAnalyzeManager.motionDict.Keys){
+                    motionAnalyzeManager.motionDict[l].UpdateCurrentState();
 
                 }
             }
+            
+            #endregion
 
-
-            #region 3D clientPoints
+            #region 3D Client Drawer
 
             //清空使用者清單
             bodyManager.WorkList_client.Clear();
@@ -414,7 +417,7 @@ namespace MultipleKinectMaster3D
                         {
                             //骨架ID管理系統
                             bodyManager.BodyState.Add(bodyManager.CurrentBodyIdx, DrawStatus.NewUser);
-                            
+
                             //動作追蹤系統
                             motionAnalyzeManager.AddMotionAnalyzer(bodyManager.CurrentBodyIdx);
                         }
@@ -435,7 +438,7 @@ namespace MultipleKinectMaster3D
 
                         }
 
-                        if (IsDeviceRotationMTReady_A > 1 && IsDeviceRotationMTReady_B > 1)
+                        if (IsDeviceRotationMTReady_A > 1 && IsDeviceRotationMTReady_B > 1 )
                         {
                             //  if (!IsDeviceRotationMTReady)
                             {
@@ -455,38 +458,37 @@ namespace MultipleKinectMaster3D
                                 {
                                     joints_transfered.Add(item.Key, tempJoint);
                                 }
-                            } 
-                        #endregion
+                            }
+
+                            //Debug Print
+                            //Debug.Print(" >> ***************************");
+                            viewPointManager.displayMatrix();
+                            //轉換後的座標點
                             this.DrawBody3D(joints_transfered, clientPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx], true, drawIdx);
 
                         }
                         else
                         {
+                            //未轉換的座標點
                             this.DrawBody3D(body.jointsInfo, clientPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx], true, drawIdx);
                         }
+                        #endregion
 
                         //bodyManager.AddClientBody(body.jointsInfo, clientPen, bodyManager.BodyState[bodyManager.CurrentBodyIdx]);
                         drawIdx++;
 
 
                         //Motion Detect!!
-                        if (i == 0 && ClientFrameCounter % 4 == 0)
+                        if ( ClientFrameCounter % 4 == 0)
                         {
-                            //motionAnalyzer.EventAnalyze(body);
                             motionAnalyzeManager.motionDict[body.TrackingId].EventAnalyze(body);
                         }
-                        //Updata UI motion 
-                        //Lbl_MotionState = motionAnalyzer.GetCurrentState();
-
-
                     }
                 }
                 ClientFrameCounter++;
-
             }
 
             #endregion
-
 
             #region 比對資料
             lock (thisLock)
@@ -516,6 +518,7 @@ namespace MultipleKinectMaster3D
 
                     bodyManager.BodyState.Clear();
 
+                    //移除舊資料有，而新資料不復存在的ID
                     foreach (ulong l in exceptOutcome)
                     {
                         motionAnalyzeManager.RemoveMotionAnalyzer(l);
@@ -683,28 +686,6 @@ namespace MultipleKinectMaster3D
             }
         }
 
-
-        private MotionsAnalyze motionAnalyzer = null;
-
-        private void InitialWorkflowInstance()
-        {
-            motionAnalyzer = new MotionsAnalyze(this);
-
-        }
-
-
-        public void OnIdle(System.Activities.WorkflowApplicationIdleEventArgs args)
-        {
-
-            // Lbl_MotionState = motionAnalyzer.GetCurrentState();
-
-        }
-
-        UnhandledExceptionAction IWorkflowView.OnUnhandledException(WorkflowApplicationUnhandledExceptionEventArgs args)
-        {
-            return UnhandledExceptionAction.Terminate;
-        }
-
         internal void ResetStartTime()
         {
             startTime = new TimeSpan(0, 0, 0);
@@ -718,6 +699,7 @@ namespace MultipleKinectMaster3D
 
         private MotionAnalyzeManager motionAnalyzeManager;
 
+        //綁定UI動作的listbox
         internal void SetMotionUI(System.Windows.Controls.ListBox LIB_Motion)
         {
             motionAnalyzeManager = new MotionAnalyzeManager(LIB_Motion);

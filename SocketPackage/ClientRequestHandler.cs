@@ -72,9 +72,9 @@ namespace SocketPackage
 
                 //取得網路串流物件，取得來自 socket client 的訊息
                 netStream = _TcpClient.GetStream();
-                if (_TcpClient.ReceiveBufferSize > 0 && netStream.CanRead)
+                if (_TcpClient.ReceiveBufferSize > 0 && netStream.CanRead )
                 {
-                   // try
+                    try
                     {
 
                         binaryReader = new BinaryReader(netStream);
@@ -125,8 +125,9 @@ namespace SocketPackage
                             }
                         }
                     }
-                  //  catch (Exception ee)
+                    catch (IOException ee)
                     {
+                        Debug.Print(ee.ToString());
                       //  log.Error(string.Format("_ClientNo:{0} ", _ClientNo), ee);
                     }
                 }

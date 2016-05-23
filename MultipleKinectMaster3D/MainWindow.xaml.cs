@@ -59,11 +59,10 @@ namespace MultipleKinectMaster3D
 
             // set data context for display in UI
             this.DataContext = this.masterKinectProcessor3D;
-            this.Lbl_MotionState.DataContext = this.masterKinectProcessor3D;
             this.Lbl_TimeStamp.DataContext = this.masterKinectProcessor3D;
             this.KinectStatus.DataContext = this;
 
-            XmlManager.XmlReader reader = new XmlManager.XmlReader(@"./Setting.xml");
+            XmlManager.XmlReader reader = new XmlManager.XmlReader(@"./Setting/3DSetting.xml");
             playBackFilePath = reader.getNodeInnerText(@"/Root/SynchronousPlayPath");
             reader.Dispose();
 
@@ -175,10 +174,8 @@ namespace MultipleKinectMaster3D
         private void SynChronousButton_Click(object sender, RoutedEventArgs e)
         {
             OneArgDelegate playback = new OneArgDelegate(this.PlaybackClip);
-            playback.BeginInvoke(playBackFilePath, null, null);
-
             SocketPackage.SocketServer.SendStartAsychronousPlay();
-            //masterKinectProcessor3D.StartAsychronousPlay();
+            playback.BeginInvoke(playBackFilePath, null, null);
         }
 
         private void SetToUnknow_Click(object sender, RoutedEventArgs e)

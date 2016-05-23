@@ -28,28 +28,53 @@
             <StatusBar Height="100" VerticalAlignment="Bottom" Foreground="{StaticResource MediumGreyBrush}">
                 <StatusBarItem x:Name="KinectStatus" />
             </StatusBar>
-            <Label x:Name="Lbl_MotionState" Content="{Binding Lbl_MotionState}" Background="Beige"/>
+            <!--<Label x:Name="Lbl_MotionState" Content="{Binding Lbl_MotionState}" Background="Beige"/>-->
             <Label x:Name="Lbl_TimeStamp" Content="{Binding Lbl_TimeStamp}" Background="NavajoWhite"/>
             <ListBox x:Name="LIB_Motion" ></ListBox>
+            <h:HelixViewport3D>
+                <h:SunLight></h:SunLight>
+                <h:FileModelVisual3D x:Name="model2" Source="D:/untitled1.3ds"/>
+            </h:HelixViewport3D>
         </StackPanel>
 
 
 
-        <h:HelixViewport3D x:Name="view1" ModelUpDirection="0,1,0" ShowCoordinateSystem="True" Background="WhiteSmoke">
-            <h:HelixViewport3D.Camera>
+        <h:HelixViewport3D x:Name="view1" ModelUpDirection="0,1,0" ShowCoordinateSystem="True" Background="WhiteSmoke" ShowCameraInfo="False">
+            <!--<h:HelixViewport3D.Camera>
                 <PerspectiveCamera Position="500,500,-0" LookDirection="-500,-550,300" FieldOfView="45" UpDirection="0,1,0"  />
-            </h:HelixViewport3D.Camera>
+            </h:HelixViewport3D.Camera>-->
             <h:DefaultLights/>
+            
 
             <local:ItemsVisual3D x:Name="ItemsVisual3DJoints" ItemTemplate="{StaticResource TemplateJointsPoint}" ItemsSource="{Binding ObservableJoints}"/>
             <local:ItemsVisual3D x:Name="ItemsVisual3DPipes" ItemTemplate="{StaticResource TemplateJointPipe}" ItemsSource="{Binding ObservablePipe}"/>
 
+
+            <!--<h:BoxVisual3D Center="0,0,0" Fill="Gray" Length="80" Width="30" Height="30"></h:BoxVisual3D>-->
+            <ModelVisual3D >
+                <!--<h:BoxVisual3D Center="100,0,550" Fill="Gray" Length="80" Width="30" Height="30"  ></h:BoxVisual3D>-->
+                <h:BoxVisual3D Center="-130,0,0" Fill="Gray" Length="80" Width="30" Height="30"  ></h:BoxVisual3D>
+                <ModelVisual3D.Transform>
+                    <RotateTransform3D>
+                        <RotateTransform3D.Rotation>
+                            <AxisAngleRotation3D Axis="0,1,0" Angle="0 "/>
+                        </RotateTransform3D.Rotation>
+                    </RotateTransform3D>
+                </ModelVisual3D.Transform>
+            </ModelVisual3D>
             <h:GridLinesVisual3D Normal="0,1,0" LengthDirection="1,0,0" Length="1800" Width="1800" Center="0,0,0" Fill="Red" MajorDistance="100" MinorDistance="10" Thickness="0.2"/>
+
             <h:CubeVisual3D Center="0,300,0" SideLength="1800" Material="{h:Material Red, Opacity=0.01}"/>
 
+            <ModelVisual3D>
+                <h:FileModelVisual3D x:Name="model2123123" Source="D:/untitled1.3ds" />
+                <ModelVisual3D.Transform>
+                    <TranslateTransform3D OffsetX="0">
+                    </TranslateTransform3D>
+                </ModelVisual3D.Transform>
+            </ModelVisual3D>
 
         </h:HelixViewport3D>
+        
     </DockPanel>
-
-
 </Window>

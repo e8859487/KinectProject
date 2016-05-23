@@ -39,10 +39,7 @@ namespace MultipleKinectMaster3D
             {
                 Debug.Print(" >> MotionAnalyzeManager.AddMotionAnalyzer already exixt TrackingId " + TrackingId.ToString());
             }
-
         }
-
-     
 
         /// <summary>
         /// 移除指定 ID 的 Tracker

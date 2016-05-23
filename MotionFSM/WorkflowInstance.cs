@@ -28,7 +28,8 @@ namespace MotionFSM
                 return true;
             }
 
-            if (StateTracker != null) { 
+            if (StateTracker.Transitions != null)
+            { 
             //Trusted transitions
             foreach (System.Activities.Statements.Transition ts in StateTracker.Transitions)
             {
@@ -41,7 +42,6 @@ namespace MotionFSM
             //unknow transition
             return false;
         }
-
 
         public WorkflowInstance(IWorkflowView view, StateMachineStateTracker stateMachineStateTracker = null)
         {
@@ -89,8 +89,6 @@ namespace MotionFSM
 
             this.Host.Extensions.Add(this.StateTracker);
         }
-
-
 
 
         /// <summary>

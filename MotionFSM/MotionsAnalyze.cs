@@ -30,17 +30,21 @@ namespace MotionFSM
         /// <summary>
         /// 記錄當下動作
         /// </summary>
-        public string CurrentMotions{
+        public string CurrentMotions
+        {
             get
             {
                 return currentMotions;
             }
             set
             {
-                currentMotions = value;
-                if (PropertyChanged != null)
+                if (currentMotions != value)
                 {
-                    this.PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CurrentMotions"));
+                    currentMotions = value;
+                    if (PropertyChanged != null)
+                    {
+                        this.PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CurrentMotions"));
+                    }
                 }
             }
         }
@@ -52,7 +56,7 @@ namespace MotionFSM
         {
             if (THS.Count < 10)
             {
-                XmlReader reader = new XmlReader(@"./Setting.xml");
+                XmlReader reader = new XmlReader(@"./Setting/3DSetting.xml");
                 THS.Add("T1", int.Parse(reader.getNodeInnerText(@"/Root/T1")));
                 THS.Add("T2", int.Parse(reader.getNodeInnerText(@"/Root/T2")));
                 THS.Add("T3", int.Parse(reader.getNodeInnerText(@"/Root/T3")));
@@ -70,7 +74,7 @@ namespace MotionFSM
         MyBody initBody = null;
         MyBody preBody = null;
         MyBody nowBody = null;
-       // CSV_Writter csv_Writter;
+        // CSV_Writter csv_Writter;
 
         public MotionsAnalyze(IWorkflowView w)
         {
@@ -140,20 +144,20 @@ namespace MotionFSM
 
             CameraSpacePoint SpineShoulder_Ini = Init.jointsInfo[JointType.SpineShoulder].Position;
             CameraSpacePoint SpineShoulder_Pre = pre.jointsInfo[JointType.SpineShoulder].Position;
-            CameraSpacePoint SpineShoulder = now.jointsInfo[JointType.SpineShoulder].Position; 
+            CameraSpacePoint SpineShoulder = now.jointsInfo[JointType.SpineShoulder].Position;
             #endregion
-            
+
 
             if (!IsInitBodyHeight)
-            { 
-                  fallDownThreshold = (float)(THS["FDT"] * 0.001);
-                  IsInitBodyHeight = true;
+            {
+                fallDownThreshold = (float)(THS["FDT"] * 0.001);
+                IsInitBodyHeight = true;
             }
             else if (D != 0 && !IsInitBodyHeight2)
             {
                 fallDownThreshold = getHeightFromPoint(head_Ini) / 2.3f;
                 IsInitBodyHeight2 = true;
-               // Debug.Print("FDT = " + fallDownThreshold);
+                // Debug.Print("FDT = " + fallDownThreshold);
             }
 
 
@@ -169,17 +173,18 @@ namespace MotionFSM
                 {
                     if (head.Y - neckkk.Y > 0.06)
                         transitionOutcome = MotionTransitions.E_FallDown;//跌倒
-                    else
-                        Debug.Print("E_FallDown's don't care\n");
+                    //else
+                    // Debug.Print("E_FallDown's don't care\n");
                 }
-                 else if (head.Y  - SpineBase.Y >  0.28 )
+                else if (head.Y - SpineBase.Y > 0.28)
                 {
                     if (head_Ini.Y - head.Y > 0.3 && torsol_Ini.Y - torsol.Y > 0.3 && head.Y - head_Pre.Y < -0.030 && torsol.Y - torsol_Pre.Y < -0.030)
                     {
                         transitionOutcome = MotionTransitions.E_SitDown; //坐下
                     }
-                    else {
-                        Debug.Print("Sitdown's don't care\n");
+                    else
+                    {
+                        //Debug.Print("Sitdown's don't care\n");
                     }
                 }
                 else
@@ -198,8 +203,8 @@ namespace MotionFSM
             //Debug.Print(string.Format("TimeSpan:{0}, Transition:{1}, State:{2}", timespan, transitionOutcome, GetCurrentState()));
 
             //write out to csv
-             //csv_Writter.WriteLine(string.Format("{0},{1},{2}", timespan, transitionOutcome, GetCurrentState()));
-                 
+            //csv_Writter.WriteLine(string.Format("{0},{1},{2}", timespan, transitionOutcome, GetCurrentState()));
+
 
             if (transitionOutcome == MotionTransitions.E_Null)
             {
@@ -211,7 +216,8 @@ namespace MotionFSM
             //Copy nowbody as pre body.
             this.DeepCopyBodyData(now, preBody);
 
-            this.CurrentMotions = GetCurrentState();
+            this.UpdateCurrentState();
+
         }
 
         private float getHeightFromPoint(CameraSpacePoint CSP)
@@ -240,8 +246,9 @@ namespace MotionFSM
         /// 取得目前動作狀態
         /// </summary>
         /// <returns></returns>
-        public string GetCurrentState()
+        public string UpdateCurrentState()
         {
+            this.CurrentMotions = wfInstance.StateTracker.CurrentState;
             return wfInstance.StateTracker.CurrentState;
         }
 
