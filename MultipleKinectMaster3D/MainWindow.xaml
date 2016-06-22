@@ -3,9 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:h="http://helix-toolkit.org/wpf"
         xmlns:local ="clr-namespace:MultipleKinectMaster3D"
-
+        
         Title="MotionDetectSystemMaster" Height="350" Width="525">
+
     <Window.Resources>
+
         <SolidColorBrush x:Key="MediumGreyBrush" Color="#ff6e6e6e"/>
 
         <local:DataTemplate3D x:Key="TemplateJointsPoint">
@@ -16,65 +18,262 @@
             <h:PipeVisual3D   Point1="{Binding Point1}" Point2="{Binding Point2}" Diameter="{Binding Radius}"   Fill="{Binding Brushes}"/>
         </local:DataTemplate3D>
 
+        <DrawingBrush x:Key="floorBrush" Viewport="0,0,0.025,0.025" ViewportUnits="Absolute"  TileMode="Tile">
+            <DrawingBrush.Drawing>
+                <DrawingGroup>
+                    <GeometryDrawing Brush="#FFC9C9C9">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="0,0,1,1"/>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+
+                    <GeometryDrawing Brush="#FF9C9C9C">
+                        <GeometryDrawing.Geometry>
+                            <GeometryGroup>
+                                <RectangleGeometry Rect="0,0,0.5,0.5"/>
+                                <RectangleGeometry Rect="0.5,0.5,0.5,0.5"/>
+                            </GeometryGroup>
+                        </GeometryDrawing.Geometry>
+                        <GeometryDrawing.Pen>
+                            <Pen Brush="White">
+                                <Pen.Thickness>0.00</Pen.Thickness>
+                            </Pen>
+                        </GeometryDrawing.Pen>
+                    </GeometryDrawing>
+
+                </DrawingGroup>
+            </DrawingBrush.Drawing>
+        </DrawingBrush>
+
     </Window.Resources>
-    <DockPanel>
+    <DockPanel >
+        <Menu DockPanel.Dock="Top" >
+
+            <MenuItem Header="File">
+                <MenuItem  Header="Exit"  />
+            </MenuItem>
+
+            <MenuItem Header="Setting">
+                <MenuItem Name="ShowCameraInfo" Header="CameraInfo" IsCheckable="True" />
+            </MenuItem>
+
+        </Menu>
 
         <StackPanel DockPanel.Dock="Right" Margin="0,0,0,-0.2"  >
-            <TextBlock  HorizontalAlignment="Center" Text="MotionDetectSystem" Padding="8" Foreground="Black"/>
+            <TabControl Height="293" Width="141">
+                <TabItem Header="基本控制">
+                    <StackPanel  >
+                        <TextBlock  HorizontalAlignment="Center" Text="MotionDetectSystem" Padding="8" Foreground="Black"/>
 
-            <Button x:Name="PlayButton" Content="PLAY" Click="PlayButton_Click" />
-            <Button x:Name="SynchronousPlay" Content="SynchronousPlay" Click="SynChronousButton_Click"/>
-            <Button x:Name="SetToUnknow" Content="SetToUnknow" Click="SetToUnknow_Click"/>
-            <StatusBar Height="100" VerticalAlignment="Bottom" Foreground="{StaticResource MediumGreyBrush}">
+                        <Button x:Name="PlayButton" Content="PLAY" Click="PlayButton_Click" />
+                        <Button x:Name="SynchronousPlay" Content="SynchronousPlay" Click="SynChronousButton_Click"/>
+                        <Button x:Name="SetToUnknow" Content="SetToUnknow" Click="SetToUnknow_Click"/>
+                        <!--<StatusBar Height="100" VerticalAlignment="Bottom" Foreground="{StaticResource MediumGreyBrush}">
                 <StatusBarItem x:Name="KinectStatus" />
-            </StatusBar>
-            <!--<Label x:Name="Lbl_MotionState" Content="{Binding Lbl_MotionState}" Background="Beige"/>-->
-            <Label x:Name="Lbl_TimeStamp" Content="{Binding Lbl_TimeStamp}" Background="NavajoWhite"/>
-            <ListBox x:Name="LIB_Motion" ></ListBox>
-            <h:HelixViewport3D>
-                <h:SunLight></h:SunLight>
-                <h:FileModelVisual3D x:Name="model2" Source="D:/untitled1.3ds"/>
-            </h:HelixViewport3D>
+            </StatusBar>-->
+                        <!--<Label x:Name="Lbl_MotionState" Content="{Binding Lbl_MotionState}" Background="Beige"/>-->
+                        <Label x:Name="Lbl_TimeStamp" Content="{Binding masterKinectProcessor.Lbl_TimeStamp}" Background="NavajoWhite"/>
+                        <ListBox x:Name="LIB_Motion" />
+                    </StackPanel>
+                </TabItem>
+                <TabItem Header="成員管制">
+                    <StackPanel>
+
+                        <TextBox Grid.Column="2" BorderBrush="White" TextAlignment="Center" Background="#FF4AFF3B" Foreground="Black">大門狀態
+                        </TextBox>
+
+                        <Grid >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" BorderBrush="White">關</TextBox>
+                            <Slider  x:Name="Doorstate"  Grid.Column="1" Height="30" Width="100" LargeChange ="100" SmallChange="100" Minimum="0" Maximum="1" IsSnapToTickEnabled="True" Value="{Binding  DoorState ,Mode=OneWay}"/>
+                            <TextBox Grid.Column="2" BorderBrush="White">開</TextBox>
+                        </Grid>
+
+                        <TextBox Grid.Column="2" BorderBrush="White" TextAlignment="Center" Background="#FFFFC510" Foreground="Black">家中成員
+                        </TextBox>
+                            <ListBox x:Name="LIB_Member" />
+
+                    </StackPanel>
+                </TabItem>
+            </TabControl>
         </StackPanel>
 
 
 
-        <h:HelixViewport3D x:Name="view1" ModelUpDirection="0,1,0" ShowCoordinateSystem="True" Background="WhiteSmoke" ShowCameraInfo="False">
-            <!--<h:HelixViewport3D.Camera>
-                <PerspectiveCamera Position="500,500,-0" LookDirection="-500,-550,300" FieldOfView="45" UpDirection="0,1,0"  />
-            </h:HelixViewport3D.Camera>-->
-            <h:DefaultLights/>
-            
+        <h:HelixViewport3D x:Name="view1" ModelUpDirection="0,1,0" ShowCoordinateSystem="True" ShowCameraInfo="{Binding IsChecked, ElementName=ShowCameraInfo}" >
+            <h:HelixViewport3D.Camera>
+                <PerspectiveCamera Position="735,695,907" LookDirection="-540,-690,-675" FieldOfView="45" UpDirection="0,1,0"  />
+                <!--<PerspectiveCamera  />-->
+            </h:HelixViewport3D.Camera>
 
-            <local:ItemsVisual3D x:Name="ItemsVisual3DJoints" ItemTemplate="{StaticResource TemplateJointsPoint}" ItemsSource="{Binding ObservableJoints}"/>
-            <local:ItemsVisual3D x:Name="ItemsVisual3DPipes" ItemTemplate="{StaticResource TemplateJointPipe}" ItemsSource="{Binding ObservablePipe}"/>
+            <!-- ===== Background color =====-->
+            <h:HelixViewport3D.Background>
+                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                    <GradientStop Color="Black" Offset="0"/>
+                    <GradientStop Color="#FF606060" Offset="1"/>
+                </LinearGradientBrush>
+            </h:HelixViewport3D.Background>
 
+            <h:DefaultLights  />
+            <!--<h:SunLight/>-->
 
-            <!--<h:BoxVisual3D Center="0,0,0" Fill="Gray" Length="80" Width="30" Height="30"></h:BoxVisual3D>-->
+            <!-- ===== Skeletons binding =====-->
+            <local:ItemsVisual3D x:Name="ItemsVisual3DJoints" ItemTemplate="{StaticResource TemplateJointsPoint}" ItemsSource="{Binding masterKinectProcessor.ObservableJoints}"/>
+            <local:ItemsVisual3D x:Name="ItemsVisual3DPipes" ItemTemplate="{StaticResource TemplateJointPipe}" ItemsSource="{Binding masterKinectProcessor.ObservablePipe}"/>
+
+            <!-- ===== Floor ===== -->
+            <h:RectangleVisual3D Normal="0,1,0" Origin="250,0,320" Width="670" Length="1400"  Fill="{StaticResource floorBrush}"/>
+
+            <!-- ===== WallDeplyment ===== -->
+            <ModelVisual3D x:Name="WallSetting" >
+
+            </ModelVisual3D>
+
+            <!--Door--><!--
             <ModelVisual3D >
-                <!--<h:BoxVisual3D Center="100,0,550" Fill="Gray" Length="80" Width="30" Height="30"  ></h:BoxVisual3D>-->
-                <h:BoxVisual3D Center="-130,0,0" Fill="Gray" Length="80" Width="30" Height="30"  ></h:BoxVisual3D>
+                <h:FileModelVisual3D  Source="C:/tmp/tt/charlie_d_doorFrame.3ds"/>
+                <h:FileModelVisual3D  Source="C:/tmp/tt/charlie_d_door.3ds"/>
+
                 <ModelVisual3D.Transform>
-                    <RotateTransform3D>
-                        <RotateTransform3D.Rotation>
-                            <AxisAngleRotation3D Axis="0,1,0" Angle="0 "/>
-                        </RotateTransform3D.Rotation>
-                    </RotateTransform3D>
+                    <Transform3DGroup>
+                        <RotateTransform3D>
+                            <RotateTransform3D.Rotation>
+                                <AxisAngleRotation3D Axis="0,1,0" Angle="90"/>
+                            </RotateTransform3D.Rotation>
+                        </RotateTransform3D>
+                        <ScaleTransform3D ScaleX="10" ScaleY="10" ScaleZ="10"/>
+                        <TranslateTransform3D OffsetX="450" OffsetY="0" OffsetZ="33">
+                        </TranslateTransform3D>
+                    </Transform3DGroup>
+                </ModelVisual3D.Transform>
+
+            </ModelVisual3D>-->
+
+            <!--Kinect01-->
+            <ModelVisual3D >
+                <h:FileModelVisual3D  Source="C:\tmp\tt\Kinect2.3ds"/>
+                <ModelVisual3D.Transform>
+                    <Transform3DGroup>
+                        <RotateTransform3D>
+                            <RotateTransform3D.Rotation>
+                                <AxisAngleRotation3D Axis="0,1,0" Angle="{Binding CameraPos1.Angle}"/>
+                            </RotateTransform3D.Rotation>
+                        </RotateTransform3D>
+                        <ScaleTransform3D ScaleX="1" ScaleY="1" ScaleZ="1"/>
+                        <TranslateTransform3D OffsetX="{Binding CameraPos1.Position.X}" OffsetY="{Binding CameraPos1.Position.Y}" OffsetZ="{Binding CameraPos1.Position.Z}"/>
+
+                    </Transform3DGroup>
                 </ModelVisual3D.Transform>
             </ModelVisual3D>
-            <h:GridLinesVisual3D Normal="0,1,0" LengthDirection="1,0,0" Length="1800" Width="1800" Center="0,0,0" Fill="Red" MajorDistance="100" MinorDistance="10" Thickness="0.2"/>
 
-            <h:CubeVisual3D Center="0,300,0" SideLength="1800" Material="{h:Material Red, Opacity=0.01}"/>
-
+            <!--Shelf01-->
             <ModelVisual3D>
-                <h:FileModelVisual3D x:Name="model2123123" Source="D:/untitled1.3ds" />
+                <h:FileModelVisual3D  Source="C:\tmp\tt\shelf.3ds"/>
                 <ModelVisual3D.Transform>
-                    <TranslateTransform3D OffsetX="0">
-                    </TranslateTransform3D>
+                    <Transform3DGroup>
+                        <RotateTransform3D>
+                            <RotateTransform3D.Rotation>
+                                <AxisAngleRotation3D Axis="1,0,0" Angle="0"/>
+                            </RotateTransform3D.Rotation>
+                        </RotateTransform3D>
+                        <ScaleTransform3D ScaleX="3" ScaleY="8" ScaleZ="3"/>
+                        <TranslateTransform3D OffsetX="{Binding CameraPos1.Position.X}" OffsetY="0" OffsetZ="{Binding CameraPos1.Position.Z}"/>
+                    </Transform3DGroup>
+                </ModelVisual3D.Transform>
+            </ModelVisual3D>
+
+
+            <!--Kinect02--><!--
+            <ModelVisual3D>
+                <h:FileModelVisual3D  Source="C:\tmp\tt\Kinect2.3ds"/>
+                <ModelVisual3D.Transform>
+                    <Transform3DGroup>
+                        <RotateTransform3D>
+                            <RotateTransform3D.Rotation>
+                                <AxisAngleRotation3D Axis="0,1,0" Angle="{Binding CameraPos2.Angle}"/>
+                            </RotateTransform3D.Rotation>
+                        </RotateTransform3D>
+                        <ScaleTransform3D ScaleX="1" ScaleY="1" ScaleZ="1"/>
+                        <TranslateTransform3D OffsetX="{Binding CameraPos2.Position.X}" OffsetY="{Binding CameraPos2.Position.Y}" OffsetZ="{Binding CameraPos2.Position.Z}"/>
+
+                    </Transform3DGroup>
+                </ModelVisual3D.Transform>
+            </ModelVisual3D>
+
+            --><!--Shelf02--><!--
+            <ModelVisual3D>
+                <h:FileModelVisual3D  Source="C:\tmp\tt\shelf.3ds"/>
+                <ModelVisual3D.Transform>
+                    <Transform3DGroup>
+                        <RotateTransform3D>
+                            <RotateTransform3D.Rotation>
+                                <AxisAngleRotation3D Axis="1,0,0" Angle="0"/>
+                            </RotateTransform3D.Rotation>
+                        </RotateTransform3D>
+                        <ScaleTransform3D ScaleX="3" ScaleY="7" ScaleZ="3"/>
+                        <TranslateTransform3D OffsetX="{Binding CameraPos2.Position.X}" OffsetY="0" OffsetZ="{Binding CameraPos2.Position.Z}"/>
+                    </Transform3DGroup>
+                </ModelVisual3D.Transform>
+            </ModelVisual3D>
+
+            --><!--Kinect03--><!--
+            <ModelVisual3D>
+                <h:FileModelVisual3D  Source="C:\tmp\tt\Kinect2.3ds"/>
+                <ModelVisual3D.Transform>
+                    <Transform3DGroup>
+                        <RotateTransform3D>
+                            <RotateTransform3D.Rotation>
+                                <AxisAngleRotation3D Axis="0,1,0" Angle="{Binding CameraPos3.Angle}"/>
+                            </RotateTransform3D.Rotation>
+                        </RotateTransform3D>
+                        <ScaleTransform3D ScaleX="1" ScaleY="1" ScaleZ="1"/>
+                        <TranslateTransform3D OffsetX="{Binding CameraPos3.Position.X}" OffsetY="{Binding CameraPos3.Position.Y}" OffsetZ="{Binding CameraPos3.Position.Z}"/>
+
+                    </Transform3DGroup>
+                </ModelVisual3D.Transform>
+            </ModelVisual3D>
+
+            --><!--Shelf03--><!--
+            <ModelVisual3D>
+                <h:FileModelVisual3D  Source="C:\tmp\tt\shelf.3ds"/>
+                <ModelVisual3D.Transform>
+                    <Transform3DGroup>
+                        <RotateTransform3D>
+                            <RotateTransform3D.Rotation>
+                                <AxisAngleRotation3D Axis="1,0,0" Angle="0"/>
+                            </RotateTransform3D.Rotation>
+                        </RotateTransform3D>
+                        <ScaleTransform3D ScaleX="3" ScaleY="7" ScaleZ="3"/>
+                        <TranslateTransform3D OffsetX="{Binding CameraPos3.Position.X}" OffsetY="0" OffsetZ="{Binding CameraPos3.Position.Z}"/>
+                    </Transform3DGroup>
+                </ModelVisual3D.Transform>
+            </ModelVisual3D>-->
+
+
+            <!--Table-->
+            <ModelVisual3D>
+                <!--<h:FileModelVisual3D  Source="C:\tmp\tt\TableModel.3ds"/>-->
+
+                <!--<h:BoxVisual3D  Width="100" Length="150" Height="100" Center="0,0,0" ></h:BoxVisual3D>-->
+                <ModelVisual3D.Transform>
+                    <Transform3DGroup>
+                        <ScaleTransform3D ScaleX="80" ScaleY="80" ScaleZ="80"/>
+                        <RotateTransform3D>
+                            <RotateTransform3D.Rotation>
+                                <AxisAngleRotation3D Angle="90" Axis="0,1,0"/>
+                            </RotateTransform3D.Rotation>
+                        </RotateTransform3D>
+                        <TranslateTransform3D OffsetX="200" OffsetY="0" OffsetZ="250">
+                        </TranslateTransform3D>
+                    </Transform3DGroup>
                 </ModelVisual3D.Transform>
             </ModelVisual3D>
 
         </h:HelixViewport3D>
-        
+
     </DockPanel>
 </Window>

@@ -31,7 +31,11 @@ namespace SocketPackage
         /// </summary>
         private float[] TMatrix_B = new float[3];
 
-
+        public Boolean IsDeviceACalculated { get; private set; }
+        private int deviceAverageCounter = 0;
+        public Boolean IsDeviceBCalculated { get; private set; }
+        private int deviceBverageCounter = 0;
+        private int maxCounter = 60;
         public void Analyze_RT_Matrix(CameraSpacePoint left, CameraSpacePoint right, CameraSpacePoint torsolCenter, DEVICE_ID deviceID)
         {
             // 存放左右兩肩的中心點
@@ -83,41 +87,82 @@ namespace SocketPackage
             transitionMatrix.Y = -(D * shoulderCenter.X + E * shoulderCenter.Y + F * shoulderCenter.Z);
             transitionMatrix.Z = -(G * shoulderCenter.X + H * shoulderCenter.Y + I * shoulderCenter.Z);
             #endregion
-
+            
 
             if (deviceID == DEVICE_ID.DEVICE_A)
             {
-                RMatrix_A[0] = A;
-                RMatrix_A[1] = B;
-                RMatrix_A[2] = C;
-                RMatrix_A[3] = D;
-                RMatrix_A[4] = E;
-                RMatrix_A[5] = F;
-                RMatrix_A[6] = G;
-                RMatrix_A[7] = H;
-                RMatrix_A[8] = I;
-
-                TMatrix_A[0] = transitionMatrix.X;
-                TMatrix_A[1] = transitionMatrix.Y;
-                TMatrix_A[2] = transitionMatrix.Z;
-            }
-            else
-            {
-                if (deviceID == DEVICE_ID.DEVICE_B)
+                if (deviceAverageCounter < maxCounter)
                 {
-                    RMatrix_B[0] = A;
-                    RMatrix_B[1] = B;
-                    RMatrix_B[2] = C;
-                    RMatrix_B[3] = D;
-                    RMatrix_B[4] = E;
-                    RMatrix_B[5] = F;
-                    RMatrix_B[6] = G;
-                    RMatrix_B[7] = H;
-                    RMatrix_B[8] = I;
+                    RMatrix_A[0] += A;
+                    RMatrix_A[1] += B;
+                    RMatrix_A[2] += C;
+                    RMatrix_A[3] += D;
+                    RMatrix_A[4] += E;
+                    RMatrix_A[5] += F;
+                    RMatrix_A[6] += G;
+                    RMatrix_A[7] += H;
+                    RMatrix_A[8] += I;
 
-                    TMatrix_B[0] = transitionMatrix.X;
-                    TMatrix_B[1] = transitionMatrix.Y;
-                    TMatrix_B[2] = transitionMatrix.Z;
+                    TMatrix_A[0] += transitionMatrix.X;
+                    TMatrix_A[1] += transitionMatrix.Y;
+                    TMatrix_A[2] += transitionMatrix.Z;
+                    deviceAverageCounter++;
+                }
+                else
+                {
+                    RMatrix_A[0] %= maxCounter;
+                    RMatrix_A[1] %= maxCounter;
+                    RMatrix_A[2] %= maxCounter;
+                    RMatrix_A[3] %= maxCounter;
+                    RMatrix_A[4] %= maxCounter;
+                    RMatrix_A[5] %= maxCounter;
+                    RMatrix_A[6] %= maxCounter;
+                    RMatrix_A[7] %= maxCounter;
+                    RMatrix_A[8] %= maxCounter;
+
+                    TMatrix_A[0] %= maxCounter;
+                    TMatrix_A[1] %= maxCounter;
+                    TMatrix_A[2] %= maxCounter;
+                    IsDeviceACalculated = true;
+                }
+
+
+            }
+            else if (deviceID == DEVICE_ID.DEVICE_B)
+            {
+                if (deviceBverageCounter < maxCounter)
+                {
+                    RMatrix_B[0] += A;
+                    RMatrix_B[1] += B;
+                    RMatrix_B[2] += C;
+                    RMatrix_B[3] += D;
+                    RMatrix_B[4] += E;
+                    RMatrix_B[5] += F;
+                    RMatrix_B[6] += G;
+                    RMatrix_B[7] += H;
+                    RMatrix_B[8] += I;
+
+                    TMatrix_B[0] += transitionMatrix.X;
+                    TMatrix_B[1] += transitionMatrix.Y;
+                    TMatrix_B[2] += transitionMatrix.Z;
+                    deviceBverageCounter++;
+                }
+                else
+                {
+                    RMatrix_B[0] %= maxCounter;
+                    RMatrix_B[1] %= maxCounter;
+                    RMatrix_B[2] %= maxCounter;
+                    RMatrix_B[3] %= maxCounter;
+                    RMatrix_B[4] %= maxCounter;
+                    RMatrix_B[5] %= maxCounter;
+                    RMatrix_B[6] %= maxCounter;
+                    RMatrix_B[7] %= maxCounter;
+                    RMatrix_B[8] %= maxCounter;
+
+                    TMatrix_B[0] %= maxCounter;
+                    TMatrix_B[1] %= maxCounter;
+                    TMatrix_B[2] %= maxCounter;
+                    IsDeviceBCalculated = true;
                 }
             }
         }
@@ -146,6 +191,10 @@ namespace SocketPackage
         Matrix<float> RMatrix_A2S_Inversed;
         Matrix<float> RMatrix_B2S;
         Matrix<float> TMatrix_BminusA;
+        public bool IsRTMatrixCalculated { get; set; }
+        /// <summary>
+        /// 計算兩裝置的旋轉矩陣
+        /// </summary>
         public void Analyze_RT_Matrix_TwoDevice()
         {
             var M = Matrix<float>.Build;
@@ -171,15 +220,7 @@ namespace SocketPackage
             });
 
             TMatrix_B2A = (RMatrix_A2S_Inversed * TMatrix_BminusA).ToArray();
-
-
-
-            //float[,] x = { { 2, 2, 5 }, { -2, 1, 2 }, { 6, 3, 9 } };
-
-            //var M = Matrix<float>.Build;
-            //Matrix<float> matrix = M.DenseOfArray(x);
-            //float a = matrix[0, 1];
-            //Console.WriteLine(matrix.Inverse());
+            this.IsRTMatrixCalculated = true;
         }
 
         public CameraSpacePoint Transform_B2A(CameraSpacePoint Point)
@@ -188,10 +229,10 @@ namespace SocketPackage
             CameraSpacePoint _Point = new CameraSpacePoint();
 
             ////假資料
-           // RMatrix_B2A = new float[,] {{1,0,0},{0,1,0},{0,0,1}};
+            // RMatrix_B2A = new float[,] {{1,0,0},{0,1,0},{0,0,1}};
 
             ////假資料
-           // TMatrix_B2A = new float[,] { { 0.004f }, { 0.03f }, { 0.05f } };
+            // TMatrix_B2A = new float[,] { { 0.004f }, { 0.03f }, { 0.05f } };
 
             _Point.X = RMatrix_B2A[0, 0] * Point.X + RMatrix_B2A[0, 1] * Point.Y + RMatrix_B2A[0, 2] * Point.Z + TMatrix_B2A[0, 0];
             _Point.Y = RMatrix_B2A[1, 0] * Point.X + RMatrix_B2A[1, 1] * Point.Y + RMatrix_B2A[1, 2] * Point.Z + TMatrix_B2A[1, 0];
@@ -274,12 +315,14 @@ namespace SocketPackage
                 {
                     Debug.Print("{0}  ", mat2[j, 0]);
                 }
-                
+
             }
-
-           
-
         }
+
+
+
+
+
     }
 
 
@@ -290,6 +333,8 @@ namespace SocketPackage
     public enum DEVICE_ID
     {
         DEVICE_A,
-        DEVICE_B
+        DEVICE_B,
+        DEVICE_C,
+        DEVICE_D
     }
 }

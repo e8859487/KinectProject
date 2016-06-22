@@ -23,12 +23,11 @@
 
             <Button x:Name="PlayButton" Content="PLAY" Click="PlayButton_Click" />
             <Button x:Name="SynchronousPlay" Content="SynchronousPlay" Click="SynChronousButton_Click"/>
+            <Button x:Name="SendTest" Content="SendMsg" Click="SendTest_Click"/>
             <StatusBar Height="100" VerticalAlignment="Bottom" Foreground="{StaticResource MediumGreyBrush}">
                 <StatusBarItem x:Name="KinectStatus" Content="{Binding KinectStatusText}" />
             </StatusBar>
         </StackPanel>
-
-
 
         <h:HelixViewport3D x:Name="view1" ModelUpDirection="0,1,0" ShowCoordinateSystem="True" Background="WhiteSmoke">
             <h:HelixViewport3D.Camera>
@@ -41,7 +40,6 @@
 
             <h:GridLinesVisual3D Normal="0,1,0" LengthDirection="1,0,0" Length="1000" Width="1000" Center="0,0,0" Fill="Red" MajorDistance="100" MinorDistance="10" Thickness="0.2"/>
             <h:CubeVisual3D Center="0,300,0" SideLength="1000" Material="{h:Material Red, Opacity=0.01}"/>
-
 
         </h:HelixViewport3D>
     </DockPanel>

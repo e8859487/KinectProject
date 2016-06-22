@@ -8,7 +8,7 @@ namespace SocketPackage
 {
     public delegate void changedEventHandler(object sender, EventArgs e);
 
-    public  enum TRANSMIT_STATUS{
+    public enum TRANSMIT_STATUS{
         Received,
         StartRecord,
         Recording,
@@ -18,7 +18,7 @@ namespace SocketPackage
         StopPlaybackClip
     }
 
-   public  class Status
+   public  class PlayBackStatus
     {
         public event changedEventHandler changed;
 
@@ -40,17 +40,16 @@ namespace SocketPackage
             }
         }
 
-        public Status()
+        public PlayBackStatus()
         {
 
         }
 
-        protected virtual void OnChanged(EventArgs e){
+        protected void OnChanged(EventArgs e){
             if(changed != null){
                 changed(this,e);
             }
         }
-
     }
 
 

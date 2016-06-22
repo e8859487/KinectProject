@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
+VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketPackage", "SocketPackage\SocketPackage.csproj", "{7B39A687-9CFA-4C8F-A3B7-69D34C257C6E}"
 EndProject
@@ -29,6 +29,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultipleKinectMaster3D", "MultipleKinectMaster3D\MultipleKinectMaster3D.csproj", "{C9490801-409C-4555-8D2F-42624398207F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultipleKinectClient3D", "MultipleKinectClient3D\MultipleKinectClient3D.csproj", "{1ABD4EC5-E4C6-4896-98E9-AA431B7D293F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpaceDepolyment", "SpaceDepolyment\SpaceDepolyment.csproj", "{D9FCEE34-0E24-4CAA-8647-C7F06F2BA70F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseService", "DatabaseService\DatabaseService.csproj", "{3C57879E-8852-4C89-9615-9A0A5B5F8CCD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -193,6 +197,34 @@ Global
 		{1ABD4EC5-E4C6-4896-98E9-AA431B7D293F}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{1ABD4EC5-E4C6-4896-98E9-AA431B7D293F}.Release|Win32.ActiveCfg = Release|Any CPU
 		{1ABD4EC5-E4C6-4896-98E9-AA431B7D293F}.Release|x64.ActiveCfg = Release|Any CPU
+		{D9FCEE34-0E24-4CAA-8647-C7F06F2BA70F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9FCEE34-0E24-4CAA-8647-C7F06F2BA70F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9FCEE34-0E24-4CAA-8647-C7F06F2BA70F}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{D9FCEE34-0E24-4CAA-8647-C7F06F2BA70F}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{D9FCEE34-0E24-4CAA-8647-C7F06F2BA70F}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{D9FCEE34-0E24-4CAA-8647-C7F06F2BA70F}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{D9FCEE34-0E24-4CAA-8647-C7F06F2BA70F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D9FCEE34-0E24-4CAA-8647-C7F06F2BA70F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9FCEE34-0E24-4CAA-8647-C7F06F2BA70F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D9FCEE34-0E24-4CAA-8647-C7F06F2BA70F}.Release|ARM.ActiveCfg = Release|Any CPU
+		{D9FCEE34-0E24-4CAA-8647-C7F06F2BA70F}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{D9FCEE34-0E24-4CAA-8647-C7F06F2BA70F}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{D9FCEE34-0E24-4CAA-8647-C7F06F2BA70F}.Release|Win32.ActiveCfg = Release|Any CPU
+		{D9FCEE34-0E24-4CAA-8647-C7F06F2BA70F}.Release|x64.ActiveCfg = Release|Any CPU
+		{3C57879E-8852-4C89-9615-9A0A5B5F8CCD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C57879E-8852-4C89-9615-9A0A5B5F8CCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C57879E-8852-4C89-9615-9A0A5B5F8CCD}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{3C57879E-8852-4C89-9615-9A0A5B5F8CCD}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{3C57879E-8852-4C89-9615-9A0A5B5F8CCD}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{3C57879E-8852-4C89-9615-9A0A5B5F8CCD}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{3C57879E-8852-4C89-9615-9A0A5B5F8CCD}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3C57879E-8852-4C89-9615-9A0A5B5F8CCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C57879E-8852-4C89-9615-9A0A5B5F8CCD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C57879E-8852-4C89-9615-9A0A5B5F8CCD}.Release|ARM.ActiveCfg = Release|Any CPU
+		{3C57879E-8852-4C89-9615-9A0A5B5F8CCD}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{3C57879E-8852-4C89-9615-9A0A5B5F8CCD}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{3C57879E-8852-4C89-9615-9A0A5B5F8CCD}.Release|Win32.ActiveCfg = Release|Any CPU
+		{3C57879E-8852-4C89-9615-9A0A5B5F8CCD}.Release|x64.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

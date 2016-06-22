@@ -15,7 +15,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -42,6 +42,10 @@
     <Reference Include="HelixToolkit.Wpf">
       <HintPath>..\packages\HelixToolkit.Wpf.2015.1.698\lib\net45\HelixToolkit.Wpf.dll</HintPath>
     </Reference>
+    <Reference Include="log4net, Version=1.2.13.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.Activities.Extensions">
       <HintPath>..\packages\Microsoft.Activities.Extensions.2.0.6.9\lib\Net45\Microsoft.Activities.Extensions.dll</HintPath>
     </Reference>
@@ -61,12 +65,18 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="Zlib.Portable, Version=1.11.0.0, Culture=neutral, PublicKeyToken=431cba815f6a8b5b, processorArchitecture=MSIL">
+      <HintPath>..\packages\Zlib.Portable.Signed.1.11.0\lib\portable-net4+sl5+wp8+win8+wpa81+MonoTouch+MonoAndroid\Zlib.Portable.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="SerialPortIO.cs" />
+    <Compile Include="UISetting\WallSetting.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -104,6 +114,9 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="key.p12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -118,6 +131,10 @@
     <Resource Include="dll說明.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DatabaseService\DatabaseService.csproj">
+      <Project>{3c57879e-8852-4c89-9615-9a0a5b5f8ccd}</Project>
+      <Name>DatabaseService</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MotionFSM\MotionFSM.csproj">
       <Project>{27e41e7f-87da-460a-9817-83f268af85f7}</Project>
       <Name>MotionFSM</Name>
@@ -125,6 +142,10 @@
     <ProjectReference Include="..\SocketPackage\SocketPackage.csproj">
       <Project>{7b39a687-9cfa-4c8f-a3b7-69d34c257c6e}</Project>
       <Name>SocketPackage</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SpaceDepolyment\SpaceDepolyment.csproj">
+      <Project>{d9fcee34-0e24-4caa-8647-c7f06f2ba70f}</Project>
+      <Name>SpaceDepolyment</Name>
     </ProjectReference>
     <ProjectReference Include="..\XmlManager\XmlManager.csproj">
       <Project>{e796a79c-d0f4-4aa4-9eda-ee5725eb070f}</Project>

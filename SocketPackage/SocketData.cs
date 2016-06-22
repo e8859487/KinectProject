@@ -11,9 +11,15 @@ namespace SocketPackage
 
     public class SocketData
     {
+        private static int DeviceNumberAssigner = 1;
+        
         public event changeEventHandler changed;
 
-        protected virtual void OnChange(EventArgs e)
+        public PlayBackStatus playbackStatus;
+
+
+
+        protected void OnChange(EventArgs e)
         {
             if (changed != null)
             {
@@ -21,10 +27,24 @@ namespace SocketPackage
             }
         }
 
-
         #region Properties and getter,setter
-        MyBody[] body = new MyBody[7];
+        //裝置辨識ID
+        private int socketClientId = 0;
+        public int SocketClientId
+        {
+            get { return socketClientId; }
+            set { socketClientId = value; }
+        }
 
+        //frameNumbers
+        private int framenumbers = 0;
+        public int Framenumbers
+        {
+            get { return framenumbers; }
+            set { framenumbers = value; }
+        }
+
+        MyBody[] body = new MyBody[7];
         public MyBody[] Body
         {
             get { return body; }
@@ -45,7 +65,7 @@ namespace SocketPackage
             set
             {
                 _ImgBuffer = value;
-                OnChange(EventArgs.Empty);
+                //OnChange(EventArgs.Empty);
             }
         }
 
@@ -53,11 +73,14 @@ namespace SocketPackage
         private string[] _SBodyJoints = new string[7];
         public string[] SBodyJoints
         {
-            get { return _SBodyJoints; 
+            get
+            {
+                return _SBodyJoints;
             }
-            set { 
+            set
+            {
                 _SBodyJoints = value;
-            OnChange(EventArgs.Empty);
+               // OnChange(EventArgs.Empty);
             }
         }
 
@@ -67,23 +90,30 @@ namespace SocketPackage
         {
             get { return _IsTracked; }
             set { _IsTracked = value; }
-        } 
+        }
+
+
+        /// <summary>
+        /// 裝置辨認編號，依照連線順序自動給以裝置編號，起始值為1。
+        /// </summary>
+        public int DeviceSerialNum { get;private set; }
         #endregion
 
 
         //Constructor
-        public SocketData() {
-
+        public SocketData()
+        {
             //初始化人體物件陣列 預設7個  [0-6]
             for (int i = 0; i < body.Length; ++i)
             {
                 body[i] = new MyBody();
             }
-        
+            playbackStatus = new PlayBackStatus();
+
+            //自動依照連線順序給以裝置編號
+            this.DeviceSerialNum = DeviceNumberAssigner;
+            DeviceNumberAssigner++;
         }
-
-      //  private ViewPointManager viewPointManager = new ViewPointManager();
-
 
         /// <summary>
         ///  將骨架座標字串轉換成 Mybody 物件儲存，存入jointsInfo Dictionrys內
@@ -100,7 +130,7 @@ namespace SocketPackage
                     string skeletonIndex = pieces[0];
 
                     //設定使用者ID
-                    b.TrackingId = (ulong)Int64.Parse( skeletonIndex);
+                    b.TrackingId = (ulong)Int64.Parse(skeletonIndex);
 
                     if (pieces.Length > 1)
                     {
@@ -117,7 +147,7 @@ namespace SocketPackage
                             Joint tempJoint = new Joint();
 
                             tempJoint.TrackingState = TrackingState.Tracked;
-                            tempJoint.JointType =jointType;
+                            tempJoint.JointType = jointType;
 
                             tempJoint.Position = jointsStr2CameraSpacePoint(jointsPieces[jointTypeValue]);
                             if (b.jointsInfo.ContainsKey(jointType))
@@ -130,32 +160,13 @@ namespace SocketPackage
                             }
 
                         }
-
-                        //計算RT矩陣
-                        //viewPointManager.Analyze_RT_Matrix(b.jointsInfo[JointType.ShoulderLeft].Position, b.jointsInfo[JointType.ShoulderRight].Position, b.jointsInfo[JointType.SpineMid].Position,DEVICE_ID.DEVICE_B);
-
-
-                        ////視角轉換
-                        //foreach (KeyValuePair<JointType, Joint> item in b.jointsInfo)
-                        //{
-                        //    Joint tempJoint = item.Value;
-                        //    tempJoint.Position = viewPointManager.Transform(tempJoint.Position);
-
-                        //    if (b.jointsInfo_VPTransfored.ContainsKey(item.Key))
-                        //    {
-                        //        b.jointsInfo_VPTransfored[item.Key] = tempJoint;
-                        //    }
-                        //    else
-                        //    {
-                        //        b.jointsInfo_VPTransfored.Add(item.Key, tempJoint);
-                        //    }
-                            
-                        //}
-                        
+                    }
+                    else
+                    {
+                        Debug.Print(">>SocketData.ProcessJointsInfo Data Format Error");
                     }
                 }
-
-                index++; 
+                index++;
             }
         }
 
@@ -163,7 +174,7 @@ namespace SocketPackage
         ///  [Not Suggest] 如果要使用jointsInfo 請改用 ProcessJointsInfo()
         ///  將骨架座標轉換成Mybody物件儲存，存入joints Dictionrys內
         /// </summary>
-        public void processJoints( )
+        public void processJoints()
         {
             int index = 0;
             foreach (MyBody b in body)
@@ -198,12 +209,10 @@ namespace SocketPackage
                             {
                                 b.joints.Add(jointType, new myCameraSpacePoint(jointsPieces[jointTypeValue]));
                             }
-
                         }
                     }
-
                 }
-                index++; 
+                index++;
 
             }
         }
@@ -227,9 +236,6 @@ namespace SocketPackage
             return csp;
         }
 
-
-     
-
     }
 
     public class MyBody
@@ -239,8 +245,9 @@ namespace SocketPackage
             MyBody newBody = new MyBody();
 
 
-            foreach(KeyValuePair<JointType,Joint> items in body.Joints){
-                  newBody.jointsInfo.Add(items.Key,items.Value);
+            foreach (KeyValuePair<JointType, Joint> items in body.Joints)
+            {
+                newBody.jointsInfo.Add(items.Key, items.Value);
             }
 
             newBody.isTracked = body.IsTracked;
@@ -253,7 +260,7 @@ namespace SocketPackage
         }
 
 
-        public Boolean isTracked ;
+        public Boolean isTracked;
 
         /// <summary>
         /// [Not Suggest] please use jointsInfo intead.
@@ -276,7 +283,8 @@ namespace SocketPackage
         /// </summary>
         public ulong TrackingId { get; set; }
 
-        public MyBody(){
+        public MyBody()
+        {
 
             joints = new Dictionary<JointType, myCameraSpacePoint>();
 
@@ -291,17 +299,17 @@ namespace SocketPackage
         {
             foreach (string js in Enum.GetNames(typeof(JointType)))
             {
-                joints.Add((JointType)Enum.Parse(typeof(JointType),js), null);
+                joints.Add((JointType)Enum.Parse(typeof(JointType), js), null);
             }
         }
     }
 
     public class myCameraSpacePoint
     {
-       public float X;
-       public float Y;
-       public float Z;
-       public string joints_XYZ = string.Empty;
+        public float X;
+        public float Y;
+        public float Z;
+        public string joints_XYZ = string.Empty;
 
         /// <summary>
         /// Set x,y,z.
@@ -321,11 +329,11 @@ namespace SocketPackage
         /// </summary>
         /// <param name="joints_XYZ">Format : X,Y,Z</param>
         /// <param name="isStoreString"></param>
-        public myCameraSpacePoint(string joints_XYZ,Boolean isStoreString = false)
+        public myCameraSpacePoint(string joints_XYZ, Boolean isStoreString = false)
         {
-            if (isStoreString) 
-            { 
-                 this.joints_XYZ = joints_XYZ;
+            if (isStoreString)
+            {
+                this.joints_XYZ = joints_XYZ;
             }
 
             string[] pieces = joints_XYZ.Split(',');
@@ -344,10 +352,5 @@ namespace SocketPackage
             }
         }
     }
-
-    
-
-
-
 
 }

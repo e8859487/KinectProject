@@ -37,7 +37,7 @@ namespace MultipleKinectMaster3D
             }
             else
             {
-                Debug.Print(" >> MotionAnalyzeManager.AddMotionAnalyzer already exixt TrackingId " + TrackingId.ToString());
+             //   Debug.Print(" >> MotionAnalyzeManager.AddMotionAnalyzer already exixt TrackingId " + TrackingId.ToString());
             }
         }
 

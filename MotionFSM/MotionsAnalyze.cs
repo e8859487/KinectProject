@@ -26,7 +26,7 @@ namespace MotionFSM
         private float deviceHeight = 0;
 
 
-        public string currentMotions = string.Empty;
+        private string currentMotions = string.Empty;
         /// <summary>
         /// 記錄當下動作
         /// </summary>

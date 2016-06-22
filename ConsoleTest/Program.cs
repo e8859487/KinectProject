@@ -11,7 +11,6 @@ using XmlManager;
 using log4net;
 using log4net.Config;
 
-
 using System.Activities;
 using System.Threading;
 using MotionFSM;
@@ -22,6 +21,9 @@ namespace ConsoleTest
     using MyCollections;
     using System.Diagnostics;
     using MathNet.Numerics.LinearAlgebra;
+    using System.Globalization;
+    using DatabaseService;
+    using SocketPackage;
 
     class Program 
     {
@@ -56,37 +58,66 @@ namespace ConsoleTest
            }
        }
 
+         private static FusionTableServices fusionTableServices; 
 
 
         static void Main(string[] args)
         {
+            Console.WriteLine(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss",
+                                CultureInfo.InvariantCulture));
+            const string USERMOTIONSID = "1VTk9u3ZyUCgvEbbt8gbFyHagrTfdYpcjfs7INwOl";
+            const string USERMOTIONSID1 = "16gJUCOJnU-9OTSxAX6QQ0wFd3lFUzA3MF909cDAo";
+            const string USERMOTIONSID2 = "1gDJnT4RCKXzFBHu-S60FSF_cCd_tSaa_sdPtN5FC";
+            const string USERMOTIONSID3 = "1jK__pXEYjimr0aDQ9fzr_LsLaqQftk6EqjiTexzW";
 
-            //MotionsAnalyze motionAnalyzer = new MotionsAnalyze();
-            //Thread.Sleep(1000);
-            //motionAnalyzer.ResumeBookmark(MotionTransitions.E_Walk);
-            //Thread.Sleep(1000);
-            //motionAnalyzer.ResumeBookmark(MotionTransitions.E_Stop);
+            fusionTableServices = new FusionTableServices();
+            Console.WriteLine(Enum.GetName(typeof(DEVICE_ID), 1));
+           // fusionTableServices.Delete(USERMOTIONSID2, "");
+
+            //List<int> FirstArray = new List<int>();
+            //Random r = new Random();
+            //r.Next(0, 100);
+
+            //for (int i = 0; i < 10; i++)
+            //{
+            //    FirstArray.Add(r.Next(0,100));
+            //}
+            //foreach (int val in FirstArray)
+            //{
+            //    Console.WriteLine(val);
+            //}
+
+                //MotionsAnalyze motionAnalyzer = new MotionsAnalyze();
+                //Thread.Sleep(1000);
+                //motionAnalyzer.ResumeBookmark(MotionTransitions.E_Walk);
+                //Thread.Sleep(1000);
+                //motionAnalyzer.ResumeBookmark(MotionTransitions.E_Stop);
 
 
-            #region matrix operate
+                #region matrix operate
 
-            //float[,] x = { { 2, 2, 5 }, { -2, 1, 2 }, { 6, 3, 9 } };
+                //float[,] x = { { 2, 2, 5 }, { -2, 1, 2 }, { 6, 3, 9 } };
 
-            //var M = Matrix<float>.Build;
-            //Matrix<float> matrix = M.DenseOfArray(x);
-            //float a = matrix[0, 1];
-            //Console.WriteLine(matrix.Inverse());
-
-            
-            #endregion
-           
+                //var M = Matrix<float>.Build;
+                //Matrix<float> matrix = M.DenseOfArray(x);
+                //float a = matrix[0, 1];
+                //Console.WriteLine(matrix.Inverse());
 
 
+                #endregion
+            int b = 2;
+            int c;
+            int a = (b == 1) ? c = 2 : c = 3;
+            Console.WriteLine(a);
+            Console.WriteLine(b);
+            Console.WriteLine(c);
 
 
 
-            #region test object shadowcopy
-            /*
+
+
+                #region test object shadowcopy
+                /*
             aaa[] a3 = new aaa[3];
             aaa[] b3 = new aaa[3];
             for (int i = 0; i < a3.Length; i++)
@@ -104,10 +135,10 @@ namespace ConsoleTest
             Console.WriteLine("b3" + b3[1].i);
             Console.WriteLine("a3" + a3[1].i); 
  */
-            #endregion
+                #endregion
 
-            #region WWF test 2
-            /*
+                #region WWF test 2
+                /*
             
             Program pg = new Program();
 
@@ -174,11 +205,11 @@ namespace ConsoleTest
 
             } 
             */
-            #endregion
+                #endregion
 
-            #region test wf print state
+                #region test wf print state
 
-            /*
+                /*
 
             Program pg = new Program();
             pg.startFSMRuntime();
@@ -207,22 +238,22 @@ namespace ConsoleTest
                 
             }
             */
-            
-            #endregion
 
-            #region test Enum
-            /*
+                #endregion
+
+                #region test Enum
+                /*
 
             foreach (string str in Enum.GetNames(typeof(JointType)))
             {
                 Console.WriteLine(str);
             }
             */
-            #endregion
+                #endregion
 
-            #region test callback
+                #region test callback
 
-            /*
+                /*
             ListWithChangeEvent list = new ListWithChangeEvent();
 
             EventListener listener = new EventListener(list);
@@ -231,11 +262,11 @@ namespace ConsoleTest
             listener.Detach();
             */
 
-            #endregion
+                #endregion
 
-            #region test log4net
+                #region test log4net
 
-            /*
+                /*
             XmlConfigurator.Configure(new System.IO.FileInfo(@"./config.xml"));
 
             ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -248,11 +279,11 @@ namespace ConsoleTest
             Console.Write("HI BITCH");
             */
 
-            #endregion
+                #endregion
 
-            #region testString length socket transmit
+                #region testString length socket transmit
 
-            /*
+                /*
             string tempStr = "(-0.1302,-0.2052,1.9159)|(-0.1638,0.1214,1.8859)|(-0.1942,0.4356,1.8423)|(-0.2429,0.5843,1.8060)|(-0.3477,0.2696,1.8958)|(-0.3577,-0.0219,1.9069)|(-0.3491,-0.2514,1.8331)|(-0.3399,-0.2885,1.8102)|(-0.0189,0.3171,1.8227)|(0.0899,0.0664,1.8554)|(0.0757,-0.1619,1.7762)|(0.0660,-0.2193,1.7650)|(-0.2024,-0.2120,1.8985)|(-0.2116,-0.5718,1.8008)|(-0.2421,-0.8602,1.7249)|(-0.2541,-0.8841,1.6147)|(-0.0527,-0.1901,1.8574)|(0.0076,-0.5683,1.9041)|(0.0170,-0.9306,2.0352)|(0.0341,-0.9929,1.9632)|(-0.1871,0.3588,1.8555)|(-0.3386,-0.3539,1.7809)|(-0.3672,-0.3091,1.7729)|(0.0460,-0.2963,1.7455)|(0.0787,-0.2310,1.7213)|(-0.1302,-0.2052,1.9159)|(-0.1638,0.1214,1.8859)|(-0.1942,0.4356,1.8423)|(-0.2429,0.5843,1.8060)|(-0.3477,0.2696,1.8958)|(-0.3577,-0.0219,1.9069)|(-0.3491,-0.2514,1.8331)|(-0.3399,-0.2885,1.8102)|(-0.0189,0.3171,1.8227)|(0.0899,0.0664,1.8554)|(0.0757,-0.1619,1.7762)|(0.0660,-0.2193,1.7650)|(-0.2024,-0.2120,1.8985)|(-0.2116,-0.5718,1.8008)|(-0.2421,-0.8602,1.7249)|(-0.2541,-0.8841,1.6147)|(-0.0527,-0.1901,1.8574)|(0.0076,-0.5683,1.9041)|(0.0170,-0.9306,2.0352)|(0.0341,-0.9929,1.9632)|(-0.1871,0.3588,1.8555)|(-0.3386,-0.3539,1.7809)|(-0.3672,-0.3091,1.7729)|(0.0460,-0.2963,1.7455)|(0.0787,-0.2310,1.7213)|";
             
             byte[] tempbyte = System.Text.Encoding.UTF8.GetBytes(tempStr);
@@ -262,11 +293,11 @@ namespace ConsoleTest
 
             */
 
-            #endregion
+                #endregion
 
-            #region 練習讀取XML讀檔
+                #region 練習讀取XML讀檔
 
-            /*
+                /*
              * 
              * 
             XmlReader xmlReader = new XmlReader(@".\Setting.xml");
@@ -276,10 +307,10 @@ namespace ConsoleTest
              * 
             */
 
-            #endregion
+                #endregion
 
-            #region 練習Client端網路連接
-            /*
+                #region 練習Client端網路連接
+                /*
             //方法二
             try
             {
@@ -314,21 +345,21 @@ namespace ConsoleTest
             Console.ReadLine(); 
              * */
 
-            #endregion
+                #endregion
 
-            #region 練習double to string format
+                #region 練習double to string format
 
-            /*
+                /*
             float ff = 0.123456789f;
             Console.Write(ff.ToString("0.0000"));
 
             Console.Read();
             */
 
-            #endregion
+                #endregion
 
-            #region 練習memroystream
-            /*
+                #region 練習memroystream
+                /*
             MemoryStream ms = new MemoryStream();
             string str1 = "First String";
             string str2 = "Second String";
@@ -408,9 +439,9 @@ namespace ConsoleTest
             Console.WriteLine(outputStr);
             Console.ReadLine();
              */
-            #endregion
+                #endregion
 
-            Console.ReadLine();
+                Console.ReadLine();
 
         }
 

@@ -19,7 +19,7 @@ namespace SocketPackage
 
     public class SocketServer
     {
-        #region private property
+        #region Private property
 
         /// socket server TCP port number
         private int _PortNumber;
@@ -36,20 +36,14 @@ namespace SocketPackage
         //Log
         private ILog log = null;
 
+        //封包資料 依照機台來分辨
+        public List<SocketData> socketDataList = null;
+
         #endregion
 
-        #region static public property
+        #region === Static Public Property ===
 
-
-
-        public static  Status status = new Status();
-
-        public static  SocketData imgObj = new SocketData();
-        
-        private void StatusChange(object sender,EventArgs e)
-        {
-            log.Info("StatusChange Fired");
-        }
+       // public static  PlayBackStatus status = new PlayBackStatus();
 
         //my callback
         public event changeEventHandler changed;
@@ -61,10 +55,10 @@ namespace SocketPackage
             }
         }
 
-        private void SocketDataChanged(object sender , EventArgs e)
-        {
-            this.OnChanged(EventArgs.Empty);
-        }
+        //private void SocketDataChanged(object sender , EventArgs e)
+        //{
+        //    this.OnChanged(EventArgs.Empty);
+        //}
 
         #endregion
 
@@ -72,7 +66,7 @@ namespace SocketPackage
 
         /// constructor
         //socket server TCP port number
-        public SocketServer(int inPortNumber)
+        public SocketServer(int inPortNumber,List<SocketData> SocketDataStorage)
         {
             XmlConfigurator.Configure(new System.IO.FileInfo(@"./config.xml"));
             log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -80,15 +74,17 @@ namespace SocketPackage
             this._PortNumber = inPortNumber;
             _bgwServer.DoWork += new DoWorkEventHandler(_bgwServer_DoWork);
 
-//            status.changed += new changedEventHandler(StatusChange);
+            socketDataList = SocketDataStorage;
 
-            imgObj.changed += new changeEventHandler(SocketDataChanged);
+            //socketData.changed += new changeEventHandler(SocketDataChanged);
         }
         
         #endregion
 
         #region Public Method
-
+        /// <summary>
+        /// Start network socket work.
+        /// </summary>
         public void Start()
         {
             if (!_bgwServer.IsBusy)
@@ -96,22 +92,29 @@ namespace SocketPackage
         }
 
         public  void SendStartAsychronousRecord(){
-            status.SocketStatus = TRANSMIT_STATUS.StartRecord;
+           // status.SocketStatus = TRANSMIT_STATUS.StartRecord;
+            Debug.Print(">>SocketServer.SendStartAsychronousRecord Error ");
         }
 
         public void SendStopAsychronousRecord()
         {
-            status.SocketStatus = TRANSMIT_STATUS.StopRecord;
+            //status.SocketStatus = TRANSMIT_STATUS.StopRecord;
+            Debug.Print(">>SocketServer.SendStopAsychronousRecord Error ");
+
         }
 
         public static void SendStartAsychronousPlay()
         {
-            status.SocketStatus = TRANSMIT_STATUS.StartPlaybackClip;
+            //status.SocketStatus = TRANSMIT_STATUS.StartPlaybackClip;
+            Debug.Print(">>SocketServer.SendStartAsychronousPlay Error ");
+
         }
 
         public void SendStopAsychronousPlay()
         {
-            status.SocketStatus = TRANSMIT_STATUS.StopPlaybackClip;
+            //status.SocketStatus = TRANSMIT_STATUS.StopPlaybackClip;
+            Debug.Print(">>SocketServer.SendStopAsychronousPlay Error ");
+
         }
   
         #endregion
@@ -147,18 +150,18 @@ namespace SocketPackage
                     log.Info(" >> " + "Client Request No:" + Convert.ToString(_ClientNo) + " started!");
                     
                     Debug.Print(string.Format(" >> " + "Client Request No: {0} started!", Convert.ToString(_ClientNo)));
+                    
+                    //新增一個儲存物件
+                    SocketData socketData = new SocketData();
+                    socketDataList.Add(socketData);
 
                     //產生 BackgroundWorker 負責處理每一個 Socket Client 的要求
-                    ClientRequestHandler handler = new ClientRequestHandler(_ClientNo, socket4Client);
+                    ClientRequestHandler handler = new ClientRequestHandler(_ClientNo, socket4Client, socketData);
                     handler.DoCommunicate();
 
                 }
             }
-            //catch (Exception exp)
-            {
-                //sMessages.Add(exp.ToString());
-              //  log.Error("_bgwServer_DoWork", exp);
-            }
+
         }
         
         #endregion

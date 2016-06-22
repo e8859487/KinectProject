@@ -14,36 +14,53 @@ namespace SocketPackage
 {
     public class ClientRequestHandler
     {
-          public  const int IMG_SIZE = 0;
-          public  const int BODY_NUMBER_SIZE = 1;
-          public  const int BODY_SKELETION_STR_SIZE = 3;
- 
+        //定義socket封包資料格式長度
+        /// <summary>
+        /// 0
+        /// </summary>
+        public const int IMG_LENTH = 0;
+        /// <summary>
+        /// 1
+        /// </summary>
+        public const int BODY_NUMBER_LENTH = 1;
+        /// <summary>
+        /// 3
+        /// </summary>
+        public const int BODY_SKELETION_STR_LENTH = 3;
+
         #region private property
 
         /// socket client 識別號碼
-        private int _ClientNo;
+        private int clientNo;
 
         /// socket client reuqest
-        private TcpClient _TcpClient;
+        private TcpClient tcpClient;
 
         //Log Declare
         private ILog log = null;
- 
+
+        //Socket Data
+        private SocketData socketData = null;
         #endregion
 
         #region constructor
-
+        /// <summary>
         /// constructor
-        //socket client 識別號碼
-        //socket client reuqest
-        public ClientRequestHandler(int inClientNo, TcpClient inTcpClient)
+        /// </summary>
+        /// <param name="inClientNo">socket client 識別號碼</param>
+        /// <param name="inTcpClient">Socket client reuqest</param>
+        public ClientRequestHandler(int clientNo, TcpClient tcpClient,SocketData socketData )
         {
             XmlConfigurator.Configure(new System.IO.FileInfo(@"./config.xml"));
             log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-            log.Info(string.Format("ClientNo:{0} , Create successfully!!", inClientNo));
-            this._ClientNo = inClientNo;
-            this._TcpClient = inTcpClient;
+            log.Info(string.Format("ClientNo:{0} , Create successfully!!", clientNo));
+
+            Debug.Print(string.Format("ClientNo:{0} , Create successfully!!", clientNo));
+
+            this.clientNo = clientNo;
+            this.tcpClient = tcpClient;
+            this.socketData = socketData;
         }
 
         #endregion
@@ -64,78 +81,124 @@ namespace SocketPackage
         {
             NetworkStream netStream = null;
             BinaryReader binaryReader = null;
-            //server & client 已經連線完成
+            BinaryWriter binaryWritter = null;
 
-
-            while (_TcpClient.Connected)
+            //送出裝置ID
+            if (tcpClient.Connected)
             {
-
                 //取得網路串流物件，取得來自 socket client 的訊息
-                netStream = _TcpClient.GetStream();
-                if (_TcpClient.ReceiveBufferSize > 0 && netStream.CanRead )
+                netStream = tcpClient.GetStream();
+                binaryWritter = new BinaryWriter(netStream);
+
+                binaryWritter.Write(System.Text.Encoding.UTF8.GetBytes(clientNo.ToString()));
+                binaryWritter.Flush();
+            }
+
+
+            //server & client 已經連線完成
+            while (tcpClient.Connected)
+            {
+                if (tcpClient.ReceiveBufferSize > 0 && netStream.CanRead)
                 {
+                    int socketHead = 0;  //封包標頭 - 區分封包內容
+                    int clientID = 0;   //裝置ID - 區分不同裝置
+
                     try
                     {
-
-                        binaryReader = new BinaryReader(netStream);
-                        //使用2D版本時需要uncommant
-                        //SocketServer.imgObj.ImgBuffer = binaryReader.ReadBytes(IMG_SIZE);
-
-                        SocketServer.imgObj.ImgBuffer = null;
-
-                        string a;
-                        a = System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(BODY_NUMBER_SIZE));
-
-                        int bodyNumbers = int.Parse(a);
-
-                        MyBody body; 
-                        
-                        for (int i = 0; i < bodyNumbers; i++)
+                        if (netStream.CanRead)
                         {
-                            body = SocketServer.imgObj.Body[i];
+                            binaryReader = new BinaryReader(netStream);
 
-                            int strLength = int.Parse(System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(BODY_SKELETION_STR_SIZE)));
-                            SocketServer.imgObj.SBodyJoints[i] = System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(strLength));
-                            body.isTracked = true;
-                        }
+                            //裝置ID (1bit)
+                            clientID = int.Parse(System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(1)));
+                            //Debug.Print(">>ClientRequestHandker.bgwSocket_DoWork: devicesID {0}", devicesID);
 
-                        //設定其他骨架為未追蹤
-                        for (int i = bodyNumbers; i < 7; i++)
-                        {
-                            body = SocketServer.imgObj.Body[i];
-
-                            body.isTracked = false;
-                        }
-                        
-                        
-                        //寫入狀態
-                        if (netStream.CanWrite)
-                        {
-                            int status = (int)SocketServer.status.SocketStatus;
-
-                            netStream.Write(System.Text.Encoding.UTF8.GetBytes(status.ToString()), 0, 1);
-
-                            if (status == (int)SocketPackage.TRANSMIT_STATUS.StartRecord)
-                            {
-                                SocketServer.status.SocketStatus = SocketPackage.TRANSMIT_STATUS.Recording;
-                            }
-                            if (status == (int)SocketPackage.TRANSMIT_STATUS.StartPlaybackClip)
-                            {
-                                SocketServer.status.SocketStatus = SocketPackage.TRANSMIT_STATUS.PlaybackCliping;
-                            }
+                            //取得封包標頭 (1bit)
+                            socketHead = int.Parse(System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(1)));
+                            //Debug.Print(">>ClientRequestHandker.bgwSocket_DoWork: socketHead {0}", socketHead);
                         }
                     }
-                    catch (IOException ee)
+                    catch
+                    {
+                        Debug.Print(">>ClientRequestHandler read socket head error");
+                    }
+
+                    try
+                    {
+                        switch (socketHead)
+                        {
+                            case 1:
+                                #region 讀取3D骨架資料
+                                binaryReader = new BinaryReader(netStream);
+                                //使用2D版本時需要uncommant
+                                //SocketServer.imgObj.ImgBuffer = binaryReader.ReadBytes(IMG_SIZE);
+
+
+                                //人體總數
+                                int bodyNumbers = int.Parse(System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(BODY_NUMBER_LENTH)));
+
+                                MyBody body;
+
+                                for (int i = 0; i < bodyNumbers; i++)
+                                {
+                                    body = socketData.Body[i];
+
+                                    int strLength = int.Parse(System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(BODY_SKELETION_STR_LENTH)));
+                                    socketData.SBodyJoints[i] = System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(strLength));
+                                    body.isTracked = true;
+                                }
+
+                                //設定其他骨架為未追蹤
+                                for (int i = bodyNumbers; i < 7; i++)
+                                {
+                                    body = socketData.Body[i];
+
+                                    body.isTracked = false;
+                                }
+
+                                //寫入狀態
+                                if (netStream.CanWrite)
+                                {
+                                    //int status = (int)SocketServer.status.SocketStatus;
+                                    int status = (int)this.socketData.playbackStatus.SocketStatus;
+                                    netStream.Write(System.Text.Encoding.UTF8.GetBytes(status.ToString()), 0, 1);
+
+                                    if (status == (int)SocketPackage.TRANSMIT_STATUS.StartRecord)
+                                    {
+                                        this.socketData.playbackStatus.SocketStatus = SocketPackage.TRANSMIT_STATUS.Recording;
+                                    }
+                                    if (status == (int)SocketPackage.TRANSMIT_STATUS.StartPlaybackClip)
+                                    {
+                                        this.socketData.playbackStatus.SocketStatus = SocketPackage.TRANSMIT_STATUS.PlaybackCliping;
+                                        //SocketServer.status.SocketStatus = SocketPackage.TRANSMIT_STATUS.PlaybackCliping;
+                                    }
+                                }
+
+                                //此處只是觸動onChanged
+                                socketData.ImgBuffer = System.Text.Encoding.UTF8.GetBytes("0");
+
+                                #endregion
+                                break;
+                            //For test
+                            case 2:
+                                Debug.Print(">>Get Device number's info :{0} ", clientID);
+                                    
+                                break;
+
+                        }
+
+                    }
+                    catch (Exception ee)
                     {
                         Debug.Print(ee.ToString());
-                      //  log.Error(string.Format("_ClientNo:{0} ", _ClientNo), ee);
                     }
                 }
             }
 
+
         }
 
-
+ 
 
         #endregion
     }

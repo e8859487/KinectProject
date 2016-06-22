@@ -79,12 +79,23 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="key.p12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DatabaseService\DatabaseService.csproj">
+      <Project>{3c57879e-8852-4c89-9615-9a0a5b5f8ccd}</Project>
+      <Name>DatabaseService</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MotionFSM\MotionFSM.csproj">
       <Project>{27e41e7f-87da-460a-9817-83f268af85f7}</Project>
       <Name>MotionFSM</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SpaceDepolyment\SpaceDepolyment.csproj">
+      <Project>{d9fcee34-0e24-4caa-8647-c7f06f2ba70f}</Project>
+      <Name>SpaceDepolyment</Name>
     </ProjectReference>
     <ProjectReference Include="..\XmlManager\XmlManager.csproj">
       <Project>{e796a79c-d0f4-4aa4-9eda-ee5725eb070f}</Project>

@@ -15,6 +15,7 @@ using System.IO;
 
 using log4net;
 using log4net.Config;
+using System.Diagnostics;
 
 
 namespace SocketPackage
@@ -31,11 +32,39 @@ namespace SocketPackage
         /// 遠端 socket server 所監聽的 port number
         private int _RemotePortNumber;
 
-        /// socket client 物件(連接遠端 socket server 用)
+        /// <summary>
+        ///  socket client 物件(連接遠端 socket server 用)
+        /// </summary>
         private TcpClient _TcpClient;
+
+
+        
+        //裝置ID
+        private byte[] connectionID_byte = null;
+
+        private int connectionID;
+
+        public int ConnectionID
+        {
+            get
+            {
+                return connectionID;
+            }
+            set
+            {
+                connectionID = value;
+            }
+        }
+
 
         //Log
         private ILog log = null;
+
+        //資料標頭
+        private readonly byte[] DT_NONE = System.Text.Encoding.UTF8.GetBytes("0");
+        private readonly byte[] DT_SKELETONINFO = System.Text.Encoding.UTF8.GetBytes("1");
+        private readonly byte[] DT_TEST = System.Text.Encoding.UTF8.GetBytes("2");
+
 
         #endregion
 
@@ -43,7 +72,7 @@ namespace SocketPackage
         /// <summary>
         /// Indicate server socket status
         /// </summary>
-        public static Status socketStatus = new Status();
+        public static PlayBackStatus socketStatus = new PlayBackStatus();
 
         #endregion
 
@@ -65,9 +94,11 @@ namespace SocketPackage
 
             //
             socketStatus.changed += new changedEventHandler(socketStatusChange);
+
         }
 
         #endregion
+
 
         #region public method
 
@@ -78,6 +109,12 @@ namespace SocketPackage
             _TcpClient = new TcpClient();
             _TcpClient.Connect(_RemoteIpAddress, _RemotePortNumber);
             log.Info("Client Socket Program - Server Connected ...");
+
+            //取得裝置識別ID
+            this.GetClientID();
+
+            connectionID_byte = System.Text.Encoding.UTF8.GetBytes(connectionID.ToString());
+
         }
 
         //與伺服器終止連線
@@ -151,22 +188,36 @@ namespace SocketPackage
         }
 
 
-        public async void SendBytes(byte[] bytes)
+        public async void SendBytesAndGetInfo(byte[] bytes)
         {
-
             //取得用來傳送訊息至 socket server 的 stream 物件
             NetworkStream serverStream = _TcpClient.GetStream();
 
-            //將資料寫入 stream object (表示傳送資料至 socket server)
+            //1. 傳送裝置ID
+              serverStream.Write(connectionID_byte, 0, connectionID_byte.Length);
+
+            //2. 傳送資料標頭
+              serverStream.Write(DT_SKELETONINFO, 0, DT_SKELETONINFO.Length);
+
+            //3. == 將資料寫入 stream object (表示傳送資料至 socket server) == 
             await serverStream.WriteAsync(bytes, 0, bytes.Length);
 
             byte[] status_byte = new byte[1];
-            //int status = serverStream.ReadByte();
+            
+            //4. 收集當前播放狀況
             await serverStream.ReadAsync(status_byte, 0, 1);
 
             int status = int.Parse(System.Text.Encoding.UTF8.GetString(status_byte));
 
             SocketClient.socketStatus.SocketStatus = (SocketPackage.TRANSMIT_STATUS)Enum.ToObject(typeof(SocketPackage.TRANSMIT_STATUS), status);
+
+        }
+        public void SendBytes(byte[] bytes)
+        {
+            //取得用來傳送訊息至 socket server 的 stream 物件
+            NetworkStream serverStream = _TcpClient.GetStream();
+
+            serverStream.Write(bytes, 0, bytes.Length);
 
         }
 
@@ -214,6 +265,39 @@ namespace SocketPackage
         }
         #endregion
 
+
+
+        /// <summary>
+        /// 取得裝置ID
+        /// </summary>
+        private void GetClientID()
+        {
+            NetworkStream netStream = null;
+            BinaryReader binaryReader = null;
+            while (ConnectionID == 0)
+            {
+                if (_TcpClient.Connected)
+                {
+                    netStream = _TcpClient.GetStream();
+
+                    if (netStream.CanRead)
+                    {
+                        try
+                        {
+                            binaryReader = new BinaryReader(netStream);
+                            ConnectionID = int.Parse(System.Text.Encoding.UTF8.GetString(binaryReader.ReadBytes(1)));
+                            Debug.Print(string.Format(">>SocketClient.GetClientID(), ConnectionID:{0}  ", connectionID));
+                        }
+                        catch(Exception ee)
+                        {
+                            Debug.Print(string.Format(">>SocketClient.GetClientID() fail, ConnectionID:{0}  ", connectionID));
+                            Debug.Print(ee.ToString());
+                        }
+                    }
+                }
+            }
+        }
+
         #region CallBack Event and Event handler
 
         /// <summary>
@@ -245,4 +329,7 @@ namespace SocketPackage
         }
         #endregion
     }
+
+
+
 }

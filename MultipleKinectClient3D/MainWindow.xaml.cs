@@ -40,7 +40,7 @@ namespace MultipleKinectClient3D
 
         private string playBackFilePath;
 
-        private ClientKinectProcessor3D masterKinectProcessor3D = null;
+        private ClientKinectProcessor3D clientKinectProcessor3D = null;
         public MainWindow()
         {
             InitializeComponent();
@@ -51,11 +51,12 @@ namespace MultipleKinectClient3D
             this.KinectStatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
                                                 : Properties.Resources.SensorNotAvailableStatusText;
 
-            this.masterKinectProcessor3D = new ClientKinectProcessor3D(kinectSensor);
-            this.masterKinectProcessor3D.PlayerStateChanged += new clientEventHandler(StatusChange);
+            this.clientKinectProcessor3D = new ClientKinectProcessor3D(kinectSensor);
+            this.clientKinectProcessor3D.PlayerStateChanged += new clientEventHandler(StatusChange);
+
 
             // set data context for display in UI
-            this.DataContext = this.masterKinectProcessor3D;
+            this.DataContext = this.clientKinectProcessor3D;
             this.KinectStatus.DataContext = this;
 
             //讀取同步播放檔案路徑
@@ -66,10 +67,10 @@ namespace MultipleKinectClient3D
 
         public void Dispose()
         {
-            if (this.masterKinectProcessor3D != null)
+            if (this.clientKinectProcessor3D != null)
             {
-                this.masterKinectProcessor3D.Dispose();
-                this.masterKinectProcessor3D = null;
+                this.clientKinectProcessor3D.Dispose();
+                this.clientKinectProcessor3D = null;
             }
         }
 
@@ -187,6 +188,11 @@ namespace MultipleKinectClient3D
         private void SynChronousButton_Click(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        private void SendTest_Click(object sender, RoutedEventArgs e)
+        {
+            clientKinectProcessor3D.SendTestMsg();
         }
     }
 }

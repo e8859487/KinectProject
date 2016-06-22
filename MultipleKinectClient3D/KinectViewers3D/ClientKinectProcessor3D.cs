@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using XmlManager;
@@ -188,9 +189,18 @@ namespace MultipleKinectClient3D
             Port = int.Parse(reader.getNodeInnerText(@"/Root/Port"));
             reader.Dispose();
 
-            this.socketClient = new SocketClient(IpAddr, Port);
-            this.socketClient.Connect();
-            this.socketClient.clientDataChanged += new clientDataChangeEventHandler(StatusChange);
+            try
+            {
+                this.socketClient = new SocketClient(IpAddr, Port);
+                this.socketClient.Connect();
+
+                this.socketClient.clientDataChanged += new clientDataChangeEventHandler(StatusChange);
+            }
+            catch (Exception ee)
+            {
+                MessageBox.Show("ClientKinectProcessor3D 連線失敗!!! \n" + ee.ToString());
+            }
+
         }
 
         private void StatusChange(object sender, StatusEventArgs e)
@@ -299,10 +309,7 @@ namespace MultipleKinectClient3D
             }
             if (frameIndex % 2 == 0)
             {
-                if (socketClient.IsConnected())
-                {
                     this.SendDataToServer();
-                }
 
             }
 
@@ -342,7 +349,7 @@ namespace MultipleKinectClient3D
 
 
                     //sb_skeletonJoints.Append(body.TrackingId.ToString() + ":"); 
-                    sb_skeletonJoints.Append(body.TrackingId.ToString().Substring(1) + ":"); 
+                    sb_skeletonJoints.Append(body.TrackingId.ToString().Substring(1) + ":");
 
                     //sb_skeletonJoints.Append("72057594037927999:");
 
@@ -357,7 +364,7 @@ namespace MultipleKinectClient3D
                         //紀錄骨架座標於string中  jointType == JointType.ShoulderRight || jointType == JointType.ShoulderLeft || jointType == JointType.Head
                         {
                             //debug 
-                           // string fakeZ = (position.Z).ToString("0.0000");
+                            // string fakeZ = (position.Z).ToString("0.0000");
                             sb_skeletonJoints.Append(string.Format("{0},{1},{2}|", position.X.ToString("0.0000"), position.Y.ToString("0.0000"), position.Z.ToString("0.0000")));
                         }
                     }
@@ -507,57 +514,61 @@ namespace MultipleKinectClient3D
         /// </summary>
         public void SendDataToServer()
         {
-            byte[] bodyNumbers_byte = System.Text.Encoding.UTF8.GetBytes(bodyNumbers.ToString());
-
-            //深度 + 人體骨架數量
-            //byte[] Depth_BodyNum_byte = CombomBinaryArray(depthPixels, bodyNumbers_byte);
-
-            //深度 + 人體骨架數量 + 骨架點
-            byte[] Depth_BodyNum_Skeleton_byte = bodyNumbers_byte;
-
-            byte[] bodySkeletons_byteArray = null;
-
-            if (bodyNumbers > 0)
+            //檢查連線狀況
+            if (this.socketClient.IsConnected())
             {
-                //找出人體的index
-                string[] dictKey = bodyIndex.Split(',');
+                byte[] bodyNumbers_byte = System.Text.Encoding.UTF8.GetBytes(bodyNumbers.ToString());
 
-                if (dictKey != null && dictKey.Length > 1)
+                //深度 + 人體骨架數量
+                //byte[] Depth_BodyNum_byte = CombomBinaryArray(depthPixels, bodyNumbers_byte);
+
+                //深度 + 人體骨架數量 + 骨架點
+                byte[] Depth_BodyNum_Skeleton_byte = bodyNumbers_byte;
+
+                byte[] bodySkeletons_byteArray = null;
+
+                if (bodyNumbers > 0)
                 {
-                    for (int i = 0; i < dictKey.Length - 1; i++)
+                    //找出人體的index
+                    string[] dictKey = bodyIndex.Split(',');
+
+                    if (dictKey != null && dictKey.Length > 1)
                     {
-                        //骨架位置字串
-                        byte[] skeleton_Joints_byte = System.Text.Encoding.UTF8.GetBytes(_JointsPosDict[int.Parse(dictKey[i])]);
-
-                        //骨架字串的長度
-                        byte[] str_SkeletonJoints_Len_byte = System.Text.Encoding.UTF8.GetBytes(_JointsPosDict[int.Parse(dictKey[i])].Length.ToString());
-
-                        //
-                        if (bodySkeletons_byteArray == null)
+                        for (int i = 0; i < dictKey.Length - 1; i++)
                         {
-                            bodySkeletons_byteArray = CombomBinaryArray(str_SkeletonJoints_Len_byte, skeleton_Joints_byte);
-                        }
-                        else
-                        {
-                            bodySkeletons_byteArray = CombomBinaryArray(bodySkeletons_byteArray, CombomBinaryArray(str_SkeletonJoints_Len_byte, skeleton_Joints_byte));
+                            //骨架位置字串
+                            byte[] skeleton_Joints_byte = System.Text.Encoding.UTF8.GetBytes(_JointsPosDict[int.Parse(dictKey[i])]);
+
+                            //骨架字串的長度
+                            byte[] str_SkeletonJoints_Len_byte = System.Text.Encoding.UTF8.GetBytes(_JointsPosDict[int.Parse(dictKey[i])].Length.ToString());
+
+                            //
+                            if (bodySkeletons_byteArray == null)
+                            {
+                                bodySkeletons_byteArray = CombomBinaryArray(str_SkeletonJoints_Len_byte, skeleton_Joints_byte);
+                            }
+                            else
+                            {
+                                bodySkeletons_byteArray = CombomBinaryArray(bodySkeletons_byteArray, CombomBinaryArray(str_SkeletonJoints_Len_byte, skeleton_Joints_byte));
+                            }
                         }
                     }
                 }
-            }
-            //沒有任何人體骨架
-            if (bodySkeletons_byteArray == null)
-            {
-                //送出深度影像 + 骨架數量(0)
-                socketClient.SendBytes(bodyNumbers_byte);
-                //Debug.Print(string.Format(" >> SendDataToServer :bodySkeletons_byteArray:  {0}", bodyNumbers_byte.Length));
+                //沒有任何人體骨架
+                if (bodySkeletons_byteArray == null)
+                {
+                    //送出深度影像 + 骨架數量(0)
+                    socketClient.SendBytesAndGetInfo(bodyNumbers_byte);
+                    //Debug.Print(string.Format(" >> SendDataToServer :bodySkeletons_byteArray:  {0}", bodyNumbers_byte.Length));
 
-            }
-            else  //一個以上的人體骨架
-            {
-                Depth_BodyNum_Skeleton_byte = CombomBinaryArray(Depth_BodyNum_Skeleton_byte, bodySkeletons_byteArray);
-                //送出 深度影像 + 骨架數量(n) + (骨架字串長度 +  骨架字串) * n
-                socketClient.SendBytes(Depth_BodyNum_Skeleton_byte);
-                //Debug.Print(string.Format(" >> SendDataToServer :Depth_BodyNum_Skeleton_byte: {0}", Depth_BodyNum_Skeleton_byte.Length));
+                }
+                else  //一個以上的人體骨架
+                {
+                    Depth_BodyNum_Skeleton_byte = CombomBinaryArray(Depth_BodyNum_Skeleton_byte, bodySkeletons_byteArray);
+                    //送出 深度影像 + 骨架數量(n) + (骨架字串長度 +  骨架字串) * n
+                    socketClient.SendBytesAndGetInfo(Depth_BodyNum_Skeleton_byte);
+                    //Debug.Print(string.Format(" >> SendDataToServer :Depth_BodyNum_Skeleton_byte: {0}", Depth_BodyNum_Skeleton_byte.Length));
+                }
 
             }
         }
@@ -576,5 +587,25 @@ namespace MultipleKinectClient3D
             return newArray;
         }
 
+
+  
+
+        internal void SendTestMsg()
+        {
+            byte[] sb = System.Text.Encoding.UTF8.GetBytes(this.socketClient.ConnectionID.ToString());
+            byte[] socketHead = System.Text.Encoding.UTF8.GetBytes("02");
+            byte[] allbyte = this.CombomBinaryArray(sb, socketHead);
+            //Debug.Print(string.Format(">>ClientKinectProcessor3D.SendTestMsg  ConnectionID = {0}", sb.Length));
+            //Debug.Print(string.Format(">>ClientKinectProcessor3D.SendTestMsg  socketHead= {0}", socketHead.Length));
+            //Debug.Print(string.Format(">>ClientKinectProcessor3D.SendTestMsg  allbyte= {0}", allbyte.Length));
+
+            //this.socketClient.SendBytes(allbyte);
+        }
     }
 }
+
+
+
+
+
+

@@ -15,11 +15,15 @@ using System.Windows.Shapes;
 
 namespace MultipleKinectMaster3D
 {
+    using HelixToolkit.Wpf;
     using Microsoft.Kinect;
     using Microsoft.Kinect.Tools;
     using Microsoft.Win32;
+    using MultipleKinectMaster3D.UISetting;
     using System.ComponentModel;
     using System.Threading;
+    using System.Windows.Media.Media3D;
+    using SpaceDepolyment;
 
     /// <summary>
     /// MainWindow.xaml 的互動邏輯
@@ -28,13 +32,13 @@ namespace MultipleKinectMaster3D
 
     public partial class MainWindow : Window, INotifyPropertyChanged, IDisposable
     {
-
+        #region Private Property
         private KinectSensor kinectSensor = null;
 
         private string kinectStatusText = String.Empty;
-        
+
         private bool isPlaying = false;
-       
+
         private string lastFile = string.Empty;
 
         private delegate void OneArgDelegate(string arg);
@@ -44,9 +48,26 @@ namespace MultipleKinectMaster3D
         private string playBackFilePath;
 
         private MasterKinectProcessor3D masterKinectProcessor3D = null;
+
+        /// <summary>
+        /// 相機位置
+        /// </summary>
+        CameraPosMapper cameraPosMapper;
+        SerialPortIO serialPortIO;
+        #endregion
         public MainWindow()
         {
             InitializeComponent();
+
+            //綁定相機位置與轉向
+            cameraPosMapper = new CameraPosMapper();
+            cameraPosMapper.AddDevice(new Point3D(50, 155, 10), 15);
+            cameraPosMapper.AddDevice(new Point3D(252, 155, 570), 180);
+            cameraPosMapper.AddDevice(new Point3D(-410, 155, 560), 108);
+
+
+            //draw img
+            this.drawWall();
 
             this.kinectSensor = KinectSensor.GetDefault();
             this.kinectSensor.IsAvailableChanged += this.Sensor_IsAvailableChanged;
@@ -56,16 +77,81 @@ namespace MultipleKinectMaster3D
 
             this.masterKinectProcessor3D = new MasterKinectProcessor3D(kinectSensor, this.Dispatcher);
             this.masterKinectProcessor3D.SetMotionUI(LIB_Motion);
+            this.masterKinectProcessor3D.SetCameraDeplyment(cameraPosMapper);
 
-            // set data context for display in UI
-            this.DataContext = this.masterKinectProcessor3D;
-            this.Lbl_TimeStamp.DataContext = this.masterKinectProcessor3D;
-            this.KinectStatus.DataContext = this;
+
+            ///*for IOT*/
+            //serialPortIO = new SerialPortIO(9600, "COM7", LIB_Member, this.Dispatcher,  Doorstate);
+
 
             XmlManager.XmlReader reader = new XmlManager.XmlReader(@"./Setting/3DSetting.xml");
             playBackFilePath = reader.getNodeInnerText(@"/Root/SynchronousPlayPath");
             reader.Dispose();
 
+
+
+            // set data context for display in UI
+
+            this.DataContext = new
+            {
+                masterKinectProcessor = this.masterKinectProcessor3D,
+                WallDeplyment = wallList,
+                CameraPos1 = cameraPosMapper.GetCameraSetting(1),
+                CameraPos2 = cameraPosMapper.GetCameraSetting(2),
+                CameraPos3 = cameraPosMapper.GetCameraSetting(3),
+                //DoorState= this.serialPortIO.DoorState
+                //this.Lbl_TimeStamp.DataContext = this.masterKinectProcessor3D;
+                //this.KinectStatus.DataContext = this;
+            };
+        }
+
+        List<WallSetting> wallList = new List<WallSetting>();
+
+        private void drawWall()
+        {
+            int WallLength_X = 444; //圍牆長
+            int WallWidth_Y = 90;   //圍牆高   
+            int WallHeight_Z = 10;  //圍牆厚
+            int WallLength_X2 = 636;
+            Brush wallBrush = Brushes.AliceBlue;
+            //      7   1           —   —
+            //    6   4    2      ｜   ｜  ｜
+            //      5   3           __   __
+            wallList.Add(new WallSetting(WallLength_X+5, WallWidth_Y, WallHeight_Z    , new Point3D((WallLength_X +5) / 2  , WallWidth_Y / 2, 0), wallBrush));                                       // 1
+
+            wallList.Add(new WallSetting(WallHeight_Z, WallWidth_Y, WallLength_X2 -55, new Point3D(WallLength_X, WallWidth_Y / 2, (WallLength_X2 + 67) / 2), wallBrush));                 // 2
+
+            wallList.Add(new WallSetting(WallLength_X, WallWidth_Y, WallHeight_Z, new Point3D(WallLength_X / 2, WallWidth_Y / 2, WallLength_X2), wallBrush));                            // 3
+
+            wallList.Add(new WallSetting(WallHeight_Z, WallWidth_Y, WallLength_X2 - 150, new Point3D(WallHeight_Z / 2, WallWidth_Y / 2,( WallLength_X2 - 150) / 2), wallBrush));                       // 4
+
+            wallList.Add(new WallSetting(WallLength_X, WallWidth_Y, WallHeight_Z, new Point3D(-WallLength_X / 2, WallWidth_Y / 2, WallLength_X2), wallBrush));                             // 5
+
+            wallList.Add(new WallSetting(WallHeight_Z, WallWidth_Y, WallLength_X2, new Point3D(-WallLength_X + 5, WallWidth_Y / 2, (WallLength_X2) / 2), wallBrush));                        // 6
+
+            wallList.Add(new WallSetting(WallLength_X, WallWidth_Y, WallHeight_Z    , new Point3D(-WallLength_X / 2, WallWidth_Y / 2, 0), wallBrush));                                        // 7
+
+
+
+            Dictionary<string, DependencyProperty> dict_propertyPair = new Dictionary<string, DependencyProperty>();
+            dict_propertyPair.Add("WallWidth", BoxVisual3D.WidthProperty);
+            dict_propertyPair.Add("WallHeight", BoxVisual3D.HeightProperty);
+            dict_propertyPair.Add("WallLength", BoxVisual3D.LengthProperty);
+            dict_propertyPair.Add("WallCenter", BoxVisual3D.CenterProperty);
+            dict_propertyPair.Add("WallBrush", BoxVisual3D.FillProperty);
+
+            foreach (var wSetting in wallList)
+            {
+                BoxVisual3D bv3d = new BoxVisual3D();
+                foreach (KeyValuePair<string, DependencyProperty> items in dict_propertyPair)
+                {
+                    Binding binding = new Binding();
+                    binding.Source = wSetting;
+                    binding.Path = new PropertyPath(items.Key);
+                    BindingOperations.SetBinding(bv3d, items.Value, binding);
+                }
+                WallSetting.Children.Add(bv3d);
+            }
         }
 
         public void Dispose()
@@ -98,7 +184,7 @@ namespace MultipleKinectMaster3D
                 }
             }
         }
- 
+
         private void Sensor_IsAvailableChanged(object sender, IsAvailableChangedEventArgs e)
         {
             this.KinectStatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
@@ -174,14 +260,14 @@ namespace MultipleKinectMaster3D
         private void SynChronousButton_Click(object sender, RoutedEventArgs e)
         {
             OneArgDelegate playback = new OneArgDelegate(this.PlaybackClip);
-            SocketPackage.SocketServer.SendStartAsychronousPlay();
+            this.masterKinectProcessor3D.SendStartAsychronousPlay();
+            //SocketPackage.SocketServer.SendStartAsychronousPlay();
             playback.BeginInvoke(playBackFilePath, null, null);
         }
 
         private void SetToUnknow_Click(object sender, RoutedEventArgs e)
         {
             masterKinectProcessor3D.SetMotionToUnknown();
-
         }
 
     }
